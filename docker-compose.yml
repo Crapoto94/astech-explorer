@@ -17,4 +17,16 @@ services:
       # Source Studio-RH (optionnelle). Laisser vide tant que non fournie.
       STUDIO_RH_API_URL: "${STUDIO_RH_API_URL:-}"
       STUDIO_RH_API_KEY: "${STUDIO_RH_API_KEY:-}"
+      # API référentiels en lecture seule — clés au format "nom:cle,nom2:cle2"
+      # (durables : reprises à chaque redémarrage même après reconstruction).
+      ASTECH_API_KEYS: "${ASTECH_API_KEYS:-}"
+      # Jeton pour l'administration des clés (/api/admin/keys).
+      ASTECH_ADMIN_TOKEN: "${ASTECH_ADMIN_TOKEN:-}"
+      # Fichier des clés générées dynamiquement (persisté via le volume).
+      ASTECH_KEYS_FILE: "/app/data/api-keys.json"
+    volumes:
+      - astech-data:/app/data
     restart: unless-stopped
+
+volumes:
+  astech-data:
