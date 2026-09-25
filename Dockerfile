@@ -32,7 +32,7 @@ ENV PORT=8099
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install --omit=dev
-COPY server.js ./
+COPY server.js apikeys.js apikey.js ./
 COPY public ./public
 
 EXPOSE 8099
