@@ -9,6 +9,8 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
+const apikeys = require('./apikeys');
 
 // Charge .env (local, non commité) avant toute lecture de process.env.
 (function loadDotEnv() {
@@ -554,53 +556,9 @@ async function syncStream(res, scope) {
 }
 
 // ─── Référentiels ────────────────────────────────────────────────────────────
-const REF_TYPES = {
-  biens: {
-    label: 'Biens & Patrimoine (ARBO)',
-    list: (term, opts = {}) => {
-      const binds = { q: '%' + term.toUpperCase() + '%' };
-      const w = [`UPPER(NVL(A.ARB_CODE,' ')||' '||NVL(A.ARB_DES,' ')||' '||NVL(ADR.ARBA_ADR1,' ')||' '||NVL(ADR.ARBA_VILLE,' ')) LIKE :q`];
-      if (opts.genre) { w.push('A.ARB_GENRE = :genre'); binds.genre = opts.genre; }
-      return exec(`${BIEN_SELECT_STD} WHERE ${w.join(' AND ')} ORDER BY A.ARB_DES FETCH FIRST ${LIMIT} ROWS ONLY`, binds, LIMIT);
-    },
-  },
-  vehicules: {
-    label: 'Véhicules & Parc Roulant (PARC)',
-    list: (term, opts = {}) => {
-      const binds = { q: '%' + term.toUpperCase() + '%' };
-      const w = [`CATEGORIE = 'GVEH'`, `UPPER(NVL(DES_BIEN,' ')||' '||NVL(IMMAT,' ')||' '||NVL(MARQUE,' ')||' '||NVL(MODELE,' ')) LIKE :q`];
-      if (opts.categorie) { w.push('CATEGORIE = :categorie'); binds.categorie = opts.categorie; }
-      return exec(`SELECT ID_BIEN AS id, DES_BIEN AS des, IMMAT AS immat, MARQUE AS marque, MODELE AS modele,
-          CATEGORIE AS categorie, SERVICE AS service, ANNEE AS annee, COMPTEUR AS compteur, NO_INVENTAIRE AS no_inventaire
-        FROM V_PARC_COMSMA WHERE ${w.join(' AND ')} ORDER BY DES_BIEN FETCH FIRST ${LIMIT} ROWS ONLY`, binds, LIMIT);
-    },
-  },
-  materiel: {
-    label: 'Matériel & Stocks (STOCK)',
-    list: (term) => exec(`SELECT SREF_COD AS code, SREF_DES AS des, SREF_FAM AS fam, SREF_SOUFAM AS soufam,
-        SREF_UNIT AS unit, SREF_QTERES AS qte, SREF_QTEMIN AS qte_min, SREF_QTEMAX AS qte_max,
-        SREF_PUMP AS pamp, SREF_MARQUE AS marque, SREF_SSERV AS sserv
-      FROM STOCK WHERE UPPER(NVL(SREF_COD,' ')||' '||NVL(SREF_DES,' ')||' '||NVL(SREF_MARQUE,' ')) LIKE :q
-      ORDER BY SREF_DES FETCH FIRST ${LIMIT} ROWS ONLY`, { q: '%' + term.toUpperCase() + '%' }),
-  },
-  tiers: {
-    label: 'Tiers & Fournisseurs (FOURNISSEUR)',
-    list: (term) => exec(`SELECT SFOU_COD AS code, SFOU_NOM AS nom, SFOU_VILLE AS ville, SFOU_SIRET AS siret,
-        SFOU_TEL1 AS tel, SFOU_EMAIL1 AS email, SFOU_ACTIF AS actif
-      FROM FOURNISSEUR WHERE UPPER(NVL(SFOU_NOM,' ')||' '||NVL(SFOU_COD,' ')||' '||NVL(SFOU_VILLE,' ')) LIKE :q
-      ORDER BY SFOU_NOM FETCH FIRST ${LIMIT} ROWS ONLY`, { q: '%' + term.toUpperCase() + '%' }),
-  },
-  services: {
-    label: 'Services & Structures (SERVICE)',
-    list: (term) => exec(`SELECT SSER_COD AS code, SSER_NOM AS nom, SSER_NOMLONG AS nom_long, SSER_ACTIF AS actif
-      FROM SERVICE WHERE UPPER(NVL(SSER_NOM,' ')||' '||NVL(SSER_NOMLONG,' ')||' '||NVL(SSER_COD,' ')) LIKE :q
-      ORDER BY SSER_NOM FETCH FIRST ${LIMIT} ROWS ONLY`, { q: '%' + term.toUpperCase() + '%' }),
-  },
-  groupes: {
-    label: 'Groupes applicatifs (GROUPEUTIL)',
-    list: (term) => listGroupes(term),
-  },
-};
+// Définition unique par référentiel : SELECT (sans WHERE ni ORDER BY), clause de
+// recherche/filtres, tri et colonne d'identifiant. Réutilisée par l'UI interne
+// (/api/referentiels) et par l'API publique versionnée (/api/v1, protégée par clé).
 const BIEN_SELECT_STD = `
   SELECT A.ARB_ID AS id, A.ARB_CODE AS code, A.ARB_DES AS des, A.ARB_NOMC AS nom_court,
          TRIM(NVL(ADR.ARBA_ADR1,' ')||' '||NVL(ADR.ARBA_CP,' ')||' '||NVL(ADR.ARBA_VILLE,' ')) AS adresse,
@@ -612,6 +570,111 @@ const BIEN_SELECT_STD = `
   LEFT JOIN CATEGORIE CAT ON CAT.SCAT_COD = A.ARB_CAT
   LEFT JOIN SOUSCATEGORIE SCAT ON SCAT.SSCAT_COD = A.ARB_SCAT
   LEFT JOIN SERVICE S ON S.SSER_COD = A.ARB_SSERV`;
+
+const REF_DEFS = {
+  biens: {
+    label: 'Biens & Patrimoine (ARBO)',
+    select: BIEN_SELECT_STD,
+    order: 'ORDER BY A.ARB_DES',
+    idCol: 'A.ARB_ID',
+    where: (term, opts = {}) => {
+      const binds = { q: '%' + term.toUpperCase() + '%' };
+      const w = [`UPPER(NVL(A.ARB_CODE,' ')||' '||NVL(A.ARB_DES,' ')||' '||NVL(ADR.ARBA_ADR1,' ')||' '||NVL(ADR.ARBA_VILLE,' ')) LIKE :q`];
+      if (opts.genre) { w.push('A.ARB_GENRE = :genre'); binds.genre = opts.genre; }
+      return { clause: 'WHERE ' + w.join(' AND '), binds };
+    },
+  },
+  vehicules: {
+    label: 'Véhicules & Parc Roulant (PARC)',
+    select: `SELECT ID_BIEN AS id, DES_BIEN AS des, IMMAT AS immat, MARQUE AS marque, MODELE AS modele,
+        CATEGORIE AS categorie, SERVICE AS service, ANNEE AS annee, COMPTEUR AS compteur, NO_INVENTAIRE AS no_inventaire
+      FROM V_PARC_COMSMA`,
+    order: 'ORDER BY DES_BIEN',
+    idCol: 'ID_BIEN',
+    where: (term, opts = {}) => {
+      const binds = { q: '%' + term.toUpperCase() + '%', categorie: opts.categorie || 'GVEH' };
+      const w = [`CATEGORIE = :categorie`,
+        `UPPER(NVL(DES_BIEN,' ')||' '||NVL(IMMAT,' ')||' '||NVL(MARQUE,' ')||' '||NVL(MODELE,' ')) LIKE :q`];
+      return { clause: 'WHERE ' + w.join(' AND '), binds };
+    },
+  },
+  materiel: {
+    label: 'Matériel & Stocks (STOCK)',
+    select: `SELECT SREF_COD AS id, SREF_COD AS code, SREF_DES AS des, SREF_FAM AS fam, SREF_SOUFAM AS soufam,
+        SREF_UNIT AS unit, SREF_QTERES AS qte, SREF_QTEMIN AS qte_min, SREF_QTEMAX AS qte_max,
+        SREF_PUMP AS pamp, SREF_MARQUE AS marque, SREF_SSERV AS sserv
+      FROM STOCK`,
+    order: 'ORDER BY SREF_DES',
+    idCol: 'SREF_COD',
+    where: (term) => ({
+      clause: `WHERE UPPER(NVL(SREF_COD,' ')||' '||NVL(SREF_DES,' ')||' '||NVL(SREF_MARQUE,' ')) LIKE :q`,
+      binds: { q: '%' + term.toUpperCase() + '%' },
+    }),
+  },
+  tiers: {
+    label: 'Tiers & Fournisseurs (FOURNISSEUR)',
+    select: `SELECT SFOU_COD AS id, SFOU_COD AS code, SFOU_NOM AS nom, SFOU_VILLE AS ville, SFOU_SIRET AS siret,
+        SFOU_TEL1 AS tel, SFOU_EMAIL1 AS email, SFOU_ACTIF AS actif
+      FROM FOURNISSEUR`,
+    order: 'ORDER BY SFOU_NOM',
+    idCol: 'SFOU_COD',
+    where: (term) => ({
+      clause: `WHERE UPPER(NVL(SFOU_NOM,' ')||' '||NVL(SFOU_COD,' ')||' '||NVL(SFOU_VILLE,' ')) LIKE :q`,
+      binds: { q: '%' + term.toUpperCase() + '%' },
+    }),
+  },
+  services: {
+    label: 'Services & Structures (SERVICE)',
+    select: `SELECT SSER_COD AS id, SSER_COD AS code, SSER_NOM AS nom, SSER_NOMLONG AS nom_long, SSER_ACTIF AS actif
+      FROM SERVICE`,
+    order: 'ORDER BY SSER_NOM',
+    idCol: 'SSER_COD',
+    where: (term) => ({
+      clause: `WHERE UPPER(NVL(SSER_NOM,' ')||' '||NVL(SSER_NOMLONG,' ')||' '||NVL(SSER_COD,' ')) LIKE :q`,
+      binds: { q: '%' + term.toUpperCase() + '%' },
+    }),
+  },
+  groupes: {
+    label: 'Groupes applicatifs (GROUPEUTIL)',
+    select: `SELECT gu.GRU_COD AS id, gu.GRU_COD AS code, gu.GRU_DES AS des, COUNT(gd.GRUD_DEM) AS nb_membres
+      FROM GROUPEUTIL gu LEFT JOIN GROUPEUTILDETAIL gd ON gd.GRUD_GRP = gu.GRU_COD`,
+    order: 'GROUP BY gu.GRU_COD, gu.GRU_DES ORDER BY gu.GRU_DES',
+    idCol: 'gu.GRU_COD',
+    where: (term) => ({
+      clause: `WHERE UPPER(NVL(gu.GRU_COD,' ')||' '||NVL(gu.GRU_DES,' ')) LIKE :q`,
+      binds: { q: '%' + term.toUpperCase() + '%' },
+    }),
+  },
+};
+const REF_KEYS = Object.keys(REF_DEFS);
+
+// Liste paginée d'un référentiel (OFFSET/FETCH côté Oracle).
+async function refList(type, { q = '', genre = '', categorie = '', limit, offset = 0, max = LIMIT } = {}) {
+  const def = REF_DEFS[type];
+  if (!def) { const e = new Error('Référentiel inconnu : ' + type); e.status = 404; throw e; }
+  const lim = int(limit, max, max);
+  const off = Math.max(0, Math.floor(Number(offset) || 0));
+  const { clause, binds } = def.where(q, { genre, categorie });
+  return exec(`${def.select} ${clause} ${def.order} OFFSET ${off} ROWS FETCH NEXT ${lim} ROWS ONLY`, binds, lim);
+}
+
+// Fiche unique par identifiant.
+async function refById(type, id) {
+  const def = REF_DEFS[type];
+  if (!def) { const e = new Error('Référentiel inconnu : ' + type); e.status = 404; throw e; }
+  const bind = /^\d+$/.test(String(id)) ? Number(id) : String(id);
+  const rows = await exec(`${def.select} WHERE ${def.idCol} = :id ${def.order} FETCH FIRST 1 ROWS ONLY`, { id: bind }, 1);
+  return rows[0] || null;
+}
+
+// Total (comptage) pour un jeu de filtres donné.
+async function refTotal(type, { q = '', genre = '', categorie = '' } = {}) {
+  const def = REF_DEFS[type];
+  if (!def) return 0;
+  const { clause, binds } = def.where(q, { genre, categorie });
+  const [r] = await exec(`SELECT COUNT(*) AS total FROM (${def.select} ${clause})`, binds, 1);
+  return Number(r.total);
+}
 
 async function listGenres() {
   return exec(`SELECT A.ARB_GENRE AS code, NVL(PG.SGEN_DES,'(non classé)') AS genre, COUNT(*) AS n
@@ -789,6 +852,128 @@ function sendJson(res, code, obj) {
 }
 const empty = (v) => (v === null || v === undefined || v === '') ? undefined : v;
 
+// ─── API publique v1 (référentiels, lecture seule, protégée par clé) ──────────
+const API_MAX_LIMIT = Number(process.env.ASTECH_API_MAX_LIMIT || 1000);
+const API_DEFAULT_LIMIT = Number(process.env.ASTECH_API_DEFAULT_LIMIT || 100);
+
+// Extrait la clé d'API de l'en-tête X-API-Key ou Authorization: Bearer.
+function readApiKey(req) {
+  const h = req.headers['x-api-key'];
+  if (h) return String(h).trim();
+  const m = /^Bearer\s+(.+)$/i.exec(req.headers['authorization'] || '');
+  return m ? m[1].trim() : '';
+}
+
+async function handleReferentielsApi(req, res, p, sp) {
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    res.setHeader('Allow', 'GET, HEAD');
+    return sendJson(res, 405, { error: 'API en lecture seule : seules les méthodes GET/HEAD sont autorisées.' });
+  }
+  if (p === '/api/v1' || p === '/api/v1/') {
+    return sendJson(res, 200, {
+      name: 'ASTECH — API Référentiels', version: '1.0', readOnly: true,
+      auth: "En-tête « X-API-Key: <clé> » (ou « Authorization: Bearer <clé> »).",
+      referentiels: REF_KEYS.map((t) => ({ type: t, label: REF_DEFS[t].label })),
+      endpoints: [
+        'GET /api/v1/referentiels',
+        'GET /api/v1/referentiels/biens/genres',
+        'GET /api/v1/referentiels/:type?q=&limit=&offset=[&genre=][&categorie=][&total=1]',
+        'GET /api/v1/referentiels/:type/:id',
+      ],
+    });
+  }
+
+  const rec = apikeys.verify(readApiKey(req));
+  if (!rec) return sendJson(res, 401, { error: 'Clé API manquante ou invalide.' });
+  if (!apikeys.hasScope(rec, 'referentiels')) return sendJson(res, 403, { error: 'Clé sans le droit « referentiels ».' });
+
+  if (p === '/api/v1/referentiels') {
+    const counts = await refCounts();
+    const items = REF_KEYS.map((t) => ({ type: t, label: REF_DEFS[t].label, count: Number((counts && counts[t]) || 0) }));
+    return sendJson(res, 200, { count: items.length, items });
+  }
+  if (p === '/api/v1/referentiels/biens/genres') {
+    return sendJson(res, 200, { rows: await listGenres() });
+  }
+  let m = /^\/api\/v1\/referentiels\/([a-z]+)$/.exec(p);
+  if (m) {
+    const type = m[1];
+    if (!REF_DEFS[type]) return sendJson(res, 404, { error: 'Référentiel inconnu : ' + type, available: REF_KEYS });
+    const limit = int(sp.get('limit'), API_DEFAULT_LIMIT, API_MAX_LIMIT);
+    const offset = Math.max(0, Math.floor(Number(sp.get('offset')) || 0));
+    const q = sp.get('q') || '', genre = sp.get('genre') || '', categorie = sp.get('categorie') || '';
+    const rows = await refList(type, { q, genre, categorie, limit, offset, max: API_MAX_LIMIT });
+    const payload = { type, label: REF_DEFS[type].label, q, limit, offset, count: rows.length, hasMore: rows.length === limit, rows };
+    if (sp.get('total') === '1') payload.total = await refTotal(type, { q, genre, categorie });
+    return sendJson(res, 200, payload);
+  }
+  m = /^\/api\/v1\/referentiels\/([a-z]+)\/(.+)$/.exec(p);
+  if (m) {
+    const type = m[1];
+    if (!REF_DEFS[type]) return sendJson(res, 404, { error: 'Référentiel inconnu : ' + type, available: REF_KEYS });
+    const row = await refById(type, decodeURIComponent(m[2]));
+    return row ? sendJson(res, 200, { type, row }) : sendJson(res, 404, { error: 'Entrée introuvable' });
+  }
+  return sendJson(res, 404, { error: 'Not found' });
+}
+
+// ─── Gestion des clés (admin) — protégée par ASTECH_ADMIN_TOKEN ──────────────
+const ADMIN_TOKEN = process.env.ASTECH_ADMIN_TOKEN || '';
+function adminAuthorized(req) {
+  if (!ADMIN_TOKEN) return false;
+  const header = String(req.headers['x-admin-token'] || '');
+  const auth = /^Bearer\s+(.+)$/i.exec(req.headers['authorization'] || '');
+  const cand = header || (auth ? auth[1].trim() : '');
+  if (!cand || cand.length !== ADMIN_TOKEN.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(cand), Buffer.from(ADMIN_TOKEN));
+}
+function readJsonBody(req, maxBytes = 100000) {
+  return new Promise((resolve, reject) => {
+    let data = '', size = 0;
+    req.on('data', (c) => {
+      size += c.length;
+      if (size > maxBytes) { reject(new Error('Corps de requête trop volumineux')); req.destroy(); return; }
+      data += c;
+    });
+    req.on('end', () => {
+      if (!data.trim()) return resolve({});
+      try { resolve(JSON.parse(data)); } catch { reject(new Error('JSON invalide')); }
+    });
+    req.on('error', reject);
+  });
+}
+async function handleAdminKeys(req, res, p) {
+  if (!ADMIN_TOKEN) return sendJson(res, 503, { error: 'Gestion des clés désactivée : définissez ASTECH_ADMIN_TOKEN (fichier .env).' });
+  if (!adminAuthorized(req)) return sendJson(res, 401, { error: 'Jeton administrateur manquant ou invalide (en-tête « X-Admin-Token »).' });
+
+  if (p === '/api/admin/keys') {
+    if (req.method === 'GET') { const keys = apikeys.list(); return sendJson(res, 200, { count: keys.length, keys }); }
+    if (req.method === 'POST') {
+      let body;
+      try { body = await readJsonBody(req); } catch (e) { return sendJson(res, 400, { error: e.message }); }
+      const name = String(body.name || '').trim();
+      if (!name) return sendJson(res, 400, { error: 'Champ « name » obligatoire.' });
+      const scopes = Array.isArray(body.scopes) && body.scopes.length ? body.scopes.map(String) : [apikeys.DEFAULT_SCOPE];
+      const created = apikeys.create({ name, scopes, createdBy: 'http' });
+      return sendJson(res, 201, { ...created, warning: "La clé en clair n'est affichée qu'une seule fois. Conservez-la en lieu sûr." });
+    }
+    res.setHeader('Allow', 'GET, POST');
+    return sendJson(res, 405, { error: 'Méthode non autorisée' });
+  }
+  const m = /^\/api\/admin\/keys\/([A-Za-z0-9]+)$/.exec(p);
+  if (m) {
+    if (req.method === 'DELETE' || req.method === 'POST') {
+      try {
+        const r = apikeys.revoke(m[1]);
+        return r ? sendJson(res, 200, { revoked: true, key: r }) : sendJson(res, 404, { error: 'Clé introuvable' });
+      } catch (e) { return sendJson(res, 409, { error: e.message }); }
+    }
+    res.setHeader('Allow', 'DELETE, POST');
+    return sendJson(res, 405, { error: 'Méthode non autorisée' });
+  }
+  return sendJson(res, 404, { error: 'Not found' });
+}
+
 const server = http.createServer(async (req, res) => {
   const u = new URL(req.url, 'http://localhost');
   const p = u.pathname;
@@ -801,8 +986,11 @@ const server = http.createServer(async (req, res) => {
       return res.end(html);
     }
     if (p === '/api/config') {
-      return sendJson(res, 200, { connectInfo, readOnly: true, limit: LIMIT, studioRh: STUDIO_RH.configured, studioRhUrl: STUDIO_RH.url || null, version: '3.0.0' });
+      return sendJson(res, 200, { connectInfo, readOnly: true, limit: LIMIT, studioRh: STUDIO_RH.configured, studioRhUrl: STUDIO_RH.url || null, version: '3.0.0', publicApi: '/api/v1', apiKeysEnabled: !!ADMIN_TOKEN });
     }
+    // API publique versionnée (référentiels) + gestion des clés
+    if (p === '/api/v1' || p.startsWith('/api/v1/')) return handleReferentielsApi(req, res, p, sp);
+    if (p === '/api/admin/keys' || p.startsWith('/api/admin/keys/')) return handleAdminKeys(req, res, p);
     if (p === '/api/dashboard') return sendJson(res, 200, await getDashboard());
     if (p === '/api/referentiels-compteurs') return sendJson(res, 200, { counts: await refCounts() });
 
@@ -834,15 +1022,13 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/sync/rh/run') return sendJson(res, 200, await syncRun(sp.get('scope'), sp.get('force') === '1'));
     if (p === '/api/sync/rh/stream') return syncStream(res, sp.get('scope'));
 
-    // Référentiels
+    // Référentiels (UI interne)
     if (p === '/api/referentiels/biens/genres') return sendJson(res, 200, { rows: await listGenres() });
     m = p.match(/^\/api\/referentiels\/([a-z]+)$/);
-    if (m && REF_TYPES[m[1]]) return sendJson(res, 200, { type: m[1], label: REF_TYPES[m[1]].label, rows: await REF_TYPES[m[1]].list(term, { genre: sp.get('genre') || '', categorie: sp.get('categorie') || '' }) });
+    if (m && REF_DEFS[m[1]]) return sendJson(res, 200, { type: m[1], label: REF_DEFS[m[1]].label, rows: await refList(m[1], { q: term, genre: sp.get('genre') || '', categorie: sp.get('categorie') || '', limit: LIMIT, offset: 0 }) });
     m = p.match(/^\/api\/referentiels\/([a-z]+)\/(.+)$/);
-    if (m && REF_TYPES[m[1]]) {
-      const rows = await REF_TYPES[m[1]].list('');
-      const id = decodeURIComponent(m[2]);
-      const row = rows.find(r => String(r.id ?? r.code) === id);
+    if (m && REF_DEFS[m[1]]) {
+      const row = await refById(m[1], decodeURIComponent(m[2]));
       return row ? sendJson(res, 200, { type: m[1], row }) : sendJson(res, 404, { error: 'Entrée introuvable' });
     }
 
