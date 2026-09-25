@@ -1,0 +1,24 @@
+{
+  "_commentaire": "Exemple de config.json (non commité). Utile uniquement en local sans variables d'environnement. Copier en config.json. Ne jamais commiter les mots de passe.",
+
+  "_prod": {
+    "host": "10.103.130.25",
+    "port": 1523,
+    "service_name": "PIVRY01",
+    "username": "ASTECHIVR",
+    "password": ""
+  },
+
+  "_test": {
+    "host": "",
+    "port": 1521,
+    "service_name": "",
+    "username": "",
+    "password": ""
+  },
+
+  "studio_rh": {
+    "url": "https://studiorh.ivry.local",
+    "api_key": ""
+  }
+}

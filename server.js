@@ -884,6 +884,37 @@ async function refCounts() {
   return r;
 }
 
+// ─── Magasins & stock ────────────────────────────────────────────────────────
+// Un « magasin » est une structure (V_SOCIETES) ; les articles sont dans STOCK
+// via STOCK.SREF_SOC = V_SOCIETES.COD.
+async function listMagasins() {
+  return exec(`SELECT S.SREF_SOC AS code, NVL(SO.NOM, S.SREF_SOC) AS nom,
+      COUNT(*) AS nb_articles,
+      SUM(CASE WHEN NVL(S.SREF_NSTOCK,0) > 0 THEN 1 ELSE 0 END) AS nb_en_stock,
+      NVL(SUM(S.SREF_NSTOCK),0) AS qte
+    FROM STOCK S
+    LEFT JOIN V_SOCIETES SO ON SO.COD = S.SREF_SOC
+    GROUP BY S.SREF_SOC, SO.NOM
+    ORDER BY SO.NOM NULLS LAST, S.SREF_SOC`, {}, 1000);
+}
+async function magasinArticles(code, { q = '', enStock = true, limit, offset = 0 } = {}) {
+  const binds = { code: String(code) };
+  const w = ['S.SREF_SOC = :code'];
+  if (q) { binds.q = '%' + q.toUpperCase() + '%'; w.push(`UPPER(NVL(S.SREF_COD,' ')||' '||NVL(S.SREF_DES,' ')||' '||NVL(S.SREF_MARQUE,' ')) LIKE :q`); }
+  if (enStock) w.push('NVL(S.SREF_NSTOCK,0) > 0');
+  const where = 'WHERE ' + w.join(' AND ');
+  const lim = int(limit, 100, 1000);
+  const off = Math.max(0, Math.floor(Number(offset) || 0));
+  const rows = await exec(`SELECT S.SREF_COD AS code, S.SREF_DES AS des, S.SREF_FAM AS fam, S.SREF_SOUFAM AS soufam,
+      S.SREF_UNIT AS unit, S.SREF_NSTOCK AS qte, S.SREF_PUMP AS pamp, S.SREF_MARQUE AS marque,
+      S.SREF_ALL AS allee, S.SREF_TRAV AS travee, S.SREF_CASIER AS casier, S.SREF_POS AS pos
+    FROM STOCK S ${where}
+    ORDER BY S.SREF_DES OFFSET ${off} ROWS FETCH NEXT ${lim} ROWS ONLY`, binds, lim);
+  const [tot] = await exec(`SELECT COUNT(*) AS total FROM STOCK S ${where}`, binds, 1);
+  const [info] = await exec(`SELECT COD AS code, NOM AS nom FROM V_SOCIETES WHERE COD = :code`, { code: String(code) }, 1);
+  return { magasin: info || { code: String(code), nom: String(code) }, total: Number(tot.total), rows };
+}
+
 // ─── Demandes d'intervention : listes de référence ───────────────────────────
 // Options des listes déroulantes du formulaire de demande (lecture seule).
 async function demandesOptions() {
@@ -1347,6 +1378,11 @@ async function handleRequest(req, res, p, sp) {
     if (p === '/api/admin/keys' || p.startsWith('/api/admin/keys/')) return handleAdminKeys(req, res, p);
     if (p === '/api/dashboard') return sendJson(res, 200, await getDashboard());
     if (p === '/api/referentiels-compteurs') return sendJson(res, 200, { counts: await refCounts() });
+
+    // Magasins & stock
+    if (p === '/api/magasins') return sendJson(res, 200, { rows: await listMagasins() });
+    let mm = p.match(/^\/api\/magasin\/([^/]+)$/);
+    if (mm) return sendJson(res, 200, await magasinArticles(decodeURIComponent(mm[1]), { q: term, enStock: sp.get('enStock') !== '0', limit: sp.get('limit'), offset: sp.get('offset') }));
 
     // Locatif
     if (p === '/api/biens') return sendJson(res, 200, { rows: await listBiens(term) });

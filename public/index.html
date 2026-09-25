@@ -96,6 +96,7 @@ tailwind.config = {
       <a data-link="#/synchro" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/synchro">Synchro RH</a>
       <a data-link="#/locatif" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/locatif">Gestion Locative</a>
       <a data-link="#/referentiels" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/referentiels">Référentiels</a>
+      <a data-link="#/magasins" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/magasins">Magasins</a>
       <a data-link="#/interventions" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/interventions">Interventions</a>
       <a data-link="#/indices" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/indices">Indices</a>
       <a data-link="#/apikeys" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/apikeys">Clés API</a>
@@ -280,6 +281,7 @@ const state = {
   agents: { tab: 'all', service: '', role: '', page: 1, pageSize: 25 },
   synchro: { scope: 'droits', tab: 'desactiver', result: null, running: false, error: null, selected: null, selCreate: null, desact: { plan: null, result: null, busy: false, error: null }, creer: { plan: null, result: null, busy: false, error: null } },
   apikeys: { keys: null, loading: false, error: null, created: null, copied: false },
+  magasins: { code: '', enStock: true, list: null },
   locatif: { tab: 'echeances', mode: 'futures', num: '' },
   refs: { type: 'biens', genre: '' },
   inter: { etat: '', type: '', period: '12m', page: 1 },
@@ -297,7 +299,7 @@ function go(hash) { if (location.hash === hash) render(); else location.hash = h
 function setNavActive(route) {
   document.querySelectorAll('#mainNav a').forEach(a => {
     const r = a.getAttribute('data-link').replace('#/', '');
-    const on = (route === r) || (route === 'bien' && r === 'locatif') || (route === 'contrat' && r === 'locatif') || (route === 'locataire' && r === 'locatif') || (route === 'agent' && r === 'agents') || (route === 'intervention' && r === 'interventions');
+    const on = (route === r) || (route === 'bien' && r === 'locatif') || (route === 'contrat' && r === 'locatif') || (route === 'locataire' && r === 'locatif') || (route === 'agent' && r === 'agents') || (route === 'intervention' && r === 'interventions') || (route === 'magasin' && r === 'magasins');
     a.className = 'navlink text-body-sm font-body-sm pb-2 transition-colors border-b-2 ' + (on ? 'text-white border-primary-container font-semibold' : 'text-[#94a3b8] hover:text-white border-transparent');
   });
 }
@@ -314,6 +316,7 @@ async function render() {
     const fns = {
       dashboard: viewDashboard, agents: viewAgents, synchro: viewSynchro, locatif: viewLocatif,
       referentiels: viewReferentiels, interventions: viewInterventions, indices: viewIndices, apikeys: viewApiKeys,
+      magasins: () => viewMagasins(arg), magasin: () => viewMagasins(arg),
       agent: () => viewAgentFiche(arg), bien: () => viewBien(arg), contrat: () => viewContrat(arg),
       locataire: () => viewLocataire(arg), intervention: () => viewInterventionFiche(arg)
     };
@@ -1326,6 +1329,53 @@ async function runPush(confirmProd) {
   finally { s.pushing = false; await viewIndices(); }
 }
 
+/* ═══════════════════════════ MAGASINS & STOCK ═══════════════════════════ */
+async function viewMagasins(arg) {
+  const m = state.magasins;
+  if (arg) m.code = decodeURIComponent(arg);
+  const d = await api('/api/magasins');
+  const rows = d.rows || [];
+  if (!m.code && rows.length) m.code = rows[0].code;
+  const cards = rows.map(r => {
+    const on = String(m.code) === String(r.code);
+    return `<button data-act="magasinOpen:${esc(String(r.code))}" class="text-left rounded-xl p-space-lg shadow-sm transition-all ${on ? 'bg-primary-container text-on-primary ring-2 ring-primary' : 'bg-surface-container-lowest hover:bg-surface-container-low'}">
+      <div class="flex items-center justify-between"><span class="material-symbols-outlined ${on ? 'text-on-primary' : 'text-primary'}">warehouse</span><span class="font-label-mono-sm ${on ? 'text-white/80' : 'text-secondary'}">${esc(r.code)}</span></div>
+      <div class="font-title-md mt-space-sm ${on ? 'text-white' : 'text-on-surface'}">${esc(r.nom || r.code)}</div>
+      <div class="font-label-mono-sm ${on ? 'text-white/80' : 'text-secondary'} mt-1">${num(r.nb_articles)} articles · ${num(r.nb_en_stock)} en stock</div>
+    </button>`;
+  }).join('');
+
+  let detail = '';
+  if (m.code) {
+    const a = await api('/api/magasin/' + encodeURIComponent(m.code) + '?q=' + encodeURIComponent(state.q || '') + (m.enStock ? '' : '&enStock=0'));
+    detail = `
+      <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden mt-space-lg">
+        <div class="p-space-lg flex flex-wrap items-center justify-between gap-space-sm bg-surface-container-low/50">
+          <div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-primary text-[24px]">inventory_2</span>
+            <h2 class="font-headline-sm text-on-surface">${esc(a.magasin.nom || a.magasin.code)}</h2>
+            <span class="font-label-mono-sm text-secondary bg-surface-container px-2 py-0.5 rounded">${num(a.total)} articles</span></div>
+          <label class="inline-flex items-center gap-2 font-label-mono-sm cursor-pointer"><input type="checkbox" data-act="magasinEnStock" ${m.enStock ? 'checked' : ''} class="w-4 h-4 accent-[#0ea5e9] cursor-pointer"/>Uniquement en stock</label>
+        </div>
+        ${dataTable([
+          { label: 'Code', get: r => cellMono(r.code, 'font-bold text-on-surface') },
+          { label: 'Désignation', get: r => `<div class="font-title-sm clamp1" style="max-width:360px">${esc(r.des || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.fam || '')}${r.soufam ? ' / ' + esc(r.soufam) : ''}</div>` },
+          { label: 'Marque', get: r => cell(r.marque) },
+          { label: 'Emplacement', get: r => cellMono([r.allee, r.travee, r.casier, r.pos].filter(Boolean).join('.'), 'text-secondary') },
+          { label: 'Stock', right: true, get: r => r.qte > 0 ? cellMono(num(r.qte) + ' ' + (r.unit || ''), 'font-bold text-emerald-700') : badge('rupture', 'red') },
+          { label: 'PAMP', right: true, get: r => r.pamp ? cellMono(money(r.pamp), '') : dash }
+        ], a.rows, { empty: 'Aucun article.', key: 'magasin_' + m.code })}
+      </div>`;
+  }
+  view.innerHTML = `
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Magasins' }, { label: 'STOCK' }])}
+    <div class="flex items-center justify-between mb-space-lg">
+      <div><span class="px-2 py-0.5 rounded bg-surface-container font-label-mono-sm text-primary font-semibold">TABLE: ASTECHIVR.STOCK</span>
+        <h1 class="font-headline-lg text-on-surface tracking-tight mt-1">Magasins &amp; Stock</h1></div>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-space-md">${cards || '<div class="text-on-surface-variant font-body-sm">Aucun magasin.</div>'}</div>
+    ${detail}`;
+}
+
 /* ═══════════════════════════ DEMANDE D'INTERVENTION ═══════════════════════════ */
 // Champs de DEMANDES (lecture seule) + formulaire de saisie. Les listes
 // déroulantes proviennent de /api/demandes/options (tables de référence ASTECH).
@@ -1645,6 +1695,8 @@ function handleAction(action, value, el) {
     case 'syncCreer': runCreer(); break;
     case 'locTab': l.tab = value; viewLocatif(); break;
     case 'locMode': l.mode = value; viewLocatif(); break;
+    case 'magasinOpen': state.magasins.code = value; state.magasins.list = null; viewMagasins(); break;
+    case 'magasinEnStock': state.magasins.enStock = el.checked; viewMagasins(); break;
     case 'refType': state.refs.type = value; state.refs.genre = ''; state.q = ''; state.pages = {}; viewReferentiels(); break;
     case 'refGenre': state.refs.genre = value || ''; state.pages = {}; viewReferentiels(); break;
     case 'interPeriod': it.period = el.value; it.page = 1; viewInterventions(); break;

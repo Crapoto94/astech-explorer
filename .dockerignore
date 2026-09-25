@@ -2,7 +2,11 @@
 node_modules
 instantclient
 config.json
+config.example.json
+.env
+.env.*
 *.log
+data
 .git
 .gitignore
 stitch_interface_graphique_application
