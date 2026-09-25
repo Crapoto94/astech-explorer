@@ -678,6 +678,75 @@ async function desactiverComptes(req, res) {
   return sendJson(res, 200, { dryRun: false, env, requested: matricules.length, applied: applied.length, applied_rows: applied, errors, journalFile });
 }
 
+// Crée des comptes ASTECH à partir d'agents Studio-RH absents de SBCG_USERS.
+// Comptes créés INACTIFS (USR_DATINVALID non nul, SDEM_SIGN='N') : aucun mot de
+// passe ni profil de droits. Simulation (dry-run) par défaut, confirmation en
+// production, journal d'audit.
+async function creerComptes(req, res) {
+  if (!WRITE_ENABLED) return sendJson(res, 403, { error: "Écriture désactivée : définir ASTECH_ALLOW_WRITES=1 côté serveur." });
+  let body;
+  try { body = await readJsonBody(req); } catch (e) { return sendJson(res, 400, { error: e.message }); }
+  const env = currentDbEnv();
+  const dryRun = body.dryRun !== false;
+  const inAgents = Array.isArray(body.agents) ? body.agents : [];
+  const norm = (s) => String(s == null ? '' : s).replace(/\s/g, '').toUpperCase();
+  const agents = [];
+  const seen = new Set();
+  for (const a of inAgents) {
+    const m = String((a && a.matricule) || '').trim();
+    if (!m) continue;
+    const k = norm(m); if (seen.has(k)) continue; seen.add(k);
+    agents.push({ matricule: m, nom: (a && a.nom) || '', service: (a && a.service) || '', email: (a && a.email) || '', fonction: (a && a.fonction) || '' });
+  }
+  if (!agents.length) return sendJson(res, 400, { error: 'Aucun agent sélectionné.' });
+  if (agents.length > 2000) return sendJson(res, 400, { error: 'Trop de comptes en une seule opération (max 2000).' });
+  if (!dryRun && env === 'prod' && body.confirm !== 'PROD') {
+    return sendJson(res, 428, { error: "Confirmation requise pour écrire en PRODUCTION (champ « confirm » = \"PROD\")." });
+  }
+
+  const binds = {};
+  const inList = agents.map((a, i) => { binds['m' + i] = a.matricule; return ':m' + i; }).join(',');
+  const existing = await exec(`SELECT USR_NAME AS matricule FROM SBCG_USERS WHERE USR_NAME IN (${inList})`, binds, agents.length + 10);
+  const existingSet = new Set(existing.map((r) => norm(r.matricule)));
+  // USR_ID : PK (aucune séquence) -> MAX+1 (comme pour INDICEINSEE).
+  const [maxRow] = await exec(`SELECT NVL(MAX(USR_ID),0) AS maxid FROM SBCG_USERS`, {}, 1);
+  const maxUsrId = Number(maxRow && maxRow.maxid) || 0;
+
+  const deja_existants = [];
+  const aValider = [];
+  let nextId = maxUsrId;
+  for (const a of agents) {
+    if (existingSet.has(norm(a.matricule))) { deja_existants.push(a.matricule); continue; }
+    nextId += 1;
+    aValider.push({ ...a, usr_id: nextId });
+  }
+
+  if (dryRun) {
+    return sendJson(res, 200, { dryRun: true, env, requested: agents.length, a_creer: aValider, deja_existants, next_usr_id: nextId });
+  }
+
+  const created = [], errors = [];
+  await execTx(async (conn) => {
+    for (const a of aValider) {
+      try {
+        await conn.execute(`INSERT INTO SBCG_USERS (USR_ID, USR_NAME, USR_DETAIL, USR_DATINVALID, USR_MAJ)
+          VALUES (:id, :name, :detail, TRUNC(SYSDATE), SYSDATE)`, { id: a.usr_id, name: a.matricule, detail: (a.nom || a.matricule).slice(0, 60) });
+        try {
+          await conn.execute(`INSERT INTO DEMANDEUR (SDEM_COD, SDEM_USR, SDEM_DES, SDEM_SIGN, SDEM_EMAIL)
+            VALUES (:cod, :usr, :des, 'N', :email)`, { cod: a.matricule, usr: a.usr_id, des: (a.nom || a.matricule).slice(0, 60), email: (a.email || null) });
+        } catch (e2) { errors.push({ matricule: a.matricule, error: 'Compte créé mais DEMANDEUR non inséré : ' + e2.message }); }
+        created.push({ matricule: a.matricule, nom: a.nom, usr_id: a.usr_id });
+      } catch (e) { errors.push({ matricule: a.matricule, error: e.message }); }
+    }
+  });
+  syncCache.at = 0; syncCache.result = null;
+  const journalFile = rhJournalPush({
+    at: new Date().toISOString(), type: 'creation_astech', env,
+    requested: agents.length, created, deja_existants, errors,
+  });
+  return sendJson(res, 200, { dryRun: false, env, requested: agents.length, created: created.length, created_rows: created, deja_existants, errors, journalFile });
+}
+
 // ─── Référentiels ────────────────────────────────────────────────────────────
 // Définition unique par référentiel : SELECT (sans WHERE ni ORDER BY), clause de
 // recherche/filtres, tri et colonne d'identifiant. Réutilisée par l'UI interne
@@ -1150,16 +1219,7 @@ async function handleReferentielsApi(req, res, p, sp) {
   return sendJson(res, 404, { error: 'Not found' });
 }
 
-// ─── Gestion des clés (admin) — protégée par ASTECH_ADMIN_TOKEN ──────────────
-const ADMIN_TOKEN = process.env.ASTECH_ADMIN_TOKEN || '';
-function adminAuthorized(req) {
-  if (!ADMIN_TOKEN) return false;
-  const header = String(req.headers['x-admin-token'] || '');
-  const auth = /^Bearer\s+(.+)$/i.exec(req.headers['authorization'] || '');
-  const cand = header || (auth ? auth[1].trim() : '');
-  if (!cand || cand.length !== ADMIN_TOKEN.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(cand), Buffer.from(ADMIN_TOKEN));
-}
+// ─── Gestion des clés d'API (accessible depuis l'UI locale, sans jeton) ──────
 function readJsonBody(req, maxBytes = 100000) {
   return new Promise((resolve, reject) => {
     let data = '', size = 0;
@@ -1176,9 +1236,6 @@ function readJsonBody(req, maxBytes = 100000) {
   });
 }
 async function handleAdminKeys(req, res, p) {
-  if (!ADMIN_TOKEN) return sendJson(res, 503, { error: 'Gestion des clés désactivée : définissez ASTECH_ADMIN_TOKEN (fichier .env).' });
-  if (!adminAuthorized(req)) return sendJson(res, 401, { error: 'Jeton administrateur manquant ou invalide (en-tête « X-Admin-Token »).' });
-
   if (p === '/api/admin/keys') {
     if (req.method === 'GET') { const keys = apikeys.list(); return sendJson(res, 200, { count: keys.length, keys }); }
     if (req.method === 'POST') {
@@ -1225,7 +1282,7 @@ async function handleRequest(req, res, p, sp) {
       return res.end(html);
     }
     if (p === '/api/config') {
-      return sendJson(res, 200, { connectInfo: dbConnectInfo(), readOnly: !WRITE_ENABLED, writeEnabled: WRITE_ENABLED, dbEnv: currentDbEnv(), dbEnvs: dbEnvList(), limit: LIMIT, studioRh: STUDIO_RH.configured, studioRhUrl: STUDIO_RH.url || null, version: '3.0.0', publicApi: '/api/v1', apiKeysEnabled: !!ADMIN_TOKEN });
+      return sendJson(res, 200, { connectInfo: dbConnectInfo(), readOnly: !WRITE_ENABLED, writeEnabled: WRITE_ENABLED, dbEnv: currentDbEnv(), dbEnvs: dbEnvList(), limit: LIMIT, studioRh: STUDIO_RH.configured, studioRhUrl: STUDIO_RH.url || null, version: '3.0.0', publicApi: '/api/v1', apiKeysEnabled: true });
     }
     if (p === '/api/env') return sendJson(res, 200, { active: currentDbEnv(), writeEnabled: WRITE_ENABLED, available: dbEnvList() });
     // API publique versionnée (référentiels) + gestion des clés
@@ -1264,6 +1321,10 @@ async function handleRequest(req, res, p, sp) {
     if (p === '/api/sync/rh/desactiver') {
       if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return sendJson(res, 405, { error: 'Méthode POST requise.' }); }
       return desactiverComptes(req, res);
+    }
+    if (p === '/api/sync/rh/creer') {
+      if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return sendJson(res, 405, { error: 'Méthode POST requise.' }); }
+      return creerComptes(req, res);
     }
     if (p === '/api/sync/rh/journal') return sendJson(res, 200, { rows: readRhJournal(Number(sp.get('limit')) || 100) });
 

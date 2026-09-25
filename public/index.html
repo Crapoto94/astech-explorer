@@ -267,7 +267,7 @@ const GMAIL = 'bg-surface-container-low';
 const state = {
   q: '',
   agents: { tab: 'all', service: '', role: '', page: 1, pageSize: 25 },
-  synchro: { scope: 'droits', tab: 'desactiver', result: null, running: false, error: null, selected: null, desact: { plan: null, result: null, busy: false, error: null } },
+  synchro: { scope: 'droits', tab: 'desactiver', result: null, running: false, error: null, selected: null, selCreate: null, desact: { plan: null, result: null, busy: false, error: null }, creer: { plan: null, result: null, busy: false, error: null } },
   apikeys: { adminToken: (typeof localStorage !== 'undefined' && localStorage.getItem('astechAdminToken')) || '', keys: null, loading: false, error: null, created: null, form: { name: '', scopes: ['referentiels'] } },
   locatif: { tab: 'echeances', mode: 'futures', num: '' },
   refs: { type: 'biens', genre: '' },
@@ -534,11 +534,17 @@ async function viewSynchro() {
   const res = s.result;
   // Par défaut, tous les comptes « à désactiver » sont sélectionnés.
   if (res && s.selected === null) s.selected = new Set(res.orphelins_astech.map((r) => String(r.matricule)));
+  if (res && s.selCreate === null) s.selCreate = new Set((res.orphelins_rh || []).map((r) => String(r.matricule)));
   const sel = s.selected || new Set();
   const orphRows = res ? res.orphelins_astech : [];
   const selCount = orphRows.filter((r) => sel.has(String(r.matricule))).length;
   const allSelected = orphRows.length > 0 && selCount === orphRows.length;
   const d = s.desact;
+  const c = s.creer;
+  const selC = s.selCreate || new Set();
+  const rhRows = res ? (res.orphelins_rh || []) : [];
+  const selCreateCount = rhRows.filter((r) => selC.has(String(r.matricule))).length;
+  const allCreateSelected = rhRows.length > 0 && selCreateCount === rhRows.length;
 
   const runBtn = s.running
     ? `<button disabled class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-wait"><span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>Interrogation de Studio-RH…</button>`
@@ -570,6 +576,7 @@ async function viewSynchro() {
     { label: 'Droits ASTECH', right: true, get: r => cellMono(num(r.nb), 'font-semibold') }
   ];
   const colsCreation = [
+    { label: '', center: true, get: r => `<input type="checkbox" data-act="syncSelectCreate:${esc(String(r.matricule))}" class="w-4 h-4 accent-[#16a34a] cursor-pointer" ${selC.has(String(r.matricule)) ? 'checked' : ''} />` },
     { label: 'Matricule RH', get: r => cellMono(r.matricule, 'font-bold text-primary') },
     { label: 'Nom & Prénom', get: r => `<div class="font-title-md text-on-surface">${esc(r.nom || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.email || '')}</div>` },
     { label: 'Service', get: r => cell(r.service) },
@@ -598,6 +605,16 @@ async function viewSynchro() {
             ${d.busy
               ? `<button disabled class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-wait"><span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>Traitement…</button>`
               : `<button data-act="syncDesactiver" ${(selCount && cfg.writeEnabled) ? '' : 'disabled'} title="${cfg.writeEnabled ? "Désactiver les comptes sélectionnés dans ASTECH" : 'Écriture désactivée (ASTECH_ALLOW_WRITES=1 requis)'}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg ${(selCount && cfg.writeEnabled) ? 'bg-error text-on-error hover:bg-error/90 shadow-md' : 'bg-surface-dim text-on-surface-variant cursor-not-allowed'} font-title-md transition-all"><span class="material-symbols-outlined text-[18px]">person_off</span>Désactiver la sélection (${num(selCount)})</button>`}
+          </div>` : s.tab === 'a_creer' ? `
+          <div class="flex flex-wrap items-center gap-2">
+            <label class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-container-lowest shadow-sm cursor-pointer font-label-mono-sm">
+              <input id="syncCreateAll" type="checkbox" data-act="syncCreateAll" class="w-4 h-4 accent-[#16a34a] cursor-pointer" ${allCreateSelected ? 'checked' : ''} />
+              <span>Tout <span class="text-secondary">(${num(selCreateCount)}/${num(rhRows.length)})</span></span>
+            </label>
+            <button data-act="syncCreateNone" class="px-2.5 py-1.5 rounded-lg bg-surface-container-lowest shadow-sm font-label-mono-sm hover:bg-surface-container">Aucun</button>
+            ${c.busy
+              ? `<button disabled class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-wait"><span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>Traitement…</button>`
+              : `<button data-act="syncCreer" ${(selCreateCount && cfg.writeEnabled) ? '' : 'disabled'} title="${cfg.writeEnabled ? "Créer les comptes ASTECH sélectionnés" : 'Écriture désactivée (ASTECH_ALLOW_WRITES=1 requis)'}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg ${(selCreateCount && cfg.writeEnabled) ? 'bg-primary text-on-primary hover:bg-primary/90 shadow-md' : 'bg-surface-dim text-on-surface-variant cursor-not-allowed'} font-title-md transition-all"><span class="material-symbols-outlined text-[18px]">person_add</span>Créer la sélection dans ASTECH (${num(selCreateCount)})</button>`}
           </div>` : `<button disabled class="px-3.5 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-not-allowed" title="Application en lecture seule">Appliquer la sélection (indisponible)</button>`}
         </div>
       </div>
@@ -636,6 +653,8 @@ async function viewSynchro() {
     ${s.error ? `<div class="bg-error-container/40 border border-error/30 text-on-error-container p-space-md rounded-xl font-body-sm mb-space-lg">${esc(s.error)}</div>` : ''}
     ${d.error ? `<div class="bg-error-container/40 border border-error/30 text-on-error-container p-space-md rounded-xl font-body-sm mb-space-lg">${esc(d.error)}</div>` : ''}
     ${d.result ? `<div class="p-space-md rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 font-body-sm mb-space-lg flex items-start gap-2"><span class="material-symbols-outlined text-[20px]">task_alt</span><div><div class="font-title-md font-bold">${num(d.result.applied)} compte(s) désactivé(s) dans ASTECH</div><div class="text-emerald-800 mt-0.5">${(d.result.errors || []).length ? num(d.result.errors.length) + ' erreur(s). ' : ''}Journal d'audit : <span class="font-label-mono-sm">${esc(d.result.journalFile || '—')}</span></div></div></div>` : ''}
+    ${c.error ? `<div class="bg-error-container/40 border border-error/30 text-on-error-container p-space-md rounded-xl font-body-sm mb-space-lg">${esc(c.error)}</div>` : ''}
+    ${c.result ? `<div class="p-space-md rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 font-body-sm mb-space-lg flex items-start gap-2"><span class="material-symbols-outlined text-[20px]">task_alt</span><div><div class="font-title-md font-bold">${num(c.result.created)} compte(s) créé(s) dans ASTECH</div><div class="text-emerald-800 mt-0.5">${(c.result.errors || []).length ? num(c.result.errors.length) + ' erreur(s). ' : ''}Journal d'audit : <span class="font-label-mono-sm">${esc(c.result.journalFile || '—')}</span></div></div></div>` : ''}
     ${s.running ? `<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg mb-space-lg">
       <div class="flex items-center justify-between mb-2">
         <span class="font-title-sm text-on-surface flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-primary animate-spin">progress_activity</span>Synchronisation Studio-RH en cours…</span>
@@ -648,6 +667,8 @@ async function viewSynchro() {
     ${results}`;
   const allBox = document.getElementById('syncSelectAll');
   if (allBox) allBox.indeterminate = selCount > 0 && !allSelected;
+  const createBox = document.getElementById('syncCreateAll');
+  if (createBox) createBox.indeterminate = selCreateCount > 0 && !allCreateSelected;
 }
 async function runDesactiver() {
   const s = state.synchro, d = s.desact;
@@ -675,6 +696,34 @@ async function runDesactiver() {
     s.result = null; // cache invalidé côté serveur : relancer la synchro
   } catch (e) { d.error = e.message; }
   finally { d.busy = false; await viewSynchro(); }
+}
+async function runCreer() {
+  const s = state.synchro, c = s.creer;
+  const sel = s.selCreate || new Set();
+  const agents = ((s.result && s.result.orphelins_rh) || [])
+    .filter((r) => sel.has(String(r.matricule)))
+    .map((r) => ({ matricule: String(r.matricule), nom: r.nom, service: r.service, email: r.email, fonction: r.fonction }));
+  if (!agents.length) return;
+  c.error = null; c.result = null; c.busy = true; await viewSynchro();
+  try {
+    const plan = await api('/api/sync/rh/creer', { method: 'POST', body: { agents, dryRun: true } });
+    c.plan = plan;
+    const env = DB_ENV_SEL || APP.active;
+    const existants = (plan.deja_existants || []).length;
+    const msg = `Créer ${plan.requested} compte(s) ASTECH ?\n\nEnvironnement : ${String(env).toUpperCase()}\n`
+      + (existants ? `${existants} matricule(s) déjà présent(s) seront ignorés.\n` : '')
+      + "\nCrée les comptes inactifs (USR_DATINVALID non nul, SDEM_SIGN='N'). Aucun mot de passe ni profil de droits n'est attribué."
+      + (env === 'prod' ? '\n\n⚠ ÉCRITURE EN PRODUCTION.' : '') + '\n\nConfirmer ?';
+    if (!window.confirm(msg)) { c.busy = false; await viewSynchro(); return; }
+    const body = { agents, dryRun: false };
+    if (env === 'prod') body.confirm = 'PROD';
+    const r = await api('/api/sync/rh/creer', { method: 'POST', body });
+    c.result = r;
+    for (const a of (r.created_rows || [])) sel.delete(String(a.matricule));
+    s.selCreate = new Set();
+    s.result = null; // cache invalidé côté serveur : relancer la synchro
+  } catch (e) { c.error = e.message; }
+  finally { c.busy = false; await viewSynchro(); }
 }
 function runSyncRh() {
   const s = state.synchro;
@@ -1519,6 +1568,21 @@ function handleAction(action, value, el) {
     }
     case 'syncSelectNone': state.synchro.selected = new Set(); viewSynchro(); break;
     case 'syncDesactiver': runDesactiver(); break;
+    case 'syncSelectCreate': {
+      const sc = state.synchro;
+      if (!sc.selCreate) sc.selCreate = new Set();
+      if (el.checked) sc.selCreate.add(value); else sc.selCreate.delete(value);
+      viewSynchro(); break;
+    }
+    case 'syncCreateAll': {
+      const sc = state.synchro; const rows = (sc.result && sc.result.orphelins_rh) || [];
+      const all = rows.map(r => String(r.matricule));
+      const allOn = sc.selCreate && all.length && all.every(m => sc.selCreate.has(m));
+      sc.selCreate = allOn ? new Set() : new Set(all);
+      viewSynchro(); break;
+    }
+    case 'syncCreateNone': state.synchro.selCreate = new Set(); viewSynchro(); break;
+    case 'syncCreer': runCreer(); break;
     case 'locTab': l.tab = value; viewLocatif(); break;
     case 'locMode': l.mode = value; viewLocatif(); break;
     case 'refType': state.refs.type = value; state.refs.genre = ''; state.q = ''; state.pages = {}; viewReferentiels(); break;
