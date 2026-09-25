@@ -5,6 +5,7 @@ config.json
 *.log
 api-keys.json
 data/
+indices-journal.jsonl
 
 # Scripts de déploiement locaux (contiennent des identifiants) — ne jamais commiter
 pulldocker.ini

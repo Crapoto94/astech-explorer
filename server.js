@@ -10,6 +10,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { AsyncLocalStorage } = require('async_hooks');
 const apikeys = require('./apikeys');
 
 // Charge .env (local, non commité) avant toute lecture de process.env.
@@ -32,6 +33,8 @@ let oracledb;
 try { oracledb = require('oracledb'); } catch { oracledb = require(APPDSI + '/node_modules/oracledb'); }
 
 const PORT = process.env.PORT || 8099;
+// Les écritures (pousser des indices) sont désactivées par défaut.
+const WRITE_ENABLED = process.env.ASTECH_ALLOW_WRITES === '1';
 const LIMIT = Number(process.env.ASTECH_LIMIT || 50000);
 // Avant 2024 = données d'essai (reprise) : on ne les considère pas pour le locatif.
 const CUTOFF = "DATE '2024-01-01'";
@@ -56,8 +59,68 @@ function loadStudioRh() {
   STUDIO_RH.insecure = process.env.STUDIO_RH_INSECURE_TLS !== '0';
 }
 
-let pool = null;
+// ─── Base : profils prod / test ───────────────────────────────────────────────
+// Le profil actif est choisi par requête via l'en-tête « X-ASTECH-Env » ou
+// ?env=test (défaut : prod). Chaque profil a son propre pool Oracle.
+const DB_ENV = new AsyncLocalStorage();
+const DB_PROFILES = {};       // id -> { user, password, connectString, label }
+const DB_POOLS = {};          // id -> pool oracledb (créé à la demande)
+let ACTIVE_ENV = 'prod';
 let connectInfo = '';
+
+function normEnv(v) {
+  const s = String(v || '').toLowerCase().trim();
+  if (s === 'test' || s === 'recette' || s === 'preprod' || s === 'dev') return 'test';
+  if (s === 'prod' || s === 'production') return 'prod';
+  return s;
+}
+function envFromPrefix(prefix) {
+  const host = process.env[prefix + '_HOST'];
+  if (!host) return null;
+  return {
+    user: process.env[prefix + '_USER'],
+    password: process.env[prefix + '_PASSWORD'],
+    connectString: `${host}:${process.env[prefix + '_PORT'] || 1521}/${process.env[prefix + '_SERVICE']}`,
+  };
+}
+function readConfigJson() {
+  try { const p = path.join(__dirname, 'config.json'); if (fs.existsSync(p)) return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { /* ignore */ }
+  return null;
+}
+async function loadDbConfigs() {
+  const c = readConfigJson();
+  // PROD : env ORACLE_ASTECH_*, puis config.json, puis SQLite AppDSI.
+  let prod = envFromPrefix('ORACLE_ASTECH');
+  if (!prod && c && (c.host || c.username)) prod = { user: c.username, password: c.password, connectString: `${c.host}:${c.port}/${c.service_name || c.service}` };
+  if (!prod) {
+    try {
+      const { setupDb, getSqlite } = require(APPDSI + '/shared/database');
+      await setupDb();
+      const s = await getSqlite().get("SELECT host, port, service_name, username, password FROM oracle_settings WHERE type='ASTECH'");
+      if (s && s.host) prod = { user: s.username, password: s.password, connectString: `${s.host}:${s.port}/${s.service_name}` };
+    } catch { /* ignore */ }
+  }
+  // TEST : env ORACLE_ASTECH_TEST_*, puis config.json (bloc "oracle_test").
+  let test = envFromPrefix('ORACLE_ASTECH_TEST');
+  if (!test && c) {
+    const t = c.oracle_test || c.test;
+    if (t && t.host) test = { user: t.username || t.user, password: t.password, connectString: `${t.host}:${t.port || 1521}/${t.service_name || t.service}` };
+  }
+  const profiles = {};
+  if (prod) profiles.prod = { ...prod, label: 'Production' };
+  if (test) profiles.test = { ...test, label: 'Test / Recette' };
+  if (!Object.keys(profiles).length) throw new Error('Paramètres ASTECH introuvables (env ORACLE_ASTECH_*, config.json ou oracle_settings).');
+  return profiles;
+}
+function currentDbEnv() { return (DB_ENV.getStore() && DB_ENV.getStore().env) || ACTIVE_ENV; }
+function dbEnvList() { return Object.keys(DB_PROFILES).map((id) => ({ id, label: DB_PROFILES[id].label, connectString: DB_PROFILES[id].connectString })); }
+function dbConnectInfo() { const p = DB_PROFILES[currentDbEnv()] || DB_PROFILES[ACTIVE_ENV]; return (p && p.connectString) || connectInfo; }
+async function getPool(envId) {
+  const id = DB_PROFILES[envId] ? envId : ACTIVE_ENV;
+  if (DB_POOLS[id]) return DB_POOLS[id];
+  DB_POOLS[id] = await oracledb.createPool({ ...DB_PROFILES[id], poolMin: 1, poolMax: 4, poolIncrement: 1, poolPingInterval: 30 });
+  return DB_POOLS[id];
+}
 
 // ─── Base ────────────────────────────────────────────────────────────────────
 function normalizeRows(rows) {
@@ -72,34 +135,21 @@ function normalizeRows(rows) {
   });
 }
 async function exec(sql, binds = {}, maxRows = LIMIT) {
-  const conn = await pool.getConnection();
+  const conn = await (await getPool(currentDbEnv())).getConnection();
   try {
     const r = await conn.execute(sql, binds, { outFormat: oracledb.OUT_FORMAT_OBJECT, maxRows });
     return normalizeRows(r.rows);
   } finally { await conn.close(); }
 }
+// Transaction d'écriture (commit/rollback) sur le profil courant.
+async function execTx(fn) {
+  const conn = await (await getPool(currentDbEnv())).getConnection();
+  try { const out = await fn(conn); await conn.commit(); return out; }
+  catch (e) { try { await conn.rollback(); } catch { /* ignore */ } throw e; }
+  finally { await conn.close(); }
+}
 async function one(sql, binds = {}) { const r = await exec(sql, binds, 1); return r[0] || null; }
 const int = (v, def, max) => { const n = Math.max(0, Math.floor(Number(v))); return Number.isFinite(n) && n > 0 ? Math.min(n, max || 1000000) : def; };
-
-async function loadConfig() {
-  if (process.env.ORACLE_ASTECH_HOST) {
-    return {
-      user: process.env.ORACLE_ASTECH_USER,
-      password: process.env.ORACLE_ASTECH_PASSWORD,
-      connectString: `${process.env.ORACLE_ASTECH_HOST}:${process.env.ORACLE_ASTECH_PORT || 1521}/${process.env.ORACLE_ASTECH_SERVICE}`,
-    };
-  }
-  const cfgPath = path.join(__dirname, 'config.json');
-  if (fs.existsSync(cfgPath)) {
-    const c = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
-    return { user: c.username, password: c.password, connectString: `${c.host}:${c.port}/${c.service_name || c.service}` };
-  }
-  const { setupDb, getSqlite } = require(APPDSI + '/shared/database');
-  await setupDb();
-  const s = await getSqlite().get("SELECT host, port, service_name, username, password FROM oracle_settings WHERE type='ASTECH'");
-  if (!s || !s.host) throw new Error('Paramètres ASTECH introuvables (config.json, env ou oracle_settings).');
-  return { user: s.username, password: s.password, connectString: `${s.host}:${s.port}/${s.service_name}` };
-}
 
 // ─── Locatif ─────────────────────────────────────────────────────────────────
 const BIEN_SELECT = `
@@ -555,6 +605,79 @@ async function syncStream(res, scope) {
   res.end();
 }
 
+// ─── Synchro RH : désactivation contrôlée des comptes ASTECH ─────────────────
+const RH_JOURNAL_FILE = process.env.ASTECH_RH_JOURNAL_FILE || path.join(__dirname, 'data', 'rh-journal.jsonl');
+function rhJournalPush(entry) {
+  try {
+    fs.mkdirSync(path.dirname(RH_JOURNAL_FILE), { recursive: true });
+    fs.appendFileSync(RH_JOURNAL_FILE, JSON.stringify(entry) + '\n');
+    return RH_JOURNAL_FILE;
+  } catch { return null; }
+}
+function readRhJournal(limit = 100) {
+  try {
+    if (!fs.existsSync(RH_JOURNAL_FILE)) return [];
+    return fs.readFileSync(RH_JOURNAL_FILE, 'utf8').split(/\r?\n/).filter(Boolean)
+      .slice(-limit).map((l) => { try { return JSON.parse(l); } catch { return null; } })
+      .filter(Boolean).reverse();
+  } catch { return []; }
+}
+// Désactive des comptes ASTECH : USR_DATINVALID sur SBCG_USERS + SDEM_SIGN='N'
+// sur DEMANDEUR. Simulation (dry-run) par défaut, confirmation explicite en
+// production, journal d'audit. Aligné sur le workflow des indices.
+async function desactiverComptes(req, res) {
+  if (!WRITE_ENABLED) return sendJson(res, 403, { error: "Écriture désactivée : définir ASTECH_ALLOW_WRITES=1 côté serveur." });
+  let body;
+  try { body = await readJsonBody(req); } catch (e) { return sendJson(res, 400, { error: e.message }); }
+  const env = currentDbEnv();
+  const dryRun = body.dryRun !== false;
+  const matricules = Array.isArray(body.matricules)
+    ? [...new Set(body.matricules.map((m) => String(m == null ? '' : m).trim()).filter(Boolean))]
+    : [];
+  if (!matricules.length) return sendJson(res, 400, { error: 'Aucun matricule sélectionné.' });
+  if (matricules.length > 2000) return sendJson(res, 400, { error: 'Trop de comptes en une seule opération (max 2000).' });
+  if (!dryRun && env === 'prod' && body.confirm !== 'PROD') {
+    return sendJson(res, 428, { error: "Confirmation requise pour écrire en PRODUCTION (champ « confirm » = \"PROD\")." });
+  }
+
+  const binds = {};
+  const inList = matricules.map((m, i) => { binds['m' + i] = m; return ':m' + i; }).join(',');
+  const rows = await exec(`SELECT u.USR_NAME AS matricule, u.USR_ID AS usr_id, u.USR_DETAIL AS nom,
+      TO_CHAR(u.USR_DATINVALID,'DD/MM/YYYY') AS datinvalid, d.SDEM_SIGN AS sign
+    FROM SBCG_USERS u LEFT JOIN DEMANDEUR d ON d.SDEM_USR = u.USR_ID
+    WHERE u.USR_NAME IN (${inList})`, binds, matricules.length + 10);
+  const byMat = new Map(rows.map((r) => [String(r.matricule), r]));
+  const plan = matricules.map((m) => {
+    const r = byMat.get(m);
+    return { matricule: m, nom: r ? r.nom : null, found: !!r, deja_invalide: !!(r && r.datinvalid), sign: r ? r.sign : null };
+  });
+
+  if (dryRun) {
+    return sendJson(res, 200, {
+      dryRun: true, env, requested: matricules.length,
+      plan, introuvables: plan.filter((p) => !p.found).map((p) => p.matricule),
+    });
+  }
+
+  const applied = [], errors = [];
+  await execTx(async (conn) => {
+    for (const p of plan) {
+      if (!p.found) { errors.push({ matricule: p.matricule, error: 'Compte introuvable dans SBCG_USERS' }); continue; }
+      try {
+        const r1 = await conn.execute(`UPDATE SBCG_USERS SET USR_DATINVALID = TRUNC(SYSDATE) WHERE USR_NAME = :m AND USR_DATINVALID IS NULL`, { m: p.matricule });
+        const r2 = await conn.execute(`UPDATE DEMANDEUR SET SDEM_SIGN = 'N' WHERE SDEM_COD = :m`, { m: p.matricule });
+        applied.push({ matricule: p.matricule, nom: p.nom, usr_rows: r1.rowsAffected, dem_rows: r2.rowsAffected });
+      } catch (e) { errors.push({ matricule: p.matricule, error: e.message }); }
+    }
+  });
+  syncCache.at = 0; syncCache.result = null; // forcer un nouveau calcul après écriture
+  const journalFile = rhJournalPush({
+    at: new Date().toISOString(), type: 'desactivation_astech', env,
+    requested: matricules.length, applied, errors,
+  });
+  return sendJson(res, 200, { dryRun: false, env, requested: matricules.length, applied: applied.length, applied_rows: applied, errors, journalFile });
+}
+
 // ─── Référentiels ────────────────────────────────────────────────────────────
 // Définition unique par référentiel : SELECT (sans WHERE ni ORDER BY), clause de
 // recherche/filtres, tri et colonne d'identifiant. Réutilisée par l'UI interne
@@ -810,7 +933,7 @@ async function verifierIndices(force) {
     try { fetched[t] = await fetchInseeObs(INSEE_SERIES[t].idbank, 12); }
     catch (e) { errors.push({ typ: t, label: INSEE_SERIES[t].label, error: e.message }); }
   }
-  const ast = await exec(`SELECT INSEE_AN AS an, INSEE_TYP AS typ, INSEE_TRIM AS trim, INSEE_TAUX AS taux,
+  const ast = await exec(`SELECT INSEE_ID AS id, INSEE_AN AS an, INSEE_TYP AS typ, INSEE_TRIM AS trim, INSEE_TAUX AS taux,
       INSEE_COD AS cod, INSEE_DES AS des, TO_CHAR(INSEE_DATP,'DD/MM/YYYY') AS datp
     FROM INDICEINSEE WHERE INSEE_TYP IN (1,2,5,6)`, {}, 10000);
   const astechMap = new Map();
@@ -824,11 +947,11 @@ async function verifierIndices(force) {
     const typ = Number(ts), an = Number(ans), trim = Number(trims);
     const a = astechMap.get(k), s = srcMap.has(k) ? srcMap.get(k) : null;
     let statut, ecart = null;
-    if (a && s !== null) { ecart = Number((s - a.taux).toFixed(3)); statut = Math.abs(ecart) < 0.005 ? 'ok' : 'ecart'; }
+    if (a && s !== null) { const diff = s - a.taux; ecart = Number(diff.toFixed(6)); statut = diff === 0 ? 'ok' : 'ecart'; }
     else if (!a && s !== null) statut = 'manquant';
     else statut = 'source_absente';
     rows.push({
-      typ, label: INSEE_SERIES[typ].label, an, trim,
+      id: a ? a.id : null, typ, label: INSEE_SERIES[typ].label, an, trim,
       cod: a ? a.cod : null, des: a ? a.des : (INSEE_SERIES[typ].des + ' ' + an + ' T' + trim),
       astech: a ? a.taux : null, source: s, ecart, statut, datp: a ? a.datp : null,
     });
@@ -843,6 +966,116 @@ async function verifierIndices(force) {
   };
   inseeCache = { at: Date.now(), result };
   return result;
+}
+
+// ─── Pousser les indices dans ASTECH ─────────────────────────────────────────
+// Codes/labels ASTECH par type (ISNEE_COD = lettre + AA + TT, ex. L2601).
+const INSEE_TYP_INFO = {
+  1: { prefix: 'L', des: 'IRL' },
+  2: { prefix: 'C', des: 'CONST' },
+  5: { prefix: 'B', des: 'LOY COMM' },
+  6: { prefix: 'I', des: 'ILAT' },
+};
+const indiceCod = (typ, an, trim) => {
+  const info = INSEE_TYP_INFO[typ] || { prefix: 'X', des: 'INDICE' };
+  return info.prefix + String(an % 100).padStart(2, '0') + String(trim).padStart(2, '0');
+};
+const indiceDes = (typ, an, trim) => {
+  const info = INSEE_TYP_INFO[typ] || { prefix: 'X', des: 'INDICE' };
+  return `${info.des} ${an} TRIM 0${trim}`;
+};
+const JOURNAL_FILE = process.env.ASTECH_JOURNAL_FILE || path.join(__dirname, 'data', 'indices-journal.jsonl');
+function journalPush(entry) {
+  try {
+    fs.mkdirSync(path.dirname(JOURNAL_FILE), { recursive: true });
+    fs.appendFileSync(JOURNAL_FILE, JSON.stringify(entry) + '\n');
+    return JOURNAL_FILE;
+  } catch { return null; }
+}
+let indiceSeqReady = false;
+async function ensureIndiceSequence(conn) {
+  if (indiceSeqReady) return;
+  try {
+    const r = await conn.execute(`SELECT NVL(MAX(INSEE_ID),0)+1 AS start FROM INDICEINSEE`, {}, { outFormat: oracledb.OUT_FORMAT_OBJECT });
+    const start = Number((r.rows[0] && r.rows[0].START) || 1);
+    await conn.execute(`CREATE SEQUENCE SEQ_INDICEINSEE START WITH ${start} NOCACHE`);
+  } catch (e) {
+    if (!/ORA-00955/.test(e.message)) console.warn('Séquence SEQ_INDICEINSEE non créée (' + e.message + '), repli sur MAX+1.');
+  }
+  indiceSeqReady = true;
+}
+async function nextIndiceId(conn) {
+  try {
+    const r = await conn.execute(`SELECT SEQ_INDICEINSEE.NEXTVAL AS id FROM DUAL`, {}, { outFormat: oracledb.OUT_FORMAT_OBJECT });
+    return r.rows[0].ID;
+  } catch {
+    const r = await conn.execute(`SELECT NVL(MAX(INSEE_ID),0)+1 AS id FROM INDICEINSEE`, {}, { outFormat: oracledb.OUT_FORMAT_OBJECT });
+    return r.rows[0].ID;
+  }
+}
+
+async function pousserIndices(req, res) {
+  if (!WRITE_ENABLED) return sendJson(res, 403, { error: "Écriture désactivée : définir ASTECH_ALLOW_WRITES=1 côté serveur." });
+  let body;
+  try { body = await readJsonBody(req); } catch (e) { return sendJson(res, 400, { error: e.message }); }
+  const env = currentDbEnv();
+  const dryRun = body.dryRun !== false; // simulation par défaut
+  const scope = ['manquants', 'ecarts', 'les_deux'].includes(body.scope) ? body.scope : 'manquants';
+  if (!dryRun && env === 'prod' && body.confirm !== 'PROD') {
+    return sendJson(res, 428, { error: "Confirmation requise pour écrire en PRODUCTION (champ « confirm » = \"PROD\")." });
+  }
+
+  const verif = await verifierIndices(true);
+  const rows = verif.rows || [];
+  const match = (r) => scope === 'manquants' ? r.statut === 'manquant'
+    : scope === 'ecarts' ? r.statut === 'ecart'
+      : (r.statut === 'manquant' || r.statut === 'ecart');
+  const cibles = rows.filter((r) => match(r) && r.source !== null && r.source !== undefined);
+
+  // Doublons ASTECH (typ,an,trim) : signalés, jamais corrigés automatiquement.
+  const dupMap = new Map();
+  for (const r of rows) if (r.id != null) { const k = r.typ + ':' + r.an + ':' + r.trim; dupMap.set(k, (dupMap.get(k) || 0) + 1); }
+  const warnings = [];
+  for (const [k, n] of dupMap) if (n > 1) warnings.push(`Doublon ASTECH sur ${k} (${n} lignes) : non corrigé automatiquement.`);
+
+  const plan = cibles.map((r) => ({
+    action: r.statut === 'manquant' ? 'INSERT' : 'UPDATE',
+    id: r.id || null, typ: r.typ, label: r.label, an: r.an, trim: r.trim,
+    cod: r.statut === 'manquant' ? indiceCod(r.typ, r.an, r.trim) : r.cod,
+    old: r.astech, new: r.source,
+  }));
+
+  if (dryRun) {
+    return sendJson(res, 200, {
+      dryRun: true, env, scope, writeEnabled: WRITE_ENABLED, requested: plan.length,
+      plan, warnings, source: verif.source, at: verif.at,
+    });
+  }
+
+  const applied = [], errors = [];
+  await execTx(async (conn) => {
+    await ensureIndiceSequence(conn);
+    for (const it of plan) {
+      try {
+        if (it.action === 'UPDATE') {
+          const r = await conn.execute(`UPDATE INDICEINSEE SET INSEE_TAUX = :taux WHERE INSEE_ID = :id`, { taux: it.new, id: it.id });
+          applied.push({ ...it, rowsAffected: r.rowsAffected });
+        } else {
+          const id = await nextIndiceId(conn);
+          const cod = indiceCod(it.typ, it.an, it.trim);
+          const des = indiceDes(it.typ, it.an, it.trim);
+          await conn.execute(
+            `INSERT INTO INDICEINSEE (INSEE_ID, INSEE_AN, INSEE_COD, INSEE_DES, INSEE_TYP, INSEE_TRIM, INSEE_DATP, INSEE_TAUX, INSEE_TAUXMOYEN, INSEE_MOIS)
+             VALUES (:id, :an, :cod, :des, :typ, :trim, TRUNC(SYSDATE), :taux, 0, 0)`,
+            { id, an: it.an, cod, des, typ: it.typ, trim: String(it.trim), taux: it.new });
+          applied.push({ ...it, id, cod, des, rowsAffected: 1 });
+        }
+      } catch (e) { errors.push({ ...it, error: e.message }); }
+    }
+  });
+  inseeCache = { at: 0, result: null }; // forcer un nouveau contrôle après écriture
+  const journalFile = journalPush({ at: new Date().toISOString(), env, scope, applied, errors, warnings });
+  return sendJson(res, 200, { dryRun: false, env, scope, requested: plan.length, applied: applied.length, applied_rows: applied, errors, warnings, journalFile });
 }
 
 // ─── HTTP ────────────────────────────────────────────────────────────────────
@@ -974,10 +1207,16 @@ async function handleAdminKeys(req, res, p) {
   return sendJson(res, 404, { error: 'Not found' });
 }
 
-const server = http.createServer(async (req, res) => {
+const server = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://localhost');
   const p = u.pathname;
   const sp = u.searchParams;
+  const reqEnv = normEnv(req.headers['x-astech-env'] || sp.get('env'));
+  const env = DB_PROFILES[reqEnv] ? reqEnv : ACTIVE_ENV;
+  DB_ENV.run({ env }, () => handleRequest(req, res, p, sp));
+});
+
+async function handleRequest(req, res, p, sp) {
   const term = (sp.get('q') || '').trim();
   try {
     if (p === '/' || p === '/index.html') {
@@ -986,8 +1225,9 @@ const server = http.createServer(async (req, res) => {
       return res.end(html);
     }
     if (p === '/api/config') {
-      return sendJson(res, 200, { connectInfo, readOnly: true, limit: LIMIT, studioRh: STUDIO_RH.configured, studioRhUrl: STUDIO_RH.url || null, version: '3.0.0', publicApi: '/api/v1', apiKeysEnabled: !!ADMIN_TOKEN });
+      return sendJson(res, 200, { connectInfo: dbConnectInfo(), readOnly: !WRITE_ENABLED, writeEnabled: WRITE_ENABLED, dbEnv: currentDbEnv(), dbEnvs: dbEnvList(), limit: LIMIT, studioRh: STUDIO_RH.configured, studioRhUrl: STUDIO_RH.url || null, version: '3.0.0', publicApi: '/api/v1', apiKeysEnabled: !!ADMIN_TOKEN });
     }
+    if (p === '/api/env') return sendJson(res, 200, { active: currentDbEnv(), writeEnabled: WRITE_ENABLED, available: dbEnvList() });
     // API publique versionnée (référentiels) + gestion des clés
     if (p === '/api/v1' || p.startsWith('/api/v1/')) return handleReferentielsApi(req, res, p, sp);
     if (p === '/api/admin/keys' || p.startsWith('/api/admin/keys/')) return handleAdminKeys(req, res, p);
@@ -1021,6 +1261,11 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/sync/rh/preview') return sendJson(res, 200, await syncPreview());
     if (p === '/api/sync/rh/run') return sendJson(res, 200, await syncRun(sp.get('scope'), sp.get('force') === '1'));
     if (p === '/api/sync/rh/stream') return syncStream(res, sp.get('scope'));
+    if (p === '/api/sync/rh/desactiver') {
+      if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return sendJson(res, 405, { error: 'Méthode POST requise.' }); }
+      return desactiverComptes(req, res);
+    }
+    if (p === '/api/sync/rh/journal') return sendJson(res, 200, { rows: readRhJournal(Number(sp.get('limit')) || 100) });
 
     // Référentiels (UI interne)
     if (p === '/api/referentiels/biens/genres') return sendJson(res, 200, { rows: await listGenres() });
@@ -1041,18 +1286,26 @@ const server = http.createServer(async (req, res) => {
     // Indices
     if (p === '/api/indices') return sendJson(res, 200, { rows: await listIndices({ type: sp.get('type'), annee: sp.get('annee') }), resume: await indicesResume() });
     if (p === '/api/indices/verifier') return sendJson(res, 200, await verifierIndices(sp.get('force') === '1'));
+    if (p === '/api/indices/pousser') {
+      if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return sendJson(res, 405, { error: 'Méthode POST requise.' }); }
+      return pousserIndices(req, res);
+    }
 
     sendJson(res, 404, { error: 'Not found' });
   } catch (err) {
     sendJson(res, 500, { error: err.message });
   }
-});
+}
 
-loadConfig()
-  .then(async (cfg) => {
-    connectInfo = cfg.connectString;
+loadDbConfigs()
+  .then(async (profiles) => {
+    Object.assign(DB_PROFILES, profiles);
+    const wanted = normEnv(process.env.ASTECH_ENV);
+    ACTIVE_ENV = DB_PROFILES[wanted] ? wanted : (DB_PROFILES.prod ? 'prod' : Object.keys(DB_PROFILES)[0]);
+    connectInfo = (DB_PROFILES[ACTIVE_ENV] || {}).connectString || '';
     loadStudioRh();
-    pool = await oracledb.createPool({ ...cfg, poolMin: 1, poolMax: 4, poolIncrement: 1, poolPingInterval: 30 });
-    server.listen(PORT, () => console.log(`ASTECH Explorer -> http://localhost:${PORT} (${connectInfo}) [lecture seule] | Studio-RH ${STUDIO_RH.configured ? 'configuré' : 'non configuré'}`));
+    await getPool(ACTIVE_ENV); // échec rapide si la base active est injoignable
+    const envs = Object.keys(DB_PROFILES).map((id) => `${id}=${DB_PROFILES[id].connectString}`).join(' | ');
+    server.listen(PORT, () => console.log(`ASTECH Explorer -> http://localhost:${PORT} [${envs}] (actif: ${ACTIVE_ENV}) [lecture seule${WRITE_ENABLED ? ' + ecriture indices' : ''}] | Studio-RH ${STUDIO_RH.configured ? 'configuré' : 'non configuré'}`));
   })
   .catch((e) => { console.error('Erreur démarrage:', e.message); process.exit(1); });

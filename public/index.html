@@ -84,6 +84,7 @@ tailwind.config = {
         <span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-[#1e293b] text-[#94a3b8] font-label-mono-sm text-label-mono-sm border border-[#334155]">
           <span class="material-symbols-outlined text-[15px]">lock</span>Lecture seule
         </span>
+        <span id="envSwitch" class="hidden items-center gap-0.5 px-0.5 py-0.5 rounded bg-[#1e293b] border border-[#334155] font-label-mono-sm text-label-mono-sm"></span>
         <span id="studioPill" class="hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded bg-[#1e293b] text-[#94a3b8] font-label-mono-sm text-label-mono-sm border border-[#334155]" title="Source Studio-RH">
           <span class="material-symbols-outlined text-[15px]">sync_problem</span>Studio-RH
         </span>
@@ -97,6 +98,7 @@ tailwind.config = {
       <a data-link="#/referentiels" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/referentiels">Référentiels</a>
       <a data-link="#/interventions" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/interventions">Interventions</a>
       <a data-link="#/indices" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/indices">Indices</a>
+      <a data-link="#/apikeys" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/apikeys">Clés API</a>
     </nav>
   </div>
 </header>
@@ -130,7 +132,41 @@ const dash = '<span class="text-outline">—</span>';
 const cell = (v) => (v === null || v === undefined || v === '') ? dash : esc(v);
 const cellMono = (v, cls) => (v === null || v === undefined || v === '') ? dash : `<span class="font-label-mono-sm text-label-mono-sm ${cls || 'text-on-surface'}">${esc(v)}</span>`;
 
-async function api(path) { const r = await fetch(path); let d; try { d = await r.json(); } catch { d = { error: 'Réponse invalide' }; } if (!r.ok) throw new Error(d.error || ('Erreur ' + r.status)); return d; }
+const APP = { writeEnabled: false, active: '', envs: [] };
+let DB_ENV_SEL = (typeof localStorage !== 'undefined' && localStorage.getItem('astechEnv')) || '';
+function withEnv(path) { if (!DB_ENV_SEL) return path; return path + (path.includes('?') ? '&' : '?') + 'env=' + encodeURIComponent(DB_ENV_SEL); }
+async function api(path, opts) {
+  const o = opts || {};
+  const init = {};
+  if (o.method) init.method = o.method;
+  const headers = Object.assign({}, o.headers || {});
+  if (o.body !== undefined) { headers['Content-Type'] = 'application/json'; init.body = JSON.stringify(o.body); }
+  if (Object.keys(headers).length) init.headers = headers;
+  const r = await fetch(withEnv(path), Object.keys(init).length ? init : undefined);
+  let d; try { d = await r.json(); } catch { d = { error: 'Réponse invalide' }; }
+  if (!r.ok) throw new Error(d.error || ('Erreur ' + r.status));
+  return d;
+}
+function adminHeaders() {
+  const t = state.apikeys && state.apikeys.adminToken;
+  return t ? { 'X-Admin-Token': t } : {};
+}
+async function initEnvSwitch() {
+  try {
+    const info = await fetch('/api/env').then(r => r.json());
+    APP.writeEnabled = !!info.writeEnabled; APP.active = info.active || ''; APP.envs = info.available || [];
+    const box = document.getElementById('envSwitch');
+    if (!box || APP.envs.length < 2) return;
+    const active = DB_ENV_SEL || APP.active;
+    box.innerHTML = APP.envs.map(e => {
+      const on = e.id === active;
+      const txt = e.id === 'prod' ? 'PROD' : e.id === 'test' ? 'TEST' : e.id.toUpperCase();
+      const cls = on ? 'bg-primary-container text-white' : 'text-[#94a3b8] hover:text-white';
+      return `<button data-act="dbEnv:${esc(e.id)}" title="${esc(e.label)}" class="px-2 py-0.5 rounded ${cls}">${txt}</button>`;
+    }).join('');
+    box.classList.remove('hidden'); box.classList.add('inline-flex');
+  } catch (e) { /* pas de sélection d'environnement */ }
+}
 
 const ROLE_LETTERS = { U: 'Utilisateur', D: 'Demandeur', R: 'Affectataire', I: 'Intervenant', C: 'Conducteur', A: 'Usager', S: 'ATT' };
 const INTERV_TYPES = { PR: 'Préventif', RE: 'Réparation', EN: 'Entretien', CO: 'Contrôle', EV: 'Événement', SC: 'Sortie comptoir', SECU: 'Sécurité', MOBU: 'Maintenance', NID: 'Nettoyage', BANC: 'Bancs', CORB: 'Corbeilles', SIGN: 'Signalisation', SIGV: 'Signalisation verticale', BARRI: 'Barrières', NSTA: 'Non standard' };
@@ -231,11 +267,12 @@ const GMAIL = 'bg-surface-container-low';
 const state = {
   q: '',
   agents: { tab: 'all', service: '', role: '', page: 1, pageSize: 25 },
-  synchro: { scope: 'droits', tab: 'desactiver', result: null, running: false, error: null },
+  synchro: { scope: 'droits', tab: 'desactiver', result: null, running: false, error: null, selected: null, desact: { plan: null, result: null, busy: false, error: null } },
+  apikeys: { adminToken: (typeof localStorage !== 'undefined' && localStorage.getItem('astechAdminToken')) || '', keys: null, loading: false, error: null, created: null, form: { name: '', scopes: ['referentiels'] } },
   locatif: { tab: 'echeances', mode: 'futures', num: '' },
   refs: { type: 'biens', genre: '' },
   inter: { etat: '', type: '', period: '12m', page: 1 },
-  indices: { type: '', annee: '', verif: null, loading: false, error: null },
+  indices: { type: '', annee: '', verif: null, loading: false, error: null, pushScope: 'manquants', plan: null, pushResult: null, pushing: false },
   pages: {}
 };
 
@@ -264,7 +301,7 @@ async function render() {
   try {
     const fns = {
       dashboard: viewDashboard, agents: viewAgents, synchro: viewSynchro, locatif: viewLocatif,
-      referentiels: viewReferentiels, interventions: viewInterventions, indices: viewIndices,
+      referentiels: viewReferentiels, interventions: viewInterventions, indices: viewIndices, apikeys: viewApiKeys,
       agent: () => viewAgentFiche(arg), bien: () => viewBien(arg), contrat: () => viewContrat(arg),
       locataire: () => viewLocataire(arg), intervention: () => viewInterventionFiche(arg)
     };
@@ -319,7 +356,7 @@ async function viewDashboard() {
         <div class="h-6 w-px bg-surface-container-high hidden sm:block"></div>
         <div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-primary">memory</span><div><div class="font-label-mono-sm text-label-mono-sm text-secondary">Driver</div><div class="font-label-mono-md text-label-mono-md text-on-surface">Thick OCI (oracledb)</div></div></div>
         <div class="h-6 w-px bg-surface-container-high hidden sm:block"></div>
-        <div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-secondary">update</span><div><div class="font-label-mono-sm text-label-mono-sm text-secondary">Synchro RH</div><div class="font-label-mono-md text-label-mono-md text-error font-semibold">Inactive (Studio-RH non branché)</div></div></div>
+        <div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-secondary">update</span><div><div class="font-label-mono-sm text-label-mono-sm text-secondary">Synchro RH</div><div class="font-label-mono-md text-label-mono-md text-error font-semibold" id="dashRhStatus">Inactive (Studio-RH non branché)</div></div></div>
       </div>
       <div class="flex items-center gap-space-xs font-label-mono-sm text-label-mono-sm bg-surface-container px-2.5 py-1 rounded text-on-surface"><span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>Requêtes SELECT</div>
     </div>
@@ -336,12 +373,19 @@ async function viewDashboard() {
             <div class="p-space-sm rounded bg-surface-container-low flex flex-col"><span class="font-headline-md text-headline-md text-tertiary font-bold tabular">${num(k.demandes)}</span><span class="font-body-sm text-[12px] text-secondary">Demandes (DI)</span></div>
           </div><div class="px-space-lg pb-space-lg"><a data-link="#/interventions" class="text-primary font-title-sm text-title-sm hover:underline">Ouvrir la GMAO →</a></div>`)}
         ${card('Alerte Synchro RH', `<div class="px-space-lg pb-space-lg"><div class="p-space-sm rounded bg-surface-container-low flex flex-col gap-1">
-            <div class="flex items-center justify-between"><span class="font-title-sm text-title-sm">Source Studio-RH</span>${badge('Non connectée', 'red')}</div>
-            <p class="font-body-sm text-[12px] text-on-surface-variant">La confrontation des matricules (API Studio-RH) n\'est pas encore branchée. Seuls les comptes ASTECH sont exploitables en lecture.</p>
+            <div class="flex items-center justify-between"><span class="font-title-sm text-title-sm">Source Studio-RH</span><span id="dashRhBadge">${badge('Non connectée', 'red')}</span></div>
+            <p class="font-body-sm text-[12px] text-on-surface-variant" id="dashRhText">La confrontation des matricules (API Studio-RH) n\'est pas encore branchée. Seuls les comptes ASTECH sont exploitables en lecture.</p>
           </div><a data-link="#/synchro" class="block text-center text-primary font-title-sm text-title-sm pt-3 hover:underline">Ouvrir la réconciliation RH →</a></div>`)}
       </div>
     </div>`;
-  api('/api/config').then(c => { $('#srvInfo').textContent = 'Oracle 19c EE (' + c.connectInfo + ')'; $('#footInfo').textContent = c.connectInfo; if (c.studioRh) { const p = $('#studioPill'); p.className = p.className.replace('sync_problem', 'sync'); p.classList.remove('text-[#94a3b8]'); p.classList.add('text-emerald-400'); } }).catch(() => {});
+  api('/api/config').then(c => {
+    $('#srvInfo').textContent = 'Oracle 19c EE (' + c.connectInfo + ')'; $('#footInfo').textContent = c.connectInfo;
+    const on = !!c.studioRh;
+    const rs = $('#dashRhStatus'); if (rs) { rs.textContent = on ? 'Active (Studio-RH branché)' : 'Inactive (Studio-RH non branché)'; rs.classList.toggle('text-error', !on); rs.classList.toggle('text-emerald-600', on); }
+    const rb = $('#dashRhBadge'); if (rb) rb.innerHTML = on ? badge('Connectée', 'green') : badge('Non connectée', 'red');
+    const rt = $('#dashRhText'); if (rt) rt.textContent = on ? ('Confrontation active via l\'API Studio-RH (' + (c.studioRhUrl || '') + ').') : "La confrontation des matricules (API Studio-RH) n'est pas encore branchée. Seuls les comptes ASTECH sont exploitables en lecture.";
+    if (on) { const p = $('#studioPill'); p.className = p.className.replace('sync_problem', 'sync'); p.classList.remove('text-[#94a3b8]'); p.classList.add('text-emerald-400'); }
+  }).catch(() => {});
 }
 
 /* ═══════════════════════════ AGENTS ═══════════════════════════ */
@@ -488,6 +532,13 @@ async function viewSynchro() {
   const cfg = await api('/api/config');
   const s = state.synchro;
   const res = s.result;
+  // Par défaut, tous les comptes « à désactiver » sont sélectionnés.
+  if (res && s.selected === null) s.selected = new Set(res.orphelins_astech.map((r) => String(r.matricule)));
+  const sel = s.selected || new Set();
+  const orphRows = res ? res.orphelins_astech : [];
+  const selCount = orphRows.filter((r) => sel.has(String(r.matricule))).length;
+  const allSelected = orphRows.length > 0 && selCount === orphRows.length;
+  const d = s.desact;
 
   const runBtn = s.running
     ? `<button disabled class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-wait"><span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>Interrogation de Studio-RH…</button>`
@@ -502,6 +553,7 @@ async function viewSynchro() {
     </div>` : '';
 
   const colsOrph = [
+    { label: '', center: true, get: r => `<input type="checkbox" data-act="syncSelect:${esc(String(r.matricule))}" class="w-4 h-4 accent-[#dc2626] cursor-pointer" ${sel.has(String(r.matricule)) ? 'checked' : ''} />` },
     { label: 'Matricule', get: r => cellMono(r.matricule, 'font-bold text-error') },
     { label: 'Nom & Prénom', get: r => `<div class="font-title-md text-on-surface">${esc(r.nom || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.email || '')}</div>` },
     { label: 'Service', get: r => `<div>${esc(r.service || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.sserv || '')}</div>` },
@@ -534,9 +586,19 @@ async function viewSynchro() {
           ${res.rh_mode === 'list' ? tabBtn('a_creer', 'À créer dans ASTECH', res.orphelins_rh.length, 'bg-primary-fixed text-on-primary-fixed') : ''}
           ${tabBtn('concordants', 'Concordants', res.concordants.length)}
         </div>
-        <div class="flex items-center gap-space-md">
+        <div class="flex flex-wrap items-center gap-space-md">
           <span class="font-label-mono-sm text-label-mono-sm text-secondary">Synchro : ${esc(new Date(res.at).toLocaleString('fr-FR'))}${res.cached ? ' (cache)' : ''}</span>
-          <button disabled class="px-3.5 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-not-allowed" title="Application en lecture seule">Appliquer la sélection (indisponible)</button>
+          ${s.tab === 'desactiver' ? `
+          <div class="flex flex-wrap items-center gap-2">
+            <label class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-container-lowest shadow-sm cursor-pointer font-label-mono-sm">
+              <input id="syncSelectAll" type="checkbox" data-act="syncSelectAll" class="w-4 h-4 accent-[#dc2626] cursor-pointer" ${allSelected ? 'checked' : ''} />
+              <span>Tout <span class="text-secondary">(${num(selCount)}/${num(orphRows.length)})</span></span>
+            </label>
+            <button data-act="syncSelectNone" class="px-2.5 py-1.5 rounded-lg bg-surface-container-lowest shadow-sm font-label-mono-sm hover:bg-surface-container">Aucun</button>
+            ${d.busy
+              ? `<button disabled class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-wait"><span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>Traitement…</button>`
+              : `<button data-act="syncDesactiver" ${(selCount && cfg.writeEnabled) ? '' : 'disabled'} title="${cfg.writeEnabled ? "Désactiver les comptes sélectionnés dans ASTECH" : 'Écriture désactivée (ASTECH_ALLOW_WRITES=1 requis)'}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg ${(selCount && cfg.writeEnabled) ? 'bg-error text-on-error hover:bg-error/90 shadow-md' : 'bg-surface-dim text-on-surface-variant cursor-not-allowed'} font-title-md transition-all"><span class="material-symbols-outlined text-[18px]">person_off</span>Désactiver la sélection (${num(selCount)})</button>`}
+          </div>` : `<button disabled class="px-3.5 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-not-allowed" title="Application en lecture seule">Appliquer la sélection (indisponible)</button>`}
         </div>
       </div>
       ${s.tab === 'desactiver' ? dataTable(colsOrph, res.orphelins_astech, { empty: 'Aucune non-concordance : tous les comptes existent dans Studio-RH.', key: 'sync_desactiver_' + res.scope })
@@ -572,6 +634,8 @@ async function viewSynchro() {
         <p class="font-body-sm text-on-surface-variant mt-0.5">${cfg.studioRh ? 'API ' + esc(cfg.studioRhUrl || '') + ' — interrogation de /api/agents/search par matricule.' : "Renseigner STUDIO_RH_API_URL et STUDIO_RH_API_KEY (fichier .env ou config.json) côté serveur."}</p></div>
     </div>
     ${s.error ? `<div class="bg-error-container/40 border border-error/30 text-on-error-container p-space-md rounded-xl font-body-sm mb-space-lg">${esc(s.error)}</div>` : ''}
+    ${d.error ? `<div class="bg-error-container/40 border border-error/30 text-on-error-container p-space-md rounded-xl font-body-sm mb-space-lg">${esc(d.error)}</div>` : ''}
+    ${d.result ? `<div class="p-space-md rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 font-body-sm mb-space-lg flex items-start gap-2"><span class="material-symbols-outlined text-[20px]">task_alt</span><div><div class="font-title-md font-bold">${num(d.result.applied)} compte(s) désactivé(s) dans ASTECH</div><div class="text-emerald-800 mt-0.5">${(d.result.errors || []).length ? num(d.result.errors.length) + ' erreur(s). ' : ''}Journal d'audit : <span class="font-label-mono-sm">${esc(d.result.journalFile || '—')}</span></div></div></div>` : ''}
     ${s.running ? `<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg mb-space-lg">
       <div class="flex items-center justify-between mb-2">
         <span class="font-title-sm text-on-surface flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-primary animate-spin">progress_activity</span>Synchronisation Studio-RH en cours…</span>
@@ -582,10 +646,40 @@ async function viewSynchro() {
     </div>` : ''}
     ${counters}
     ${results}`;
+  const allBox = document.getElementById('syncSelectAll');
+  if (allBox) allBox.indeterminate = selCount > 0 && !allSelected;
+}
+async function runDesactiver() {
+  const s = state.synchro, d = s.desact;
+  const sel = s.selected || new Set();
+  const matricules = ((s.result && s.result.orphelins_astech) || [])
+    .map((r) => String(r.matricule)).filter((m) => sel.has(m));
+  if (!matricules.length) return;
+  d.error = null; d.result = null; d.busy = true; await viewSynchro();
+  try {
+    const plan = await api('/api/sync/rh/desactiver', { method: 'POST', body: { matricules, dryRun: true } });
+    d.plan = plan;
+    const env = DB_ENV_SEL || APP.active;
+    const introuvables = (plan.introuvables || []).length;
+    const msg = `Désactiver ${plan.requested} compte(s) dans ASTECH ?\n\nEnvironnement : ${String(env).toUpperCase()}\n`
+      + (introuvables ? `${introuvables} matricule(s) introuvable(s) seront ignorés.\n` : '')
+      + "\nRenseigne USR_DATINVALID sur SBCG_USERS et SDEM_SIGN='N' sur DEMANDEUR."
+      + (env === 'prod' ? '\n\n⚠ ÉCRITURE EN PRODUCTION.' : '') + '\n\nConfirmer ?';
+    if (!window.confirm(msg)) { d.busy = false; await viewSynchro(); return; }
+    const body = { matricules, dryRun: false };
+    if (env === 'prod') body.confirm = 'PROD';
+    const r = await api('/api/sync/rh/desactiver', { method: 'POST', body });
+    d.result = r;
+    for (const a of (r.applied_rows || [])) sel.delete(String(a.matricule));
+    s.selected = new Set();
+    s.result = null; // cache invalidé côté serveur : relancer la synchro
+  } catch (e) { d.error = e.message; }
+  finally { d.busy = false; await viewSynchro(); }
 }
 function runSyncRh() {
   const s = state.synchro;
-  s.running = true; s.error = null; s.result = null;
+  s.running = true; s.error = null; s.result = null; s.selected = null;
+  s.desact = { plan: null, result: null, busy: false, error: null };
   viewSynchro().then(() => {
     const bar = document.getElementById('syncBar');
     const txt = document.getElementById('syncText');
@@ -601,7 +695,7 @@ function runSyncRh() {
       if (d.type === 'start') up(0, d.total);
       else if (d.type === 'progress') up(d.done, d.total);
       else if (d.type === 'error') { es.close(); s.error = d.error; s.running = false; viewSynchro(); }
-      else if (d.type === 'done') { es.close(); s.result = d.result; s.running = false; viewSynchro(); }
+      else if (d.type === 'done') { es.close(); s.result = d.result; s.selected = null; s.running = false; viewSynchro(); }
     };
     es.onerror = () => { es.close(); if (s.running) { s.error = 'Flux interrompu (connexion au proxy).'; s.running = false; viewSynchro(); } };
   });
@@ -1017,10 +1111,59 @@ function verifSection(v) {
         { label: 'Période', get: r => `<span class="font-title-sm">${esc(r.an)} - T${esc(r.trim)}</span>` },
         { label: 'ASTECH (insee_taux)', right: true, get: r => r.astech !== null ? cellMono(num(r.astech), 'font-bold') : '<span class="text-outline italic">non renseigné</span>' },
         { label: 'Source INSEE', right: true, get: r => r.source !== null ? cellMono(num(r.source), 'font-semibold text-primary') : dash },
-        { label: 'Écart', right: true, get: r => r.ecart === null ? dash : `<span class="font-semibold ${Math.abs(r.ecart) < 0.005 ? 'text-emerald-600' : 'text-amber-700'}">${r.ecart > 0 ? '+' : ''}${Number(r.ecart).toFixed(2)}</span>` },
+        { label: 'Écart', right: true, get: r => r.ecart === null ? dash : `<span class="font-semibold ${r.ecart === 0 ? 'text-emerald-600' : 'text-amber-700'}">${r.ecart > 0 ? '+' : ''}${Number(r.ecart).toFixed(2)}</span>` },
         { label: 'Statut', center: true, get: r => verifStatutBadge(r.statut) }
       ], rows, { empty: 'Aucune donnée à confronter.', key: 'verif_indices' })}
+      ${pushControls()}
     </div>`;
+}
+function pushControls() {
+  const s = state.indices;
+  const plan = s.plan, res = s.pushResult;
+  const scopeSel = `<select data-act="pushScope" class="h-9 px-3 rounded-lg bg-surface-container-low font-body-sm">
+      <option value="manquants" ${s.pushScope === 'manquants' ? 'selected' : ''}>Indices manquants uniquement</option>
+      <option value="ecarts" ${s.pushScope === 'ecarts' ? 'selected' : ''}>Écarts uniquement</option>
+      <option value="les_deux" ${s.pushScope === 'les_deux' ? 'selected' : ''}>Manquants + écarts</option>
+    </select>`;
+  const btn = s.pushing
+    ? `<button disabled class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-wait"><span class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>Traitement…</button>`
+    : `<button data-act="pushDryRun" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-tertiary-container text-on-tertiary-container hover:bg-tertiary font-title-md shadow-md transition-all"><span class="material-symbols-outlined text-[20px]">upload</span>Pousser dans ASTECH (aperçu)</button>`;
+  const writeNote = APP.writeEnabled
+    ? `<span class="inline-flex items-center gap-1 font-label-mono-sm text-amber-700"><span class="material-symbols-outlined text-[16px]">edit</span>Écriture activée sur <b>${esc((DB_ENV_SEL || APP.active || '').toUpperCase())}</b></span>`
+    : `<span class="inline-flex items-center gap-1 font-label-mono-sm text-secondary"><span class="material-symbols-outlined text-[16px]">lock</span>Écriture désactivée (ASTECH_ALLOW_WRITES=1 côté serveur)</span>`;
+  let panel = '';
+  if (plan) {
+    const warn = (plan.warnings || []).length ? `<div class="bg-amber-50 border border-amber-200 text-amber-800 p-space-sm rounded font-body-sm mb-2">${plan.warnings.map(esc).join('<br>')}</div>` : '';
+    const rowsHtml = (plan.plan || []).map(p => `<tr class="border-t border-surface-container">
+        <td class="p-2">${badge(p.action, p.action === 'INSERT' ? 'primary' : 'amber')}</td>
+        <td class="p-2">${indiceBadge(p.typ)}</td>
+        <td class="p-2 font-title-sm">${esc(p.an)} - T${esc(p.trim)}</td>
+        <td class="p-2 font-label-mono-sm">${esc(p.cod || '')}</td>
+        <td class="p-2 text-right font-label-mono-sm">${p.old === null || p.old === undefined ? dash : num(p.old)}</td>
+        <td class="p-2 text-right font-label-mono-sm font-semibold text-primary">${num(p.new)}</td>
+      </tr>`).join('');
+    panel = `<div class="mt-space-lg border-t border-surface-container pt-space-lg">
+      <div class="flex flex-wrap items-center justify-between gap-space-sm mb-2"><h3 class="font-title-md text-on-surface">Aperçu — ${plan.requested} modification(s) proposée(s)</h3>
+        ${plan.requested ? `<button data-act="pushConfirm" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-error text-on-error hover:opacity-90 font-title-md shadow-md"><span class="material-symbols-outlined text-[20px]">warning</span>Confirmer l'écriture (${plan.requested})</button>` : ''}</div>
+      ${warn}
+      ${plan.requested ? `<div class="overflow-x-auto"><table class="w-full text-left text-body-sm border-collapse"><thead><tr class="bg-surface-container font-label-mono-sm uppercase tracking-wider text-secondary"><th class="p-2">Action</th><th class="p-2">Type</th><th class="p-2">Période</th><th class="p-2">Code</th><th class="p-2 text-right">ASTECH</th><th class="p-2 text-right">INSEE</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>` : '<div class="font-body-sm text-on-surface-variant">Rien à pousser pour ce périmètre.</div>'}
+    </div>`;
+  }
+  if (res) {
+    const errs = res.errors || [];
+    panel += `<div class="mt-space-lg border-t border-surface-container pt-space-lg">
+      <h3 class="font-title-md ${errs.length ? 'text-amber-700' : 'text-emerald-700'}">${res.applied} écriture(s) appliquée(s)${errs.length ? ' — ' + errs.length + ' erreur(s)' : ''} sur <b>${esc((res.env || '').toUpperCase())}</b></h3>
+      ${errs.length ? `<div class="bg-error-container/40 border border-error/30 text-on-error-container p-space-sm rounded font-body-sm mt-2">${errs.map(e => esc(e.an + ' T' + e.trim + ' : ' + e.error)).join('<br>')}</div>` : ''}
+      <div class="font-label-mono-sm text-secondary mt-1">Journal : ${esc(res.journalFile || '(mémoire)')}</div>
+    </div>`;
+  }
+  return `<div class="p-space-lg border-t border-surface-container bg-surface-container-low/40">
+    <div class="flex flex-wrap items-center justify-between gap-space-sm">
+      <div class="flex flex-wrap items-center gap-space-sm">${writeNote}${scopeSel}</div>
+      ${btn}
+    </div>
+    ${panel}
+  </div>`;
 }
 async function viewIndices() {
   const s = state.indices;
@@ -1046,7 +1189,7 @@ async function viewIndices() {
         <div class="flex items-center gap-space-sm"><span class="px-2 py-0.5 rounded bg-surface-container font-label-mono-sm text-primary font-semibold">TABLE: ASTECHIVR.INDICEINSEE</span>
           <span class="inline-flex items-center gap-1 font-label-mono-sm text-secondary"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Source : INSEE BDM (bdm.insee.fr, accès libre)</span></div>
         <h1 class="font-headline-lg text-on-surface tracking-tight">Indices INSEE &amp; Indexations Locatives</h1>
-        <p class="font-body-md text-on-surface-variant max-w-3xl">Séries officielles (IRL, ILAT, ICC, ILC) du référentiel Oracle ASTECH, confrontées aux dernières publications INSEE. Application en lecture seule : les propositions ne sont pas écrites en base.</p>
+        <p class="font-body-md text-on-surface-variant max-w-3xl">Séries officielles (IRL, ILAT, ICC, ILC) du référentiel Oracle ASTECH, confrontées aux dernières publications INSEE. ${APP.writeEnabled ? "Le bouton « Pousser dans ASTECH » prépare un aperçu, puis écrit en base après confirmation explicite." : "Application en lecture seule : les propositions ne sont pas écrites en base."}</p>
       </div>
       ${verifBtn}
     </div>
@@ -1081,6 +1224,256 @@ async function runIndicesVerif() {
   catch (e) { s.error = e.message; }
   finally { s.loading = false; await viewIndices(); }
 }
+async function runPush(confirmProd) {
+  const s = state.indices;
+  s.error = null;
+  const env = DB_ENV_SEL || APP.active;
+  if (confirmProd && env === 'prod') {
+    if (!window.confirm('ÉCRIRE DANS LA BASE DE PRODUCTION ?\n\nCette action modifie le référentiel INDICEINSEE en production. Confirmer ?')) return;
+  }
+  s.pushing = true; await viewIndices();
+  try {
+    const body = { dryRun: !confirmProd, scope: s.pushScope };
+    if (confirmProd) body.confirm = env === 'prod' ? 'PROD' : undefined;
+    const r = await api('/api/indices/pousser', { method: 'POST', body });
+    if (confirmProd) { s.plan = null; s.pushResult = r; s.verif = null; }
+    else { s.plan = r; s.pushResult = null; }
+  } catch (e) { s.error = e.message; }
+  finally { s.pushing = false; await viewIndices(); }
+}
+
+/* ═══════════════════════════ CLÉS API ═══════════════════════════ */
+const API_SCOPES = [
+  { id: 'referentiels', label: 'Référentiels — API v1 (lecture)' },
+  { id: '*', label: 'Tous les droits' },
+];
+const API_GETTING_STARTED = (origin) => [
+  ['Authentification', 'En-tête « X-API-Key: <clé> » ou « Authorization: Bearer <clé> »'],
+  ['Découverte', `GET ${origin}/api/v1`],
+  ['Lister les référentiels', `GET ${origin}/api/v1/referentiels`],
+  ['Données d\u2019un référentiel', `GET ${origin}/api/v1/referentiels/biens?q=&limit=100&offset=0&total=1`],
+  ['Fiche', `GET ${origin}/api/v1/referentiels/biens/:id`],
+];
+async function viewApiKeys() {
+  const s = state.apikeys;
+  const cfg = await api('/api/config');
+
+  if (!s.adminToken) {
+    view.innerHTML = `
+      ${breadcrumb([{ label: 'Accueil' }, { label: 'Clés API' }])}
+      <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight mt-1 mb-1">Clés API</h1>
+      <p class="font-body-md text-body-md text-secondary mb-6">Créez et révoquez les clés d'accès en lecture à l'API (<span class="font-mono">/api/v1</span>).</p>
+      ${!cfg.apiKeysEnabled
+        ? `<div class="p-space-lg rounded-xl bg-error-container/40 border border-error/30 text-on-error-container font-body-sm">Gestion des clés désactivée : définissez <span class="font-mono">ASTECH_ADMIN_TOKEN</span> côté serveur (fichier .env), puis redémarrez.</div>`
+        : `<div class="max-w-lg bg-surface-container-lowest rounded-xl shadow-sm p-space-lg flex flex-col gap-space-md">
+            <div class="p-space-md rounded-lg bg-surface-container-low flex items-start gap-2">
+              <span class="material-symbols-outlined text-[20px] text-primary">key</span>
+              <div class="font-body-sm text-on-surface-variant">Saisissez le <span class="font-semibold text-on-surface">jeton administrateur</span> (<span class="font-mono">ASTECH_ADMIN_TOKEN</span>) pour gérer les clés. Il est conservé localement dans ce navigateur.</div>
+            </div>
+            <div>
+              <label class="font-label-mono-sm text-secondary uppercase">Jeton administrateur</label>
+              <input id="apikeysTokenInput" type="password" autocomplete="off" class="mt-1 w-full h-10 px-3 rounded-lg bg-surface-container-low focus:outline-none" placeholder="••••••••" />
+            </div>
+            <button data-act="apikeysToken" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary font-title-md hover:bg-primary shadow-md"><span class="material-symbols-outlined text-[18px]">lock_open</span>Déverrouiller</button>
+          </div>`}
+      ${s.error ? `<div class="mt-space-lg p-space-md rounded-xl bg-error-container/40 border border-error/30 text-on-error-container font-body-sm">${esc(s.error)}</div>` : ''}`;
+    return;
+  }
+
+  if (s.keys === null && !s.loading) {
+    s.loading = true; s.error = null;
+    try { const r = await api('/api/admin/keys', { headers: adminHeaders() }); s.keys = r.keys || []; }
+    catch (e) { s.error = e.message; s.keys = []; }
+    finally { s.loading = false; }
+  }
+  const keys = s.keys || [];
+  const created = s.created;
+
+  const cols = [
+    { label: 'Nom', get: r => `<div class="font-title-sm text-on-surface">${esc(r.name)}</div><div class="font-label-mono-sm text-secondary">${esc(r.id)}</div>` },
+    { label: 'Clé', get: r => cellMono(r.prefix, 'text-secondary') },
+    { label: 'Droits', get: r => (r.scopes || []).map(sc => badge(sc, sc === '*' ? 'purple' : 'blue')).join(' ') },
+    { label: 'Source', center: true, get: r => badge(r.source === 'env' ? '.env' : 'fichier', r.source === 'env' ? 'amber' : 'slate') },
+    { label: 'Créée', get: r => r.createdAt ? cellMono(r.createdAt.slice(0, 16).replace('T', ' '), 'text-secondary') : dash },
+    { label: 'Dernier usage', get: r => r.lastUsedAt ? cellMono(r.lastUsedAt.slice(0, 16).replace('T', ' '), 'text-secondary') : dash },
+    { label: 'Statut', center: true, get: r => r.revokedAt ? badge('révoquée', 'red') : badge('active', 'green') },
+    { label: 'Action', center: true, get: r => (r.revokedAt || r.source === 'env') ? dash : `<button data-act="apikeysRevoke:${esc(r.id)}" class="px-2.5 py-1 rounded bg-error-container text-on-error-container font-label-mono-sm hover:bg-error hover:text-on-error">Révoquer</button>` },
+  ];
+  const scopeChecks = API_SCOPES.map(sc => `<label class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-container-low cursor-pointer font-label-mono-sm"><input type="checkbox" data-scope="${esc(sc.id)}" class="w-4 h-4 accent-[#2563eb]" ${sc.id === 'referentiels' ? 'checked' : ''}/>${esc(sc.label)}</label>`).join('');
+  const createForm = `
+    <div class="p-space-lg flex flex-col gap-space-md">
+      <div>
+        <label class="font-label-mono-sm text-secondary uppercase">Nom</label>
+        <input id="apikeysName" type="text" placeholder="Studio-RH, partenaire…" class="mt-1 w-full h-10 px-3 rounded-lg bg-surface-container-low focus:outline-none" />
+      </div>
+      <div>
+        <label class="font-label-mono-sm text-secondary uppercase">Droits (lecture)</label>
+        <div class="mt-1 flex flex-col gap-2">${scopeChecks}</div>
+      </div>
+      <button data-act="apikeysCreate" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary font-title-md hover:bg-primary shadow-md"><span class="material-symbols-outlined text-[18px]">add</span>Créer la clé</button>
+    </div>`;
+  const createdBox = created ? `
+    <div class="p-space-lg rounded-xl bg-emerald-50 border border-emerald-200 mb-space-lg">
+      <div class="flex items-start justify-between gap-space-md">
+        <div>
+          <div class="font-title-md font-bold text-emerald-900">Clé créée — copiez-la maintenant</div>
+          <p class="font-body-sm text-emerald-800 mt-0.5">La valeur en clair n'est affichée qu'une seule fois.</p>
+        </div>
+        <button data-act="apikeysDismiss" class="px-2.5 py-1 rounded bg-white/70 border border-emerald-200 text-emerald-900 font-label-mono-sm hover:bg-white">Fermer</button>
+      </div>
+      <div class="mt-space-md flex flex-wrap items-center gap-2">
+        <code class="flex-1 min-w-[260px] px-3 py-2 rounded bg-white border border-emerald-200 font-label-mono-sm break-all">${esc(created.key)}</code>
+        <button data-act="apikeysCopy" class="px-3 py-2 rounded-lg bg-emerald-600 text-white font-title-md hover:bg-emerald-700">${s.copied ? 'Copié ✓' : 'Copier'}</button>
+      </div>
+      <p class="font-label-mono-sm text-emerald-800 mt-2 break-all">Exemple : <span class="font-mono">curl -H "X-API-Key: ${esc(created.key)}" ${esc(location.origin)}/api/v1/referentiels</span></p>
+    </div>` : '';
+  const guide = API_GETTING_STARTED(location.origin)
+    .map(([k, v]) => `<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 py-1.5 border-b border-surface-container-low last:border-0"><span class="font-label-mono-sm text-secondary uppercase">${esc(k)}</span><span class="font-label-mono-sm text-on-surface break-all">${esc(v)}</span></div>`).join('');
+
+  view.innerHTML = `
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Clés API' }])}
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md mb-space-lg">
+      <div>
+        <span class="font-label-mono-sm px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-semibold uppercase tracking-wider">Accès API en lecture</span>
+        <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight mt-1">Clés API</h1>
+        <p class="font-body-md text-body-md text-secondary">Créez, consultez et révoquez les clés donnant accès en lecture aux données (API <span class="font-mono">/api/v1</span>).</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button data-act="apikeysRefresh" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-container-lowest shadow-sm font-title-md hover:bg-surface-container"><span class="material-symbols-outlined text-[18px]">refresh</span>Rafraîchir</button>
+        <button data-act="apikeysForget" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-container-lowest shadow-sm font-title-md hover:bg-surface-container"><span class="material-symbols-outlined text-[18px]">lock</span>Verrouiller</button>
+      </div>
+    </div>
+    ${createdBox}
+    ${s.error ? `<div class="p-space-md rounded-xl bg-error-container/40 border border-error/30 text-on-error-container font-body-sm mb-space-lg">${esc(s.error)}</div>` : ''}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-space-lg">
+      <div class="lg:col-span-2">${card('Clés existantes (' + num(keys.length) + ')', dataTable(cols, keys, { empty: 'Aucune clé.' }))}</div>
+      <div>${card('Nouvelle clé', createForm, null, 'Clé en lecture seule — la valeur n\u2019est affichée qu\u2019une fois.')}</div>
+    </div>
+    <div class="mt-space-lg">${card('Utiliser l\u2019API', `<div class="p-space-lg">${guide}</div>`)}</div>`;
+}
+async function runCreateKey() {
+  const s = state.apikeys;
+  const nameEl = document.getElementById('apikeysName');
+  const name = nameEl ? nameEl.value.trim() : '';
+  if (!name) { s.error = 'Le nom de la clé est obligatoire.'; return viewApiKeys(); }
+  const scopes = Array.from(document.querySelectorAll('input[data-scope]:checked')).map((el) => el.getAttribute('data-scope'));
+  if (!scopes.length) { s.error = 'Sélectionnez au moins un droit.'; return viewApiKeys(); }
+  s.error = null; s.created = null; s.copied = false;
+  try {
+    const r = await api('/api/admin/keys', { method: 'POST', headers: adminHeaders(), body: { name, scopes } });
+    s.created = r; s.keys = null;
+  } catch (e) { s.error = e.message; }
+  await viewApiKeys();
+}
+async function runRevokeKey(id) {
+  if (!id) return;
+  if (!window.confirm('Révoquer définitivement la clé « ' + id + ' » ?\n\nLes clients qui l\'utilisent perdront l\'accès.')) return;
+  const s = state.apikeys;
+  s.error = null;
+  try { await api('/api/admin/keys/' + encodeURIComponent(id), { method: 'DELETE', headers: adminHeaders() }); s.keys = null; }
+  catch (e) { s.error = e.message; }
+  await viewApiKeys();
+}
+
+/* ═══════════════════════════ CLÉS API ═══════════════════════════ */
+function apikeyScopeBadges(scopes) {
+  return (scopes || []).map(s => badge(s === '*' ? 'tous' : s, 'slate')).join(' ') || dash;
+}
+async function viewApiKeys() {
+  const ap = state.apikeys;
+  if (!ap.adminToken) {
+    view.innerHTML = `
+      ${breadcrumb([{ label: 'Accueil' }, { label: 'Clés API' }])}
+      <div class="max-w-xl mx-auto bg-surface-container-lowest rounded-xl shadow-sm p-space-lg mt-space-lg">
+        <div class="flex items-center gap-2 mb-space-sm"><span class="material-symbols-outlined text-primary text-[24px]">key</span><h1 class="font-headline-md text-on-surface">Administration des clés d'API</h1></div>
+        <p class="font-body-sm text-on-surface-variant mb-space-md">Saisissez le jeton administrateur (variable <span class="font-mono">ASTECH_ADMIN_TOKEN</span> côté serveur). Il est conservé uniquement dans votre navigateur.</p>
+        <div class="flex items-center gap-space-sm">
+          <input id="apikeysTokenInput" type="password" autocomplete="off" placeholder="Jeton administrateur" class="flex-1 h-10 px-3 rounded-lg bg-surface-container-low border border-surface-container-high focus:outline-none focus:border-primary"/>
+          <button data-act="apikeysToken" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title-md shadow-md transition-all"><span class="material-symbols-outlined text-[18px]">login</span>Se connecter</button>
+        </div>
+      </div>`;
+    return;
+  }
+  if (ap.error) {
+    view.innerHTML = `${breadcrumb([{ label: 'Accueil' }, { label: 'Clés API' }])}
+      <div class="bg-error-container/40 border border-error/30 text-on-error-container p-space-lg rounded-xl font-body-sm mb-space-lg">${esc(ap.error)}</div>
+      <button data-act="apikeysForget" class="text-primary font-title-sm hover:underline">Changer de jeton administrateur</button>`;
+    return;
+  }
+  if (!ap.keys) {
+    view.innerHTML = `<div class="p-space-xl text-center text-on-surface-variant font-body-sm"><span class="material-symbols-outlined align-middle animate-spin mr-2">progress_activity</span>Chargement des clés…</div>`;
+    try { ap.keys = await api('/api/admin/keys', { headers: adminHeaders() }); }
+    catch (e) { ap.error = e.message; return viewApiKeys(); }
+  }
+  const keys = ap.keys.keys || [];
+  const created = ap.created;
+  const createdBox = created ? `
+    <div class="bg-emerald-50 border border-emerald-200 text-emerald-900 p-space-md rounded-xl mb-space-lg">
+      <div class="flex items-center justify-between gap-space-sm mb-1"><b class="font-title-md">Clé créée — à copier maintenant</b>
+        <button data-act="apikeysDismiss" class="text-emerald-800 hover:underline font-title-sm">Masquer</button></div>
+      <p class="font-body-sm mb-2">Elle ne sera plus jamais affichée. Reportez-la dans <span class="font-mono">ASTECH_API_KEYS</span> (fichier .env) pour la rendre durable.</p>
+      <div class="flex items-center gap-space-sm">
+        <code class="flex-1 font-label-mono-md bg-white/70 px-2 py-1.5 rounded border border-emerald-200 break-all">${esc(created.key)}</code>
+        <button data-act="apikeysCopy" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 font-title-sm"><span class="material-symbols-outlined text-[18px]">${ap.copied ? 'check' : 'content_copy'}</span>${ap.copied ? 'Copié' : 'Copier'}</button>
+      </div>
+    </div>` : '';
+  const rowsHtml = keys.length ? keys.map(k => `<tr class="border-t border-surface-container">
+      <td class="p-2 font-title-sm text-on-surface">${esc(k.name)}</td>
+      <td class="p-2 font-label-mono-sm text-secondary">${esc(k.prefix)}</td>
+      <td class="p-2">${apikeyScopeBadges(k.scopes)}</td>
+      <td class="p-2">${badge(k.source === 'env' ? 'Env' : 'Fichier', 'slate')}</td>
+      <td class="p-2 font-label-mono-sm text-secondary">${esc(k.lastUsedAt ? new Date(k.lastUsedAt).toLocaleString('fr-FR') : '—')}</td>
+      <td class="p-2 text-right">${k.revokedAt ? badge('Révoquée', 'red') : `<button data-act="apikeysRevoke:${esc(k.id)}" class="text-error font-title-sm hover:underline">Révoquer</button>`}</td>
+    </tr>`).join('') : '';
+  view.innerHTML = `
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Clés API' }, { label: 'Lecture seule' }])}
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md bg-surface-container-lowest p-space-lg rounded-xl shadow-sm mb-space-lg">
+      <div class="space-y-1">
+        <div class="flex items-center gap-space-sm"><span class="px-2 py-0.5 rounded bg-surface-container font-label-mono-sm text-primary font-semibold">API /api/v1/referentiels</span>
+          <span class="inline-flex items-center gap-1 font-label-mono-sm text-secondary"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Accès lecture seule par clé</span></div>
+        <h1 class="font-headline-lg text-on-surface tracking-tight">Clés d'API</h1>
+        <p class="font-body-md text-on-surface-variant max-w-3xl">Générez des clés pour l'API référentiels. Les clés sont stockées hachées (SHA-256) ; la valeur en clair n'est affichée qu'à la création.</p>
+      </div>
+      <div class="flex items-center gap-space-sm">
+        <button data-act="apikeysRefresh" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high font-title-sm"><span class="material-symbols-outlined text-[18px]">refresh</span>Rafraîchir</button>
+        <button data-act="apikeysForget" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-secondary hover:text-on-surface font-title-sm"><span class="material-symbols-outlined text-[18px]">logout</span>Oublier le jeton</button>
+      </div>
+    </div>
+    ${createdBox}
+    <div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg mb-space-lg">
+      <h2 class="font-title-md text-on-surface mb-space-sm">Nouvelle clé</h2>
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-end gap-space-sm">
+        <label class="flex-1"><span class="font-label-mono-sm text-secondary">Nom</span>
+          <input data-act="apikeysFormName" value="${esc(ap.form.name)}" placeholder="Studio-RH, Reporting..." class="w-full h-10 px-3 mt-1 rounded-lg bg-surface-container-low border border-surface-container-high focus:outline-none focus:border-primary"/></label>
+        <button data-act="apikeysCreate" class="h-10 inline-flex items-center gap-2 px-4 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title-md shadow-md transition-all"><span class="material-symbols-outlined text-[18px]">add</span>Générer</button>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+      <div class="p-space-lg flex items-center justify-between bg-surface-container-low/50"><h2 class="font-headline-sm text-on-surface">Clés existantes</h2><span class="font-label-mono-sm text-secondary bg-surface-container px-2 py-0.5 rounded">${num(keys.length)}</span></div>
+      ${keys.length ? `<div class="overflow-x-auto"><table class="w-full text-left text-body-sm border-collapse"><thead><tr class="bg-surface-container font-label-mono-sm uppercase tracking-wider text-secondary"><th class="p-2">Nom</th><th class="p-2">Préfixe</th><th class="p-2">Droits</th><th class="p-2">Source</th><th class="p-2">Dernier usage</th><th class="p-2 text-right">Action</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>`
+        : `<div class="p-space-lg font-body-sm text-on-surface-variant">Aucune clé. Générez-en une ci-dessus.</div>`}
+    </div>`;
+}
+async function runCreateKey() {
+  const ap = state.apikeys;
+  const name = (ap.form.name || '').trim();
+  if (!name) { ap.error = 'Le nom de la clé est obligatoire.'; return viewApiKeys(); }
+  ap.error = null;
+  try {
+    const r = await api('/api/admin/keys', { method: 'POST', headers: adminHeaders(), body: { name, scopes: ['referentiels'] } });
+    ap.created = r; ap.copied = false; ap.keys = null; ap.form.name = '';
+  } catch (e) { ap.error = e.message; }
+  viewApiKeys();
+}
+async function runRevokeKey(id) {
+  const ap = state.apikeys;
+  const k = (ap.keys && ap.keys.keys || []).find(x => x.id === id);
+  if (!window.confirm('Révoquer la clé « ' + ((k && k.name) || id) + ' » ? Cette action est immédiate et définitive.')) return;
+  ap.error = null;
+  try { await api('/api/admin/keys/' + encodeURIComponent(id), { method: 'DELETE', headers: adminHeaders() }); ap.keys = null; }
+  catch (e) { ap.error = e.message; }
+  viewApiKeys();
+}
 
 /* ═══════════════════════════ Drawer & events ═══════════════════════════ */
 function openDrawer(html) { drawerPanel.innerHTML = html; drawer.classList.remove('hidden'); }
@@ -1091,6 +1484,7 @@ document.addEventListener('click', (e) => {
   if (link) { if (e.target.closest('a[href]') && !link.hasAttribute('data-link')) return; e.preventDefault(); go(link.getAttribute('data-link')); return; }
   const act = e.target.closest('[data-act]');
   if (!act) return;
+  if (act.matches('input[type=checkbox]')) return; // géré par l'événement change
   const [action, value] = act.getAttribute('data-act').split(':');
   handleAction(action, value, act);
 });
@@ -1108,8 +1502,23 @@ function handleAction(action, value, el) {
     case 'agentService': a.service = el.value; a.page = 1; viewAgents(); break;
     case 'agentRole': a.role = el.value; a.page = 1; viewAgents(); break;
     case 'syncRun': runSyncRh(); break;
-    case 'syncScope': state.synchro.scope = el.value; state.synchro.result = null; viewSynchro(); break;
+    case 'syncScope': state.synchro.scope = el.value; state.synchro.result = null; state.synchro.selected = null; state.synchro.desact = { plan: null, result: null, busy: false, error: null }; viewSynchro(); break;
     case 'syncTab': state.synchro.tab = value; viewSynchro(); break;
+    case 'syncSelect': {
+      const sc = state.synchro;
+      if (!sc.selected) sc.selected = new Set();
+      if (el.checked) sc.selected.add(value); else sc.selected.delete(value);
+      viewSynchro(); break;
+    }
+    case 'syncSelectAll': {
+      const sc = state.synchro; const rows = (sc.result && sc.result.orphelins_astech) || [];
+      const all = rows.map(r => String(r.matricule));
+      const allOn = sc.selected && all.length && all.every(m => sc.selected.has(m));
+      sc.selected = allOn ? new Set() : new Set(all);
+      viewSynchro(); break;
+    }
+    case 'syncSelectNone': state.synchro.selected = new Set(); viewSynchro(); break;
+    case 'syncDesactiver': runDesactiver(); break;
     case 'locTab': l.tab = value; viewLocatif(); break;
     case 'locMode': l.mode = value; viewLocatif(); break;
     case 'refType': state.refs.type = value; state.refs.genre = ''; state.q = ''; state.pages = {}; viewReferentiels(); break;
@@ -1129,6 +1538,39 @@ function handleAction(action, value, el) {
     case 'indType': ind.type = el.value; viewIndices(); break;
     case 'indAnnee': ind.annee = el.value; viewIndices(); break;
     case 'indicesVerif': runIndicesVerif(); break;
+    case 'pushScope': ind.pushScope = el.value; ind.plan = null; ind.pushResult = null; viewIndices(); break;
+    case 'pushDryRun': runPush(false); break;
+    case 'pushConfirm': runPush(true); break;
+    case 'apikeysToken': {
+      const ap = state.apikeys;
+      const input = document.getElementById('apikeysTokenInput');
+      ap.adminToken = input ? input.value.trim() : '';
+      try { localStorage.setItem('astechAdminToken', ap.adminToken); } catch (e) { /* ignore */ }
+      ap.keys = null; ap.error = null;
+      viewApiKeys(); break;
+    }
+    case 'apikeysForget':
+      state.apikeys.adminToken = '';
+      try { localStorage.removeItem('astechAdminToken'); } catch (e) { /* ignore */ }
+      state.apikeys.keys = null; state.apikeys.error = null; viewApiKeys(); break;
+    case 'apikeysRefresh': state.apikeys.keys = null; viewApiKeys(); break;
+    case 'apikeysFormName': state.apikeys.form.name = el.value; break;
+    case 'apikeysCreate': runCreateKey(); break;
+    case 'apikeysRevoke': runRevokeKey(value); break;
+    case 'apikeysDismiss': state.apikeys.created = null; viewApiKeys(); break;
+    case 'apikeysCopy': {
+      const ap = state.apikeys;
+      const val = (ap.created && ap.created.key) || '';
+      if (!val) break;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(val).then(() => { ap.copied = true; viewApiKeys(); }).catch(() => { /* ignore */ });
+      }
+      break;
+    }
+    case 'dbEnv':
+      DB_ENV_SEL = value; try { localStorage.setItem('astechEnv', value); } catch (e) { /* ignore */ }
+      state.indices.verif = null; state.indices.plan = null; state.indices.pushResult = null;
+      initEnvSwitch(); render(); break;
   }
 }
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); const s = $('#globalSearch'); if (s) s.focus(); } });
@@ -1142,6 +1584,7 @@ function wireGlobalSearch() {
 
 window.addEventListener('hashchange', render);
 wireGlobalSearch();
+initEnvSwitch();
 render();
 </script>
 </body>

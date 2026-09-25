@@ -14,6 +14,19 @@ services:
       ORACLE_ASTECH_SERVICE: "${ORACLE_ASTECH_SERVICE:-PIVRY01}"
       ORACLE_ASTECH_USER: "${ORACLE_ASTECH_USER:-ASTECHIVR}"
       ORACLE_ASTECH_PASSWORD: "${ORACLE_ASTECH_PASSWORD}"
+      # Base de TEST / recette (optionnelle). Renseigne-t-on les mêmes suffixes
+      # que la prod : ORACLE_ASTECH_TEST_HOST/PORT/SERVICE/USER/PASSWORD.
+      ORACLE_ASTECH_TEST_HOST: "${ORACLE_ASTECH_TEST_HOST:-}"
+      ORACLE_ASTECH_TEST_PORT: "${ORACLE_ASTECH_TEST_PORT:-1521}"
+      ORACLE_ASTECH_TEST_SERVICE: "${ORACLE_ASTECH_TEST_SERVICE:-}"
+      ORACLE_ASTECH_TEST_USER: "${ORACLE_ASTECH_TEST_USER:-}"
+      ORACLE_ASTECH_TEST_PASSWORD: "${ORACLE_ASTECH_TEST_PASSWORD:-}"
+      # Profil sélectionné par défaut au démarrage : prod ou test.
+      ASTECH_ENV: "${ASTECH_ENV:-prod}"
+      # Écritures (pousser les indices) : désactivées par défaut.
+      ASTECH_ALLOW_WRITES: "${ASTECH_ALLOW_WRITES:-0}"
+      # Journal des écritures d'indices (persisté via le volume).
+      ASTECH_JOURNAL_FILE: "/app/data/indices-journal.jsonl"
       # Source Studio-RH (optionnelle). Laisser vide tant que non fournie.
       STUDIO_RH_API_URL: "${STUDIO_RH_API_URL:-}"
       STUDIO_RH_API_KEY: "${STUDIO_RH_API_KEY:-}"

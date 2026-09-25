@@ -625,7 +625,29 @@ https://github.com/Crapoto94/astech), port **8099** :
   `tiers`=`FOURNISSEUR`, `services`=`SERVICE`, `groupes`=`GROUPEUTIL`.
 - **Interventions** : `INTERVENTIONS` (en cours) UNION `INTERVENTIONSTERMINEES`
   (clôturées) ; filtres par défaut sur 12 mois (`ADD_MONTHS(SYSDATE,-12)`).
-- **Indices** : `INDICEINSEE` (`INSEE_TYP` : 1=IRL, 2=ICC, 5=ILC, 6=ILAT).
+- **Indices** : `INDICEINSEE` (`INSEE_TYP` : 1=IRL, 2=ICC, 5=ILC, 6=ILAT ;
+  `INSEE_COD` = lettre+AA+TT : L/C/B/I). Confrontation à l'INSEE BDM
+  (`bdm.insee.fr`, séries 001515333=IRL, 000008630=ICC, 001532540=ILC,
+  001617112=ILAT). **Tolérance d'écart = 0** (tout écart non nul est signalé).
+  Pas de trigger ni d'unicité sur `(TYP,AN,TRIM)` ; PK `INSEE_ID` (ni séquence
+  ni identity → `SEQ_INDICEINSEE` créée à la demande, repli `MAX+1`).
+  FK entrantes : `CONTRAT_LOCATIF.CONTL_INSEEDEP`, `CONTRAT_REVISION.CONTRV_INSEE`
+  / `CONTRV_INSEEP`, `CONTRAT.CONT_INSEEDEP`, `CONTRAT_LOC.CONTL_INSEE`.
+- **Profils base prod/test** : le serveur monte un pool par profil. Le profil
+  actif est choisi par requête via l'en-tête `X-ASTECH-Env: test` ou `?env=test`
+  (défaut = `ASTECH_ENV`). Profils définis par `ORACLE_ASTECH_*` (prod) et
+  `ORACLE_ASTECH_TEST_*` (test), ou `config.json` (`oracle_test`). Endpoint
+  `/api/env`. Le front a un sélecteur PROD/TEST (en-tête mémorisé).
+- **Pousser les indices** : `POST /api/indices/pousser` `{ scope, dryRun, confirm }`
+  (`scope` = `manquants` \| `ecarts` \| `les_deux`). `dryRun:true` (défaut) =
+  aperçu ; écriture réelle seulement si `ASTECH_ALLOW_WRITES=1` et, en prod,
+  `confirm:"PROD"`. INSERT : `INSEE_ID` généré, `TAUXMOYEN=0`, `MOIS=0` ;
+  UPDATE : sur `INSEE_ID` uniquement. Journal JSONL (`ASTECH_JOURNAL_FILE`),
+  `create` sur `SEQ_INDICEINSEE` best-effort. Doublons `(TYP,AN,TRIM)`
+  **signalés, jamais corrigés automatiquement** (ex. ILC 2025 : ID 392 trim 3 et
+  ID 402 « TRIM 04 » stocké trim 3).
+  ⚠️ Modifier `INSEE_TAUX` d'un indice référencé change `F_CALCUL_REVIS` et les
+  rapports `RPT7342_*` ; tester d'abord sur la base de test.
 - **Docker Linux** : `Dockerfile` (base Oracle Linux 8 + `oracle-instantclient-basic`
   + Node 20) et `docker-compose.yml` ; voir README pour les variables d'env.
 - Recherche via `UPPER(...) LIKE :q` (bind), `FETCH FIRST n ROWS ONLY`,
