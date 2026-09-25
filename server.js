@@ -889,7 +889,8 @@ async function refCounts() {
 // n° de série = ARB_SERIE). Données d'atelier, états, certificat, CT et
 // propriétaire proviennent de la vue V_PARC_COMSMA (pivot sur ARBO_MATE,
 // ARBO_NRJ (compteurs), ARBO_AFFP (affectation), PATRI_FORM (formulaire parc)).
-const PARC_SELECT = `SELECT * FROM V_PARC_COMSMA WHERE CATEGORIE='GVEH'`;
+const PARC_TABLE = `V_PARC_COMSMA`;
+const PARC_FILTER = `CATEGORIE='GVEH'`;
 
 async function listParc(f = {}) {
   const binds = {};
@@ -904,13 +905,13 @@ async function listParc(f = {}) {
   const rows = await exec(`SELECT ID_BIEN AS id, DES_BIEN AS des, IMMAT AS immat, MARQUE AS marque, MODELE AS modele,
       ANNEE AS annee, SERVICE AS service, COMPTEUR AS compteur, NO_SERIE AS no_serie, NO_INVENTAIRE AS no_inventaire,
       ETAT_GENERAL AS etat_general, VALEUR_COMPTABLE AS valeur_comptable, VALEUR_ESTIMEE AS valeur_estimee
-    FROM ${PARC_SELECT} ${where} ORDER BY DES_BIEN OFFSET ${offset} ROWS FETCH NEXT ${pageSize} ROWS ONLY`, binds, pageSize);
-  const [tot] = await exec(`SELECT COUNT(*) AS total FROM ${PARC_SELECT} ${where}`, binds, 1);
+    FROM ${PARC_TABLE} ${where} ORDER BY DES_BIEN OFFSET ${offset} ROWS FETCH NEXT ${pageSize} ROWS ONLY`, binds, pageSize);
+  const [tot] = await exec(`SELECT COUNT(*) AS total FROM ${PARC_TABLE} ${where}`, binds, 1);
   return { rows, total: Number(tot.total), page, pageSize };
 }
 
 async function getParcVehicule(id) {
-  const [v] = await exec(`SELECT * FROM ${PARC_SELECT} WHERE ID_BIEN = :id`, { id: Number(id) }, 1);
+  const [v] = await exec(`SELECT * FROM ${PARC_TABLE} WHERE ${PARC_FILTER} AND ID_BIEN = :id`, { id: Number(id) }, 1);
   if (!v) return null;
   const [arbo] = await exec(`SELECT A.ARB_ID AS id, A.ARB_CODE AS code, A.ARB_DES AS des, A.ARB_REF AS immat,
       A.ARB_SERIE AS no_serie, A.ARB_SCAT AS sous_cat, SS.SSCAT_DES AS sous_cat_des, A.ARB_SSERV AS sserv,
@@ -937,16 +938,16 @@ async function getParcVehicule(id) {
 async function parcStats() {
   const [r] = await exec(`SELECT COUNT(*) AS total,
       COUNT(COMPTEUR) AS avec_compteur, COUNT(MARQUE) AS avec_marque, COUNT(SERVICE) AS avec_service
-    FROM ${PARC_SELECT}`, {}, 1);
-  const par_service = await exec(`SELECT NVL(SERVICE,'(non affecté)') AS service, COUNT(*) AS n FROM ${PARC_SELECT}
-    GROUP BY SERVICE ORDER BY n DESC FETCH FIRST 20 ROWS ONLY`, {}, 50);
-  const par_marque = await exec(`SELECT NVL(MARQUE,'(non renseigné)') AS marque, COUNT(*) AS n FROM ${PARC_SELECT}
-    GROUP BY MARQUE ORDER BY n DESC FETCH FIRST 20 ROWS ONLY`, {}, 50);
-  const par_annee = await exec(`SELECT ANNEE AS annee, COUNT(*) AS n FROM ${PARC_SELECT}
-    WHERE ANNEE IS NOT NULL GROUP BY ANNEE ORDER BY ANNEE DESC FETCH FIRST 30 ROWS ONLY`, {}, 50);
-  const par_etat = await exec(`SELECT NVL(ETAT_GENERAL,'(non évalué)') AS etat, COUNT(*) AS n FROM ${PARC_SELECT}
-    GROUP BY ETAT_GENERAL ORDER BY n DESC FETCH FIRST 20 ROWS ONLY`, {}, 50);
-  const services = await exec(`SELECT DISTINCT SERVICE FROM ${PARC_SELECT} WHERE SERVICE IS NOT NULL ORDER BY SERVICE`, {}, 200);
+    FROM ${PARC_TABLE} WHERE ${PARC_FILTER}`, {}, 1);
+  const par_service = await exec(`SELECT NVL(SERVICE,'(non affecté)') AS service, COUNT(*) AS n FROM ${PARC_TABLE}
+    WHERE ${PARC_FILTER} GROUP BY SERVICE ORDER BY n DESC FETCH FIRST 20 ROWS ONLY`, {}, 50);
+  const par_marque = await exec(`SELECT NVL(MARQUE,'(non renseigné)') AS marque, COUNT(*) AS n FROM ${PARC_TABLE}
+    WHERE ${PARC_FILTER} GROUP BY MARQUE ORDER BY n DESC FETCH FIRST 20 ROWS ONLY`, {}, 50);
+  const par_annee = await exec(`SELECT ANNEE AS annee, COUNT(*) AS n FROM ${PARC_TABLE}
+    WHERE ${PARC_FILTER} AND ANNEE IS NOT NULL GROUP BY ANNEE ORDER BY ANNEE DESC FETCH FIRST 30 ROWS ONLY`, {}, 50);
+  const par_etat = await exec(`SELECT NVL(ETAT_GENERAL,'(non évalué)') AS etat, COUNT(*) AS n FROM ${PARC_TABLE}
+    WHERE ${PARC_FILTER} GROUP BY ETAT_GENERAL ORDER BY n DESC FETCH FIRST 20 ROWS ONLY`, {}, 50);
+  const services = await exec(`SELECT DISTINCT SERVICE FROM ${PARC_TABLE} WHERE ${PARC_FILTER} AND SERVICE IS NOT NULL ORDER BY SERVICE`, {}, 200);
   return {
     total: Number(r.total), avec_compteur: Number(r.avec_compteur || 0),
     avec_marque: Number(r.avec_marque || 0), avec_service: Number(r.avec_service || 0),
