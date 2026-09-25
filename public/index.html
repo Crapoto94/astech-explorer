@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ASTECH Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "tertiary-fixed": "#eaddff", "on-primary-fixed": "#001551", "inverse-on-surface": "#eaf1ff",
+        "on-secondary-container": "#5c647a", "surface-container-highest": "#d3e4fe", "inverse-surface": "#213145",
+        "secondary-container": "#dae2fd", "on-error": "#ffffff", "outline-variant": "#c4c5d7", "secondary-fixed": "#dae2fd",
+        background: "#f8f9ff", secondary: "#565e74", "primary-container": "#1d4ed8", "primary-fixed": "#dce1ff",
+        "on-tertiary-fixed": "#25005a", "error-container": "#ffdad6", "on-secondary-fixed": "#131b2e", "surface-dim": "#cbdbf5",
+        surface: "#f8f9ff", "on-tertiary-fixed-variant": "#5a00c6", "on-tertiary": "#ffffff", "on-primary-fixed-variant": "#0039b5",
+        "primary-fixed-dim": "#b7c4ff", "on-error-container": "#93000a", "on-tertiary-container": "#dfccff",
+        "surface-container-lowest": "#ffffff", outline: "#747686", "surface-tint": "#2151da", tertiary: "#5700c0",
+        "tertiary-fixed-dim": "#d2bbff", "on-secondary-fixed-variant": "#3f465c", "on-secondary": "#ffffff",
+        "tertiary-container": "#712ae2", "surface-container": "#e5eeff", "on-primary": "#ffffff", "on-surface": "#0b1c30",
+        "secondary-fixed-dim": "#bec6e0", primary: "#0037b0", "on-background": "#0b1c30", "surface-bright": "#f8f9ff",
+        "inverse-primary": "#b7c4ff", "surface-container-high": "#dce9ff", "on-surface-variant": "#434655",
+        "surface-variant": "#d3e4fe", error: "#ba1a1a", "surface-container-low": "#eff4ff", "on-primary-container": "#cad3ff"
+      },
+      borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+      spacing: { "space-md": "0.75rem", gutter: "1rem", "space-lg": "1rem", "space-xl": "1.5rem", "space-xs": "0.25rem", "space-sm": "0.5rem", "gutter-lg": "1.5rem", margin: "1.25rem" },
+      fontFamily: { "headline-sm": ["Inter"], "headline-md": ["Inter"], "headline-lg": ["Inter"], "label-mono-sm": ["JetBrains Mono"], "title-sm": ["Inter"], "body-md": ["Inter"], "label-mono-lg": ["JetBrains Mono"], "body-sm": ["Inter"], "title-md": ["Inter"], "body-lg": ["Inter"], "headline-xl": ["Inter"], "label-mono-md": ["JetBrains Mono"] },
+      fontSize: {
+        "headline-sm": ["1rem", { lineHeight: "1.5rem", fontWeight: "600" }],
+        "headline-md": ["1.25rem", { lineHeight: "1.75rem", fontWeight: "600" }],
+        "label-mono-sm": ["0.6875rem", { lineHeight: "0.875rem", fontWeight: "500" }],
+        "title-sm": ["0.75rem", { lineHeight: "1rem", fontWeight: "600" }],
+        "body-md": ["0.875rem", { lineHeight: "1.25rem", fontWeight: "400" }],
+        "label-mono-lg": ["0.875rem", { lineHeight: "1.25rem", fontWeight: "500" }],
+        "body-sm": ["0.8125rem", { lineHeight: "1.125rem", fontWeight: "400" }],
+        "headline-lg": ["1.5rem", { lineHeight: "2rem", fontWeight: "600" }],
+        "title-md": ["0.875rem", { lineHeight: "1.25rem", fontWeight: "600" }],
+        "body-lg": ["1rem", { lineHeight: "1.5rem", fontWeight: "400" }],
+        "headline-xl": ["2rem", { lineHeight: "2.5rem", fontWeight: "700" }],
+        "label-mono-md": ["0.75rem", { lineHeight: "1rem", fontWeight: "500" }]
+      }
+    }
+  }
+};
+</script>
+<style>
+  @layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+  .tabular { font-variant-numeric: tabular-nums; }
+  .clamp1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+</style>
+</head>
+<body class="bg-surface font-body-md text-on-surface antialiased min-h-screen flex flex-col">
+
+<!-- ═══════════ HEADER ═══════════ -->
+<header class="fixed top-0 w-full z-50 bg-[#0f172a] text-[#cbd5e1] border-b border-[#1e293b]">
+  <div class="h-28 w-full max-w-7xl mx-auto px-gutter-lg flex flex-col justify-between pt-2 pb-0">
+    <div class="flex items-center justify-between gap-space-lg w-full">
+      <div class="flex items-center gap-space-md">
+        <svg viewBox="0 0 40 40" class="h-8 w-8"><rect width="40" height="40" rx="8" fill="#1e293b"/><path d="M12 28L20 12L28 28" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M15 23H25" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round"/><circle cx="20" cy="12" r="2.5" fill="#60a5fa"/><path d="M28 22L32 28" stroke="#93c5fd" stroke-width="2" stroke-linecap="round"/></svg>
+        <div class="flex items-center gap-space-sm">
+          <span class="font-headline-md text-headline-md font-bold tracking-tight text-white">ASTECH Explorer</span>
+          <span class="hidden lg:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#1e293b] text-[#94a3b8] font-label-mono-sm text-label-mono-sm border border-[#334155]">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>Oracle 19c • PIVRY01
+          </span>
+        </div>
+      </div>
+      <div class="flex-1 max-w-lg hidden md:block mx-space-md">
+        <div class="relative flex items-center">
+          <span class="material-symbols-outlined absolute left-2.5 text-[#64748b] text-[18px]">search</span>
+          <input id="globalSearch" class="w-full h-8 pl-8 pr-12 rounded bg-[#1e293b] text-white placeholder-[#64748b] font-body-sm text-body-sm border border-[#334155] focus:outline-none focus:border-primary-container" placeholder="Rechercher agent, matricule, contrat, bien..." type="text"/>
+          <span class="absolute right-2 font-label-mono-sm text-label-mono-sm text-[#64748b] border border-[#334155] px-1 rounded">Entrée</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-space-md">
+        <span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-[#1e293b] text-[#94a3b8] font-label-mono-sm text-label-mono-sm border border-[#334155]">
+          <span class="material-symbols-outlined text-[15px]">lock</span>Lecture seule
+        </span>
+        <span id="studioPill" class="hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded bg-[#1e293b] text-[#94a3b8] font-label-mono-sm text-label-mono-sm border border-[#334155]" title="Source Studio-RH">
+          <span class="material-symbols-outlined text-[15px]">sync_problem</span>Studio-RH
+        </span>
+      </div>
+    </div>
+    <nav id="mainNav" class="flex items-center gap-space-lg overflow-x-auto whitespace-nowrap pt-1">
+      <a data-link="#/dashboard" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/dashboard">Tableau de bord</a>
+      <a data-link="#/agents" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/agents">Agents &amp; Comptes</a>
+      <a data-link="#/synchro" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/synchro">Synchro RH</a>
+      <a data-link="#/locatif" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/locatif">Gestion Locative</a>
+      <a data-link="#/referentiels" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/referentiels">Référentiels</a>
+      <a data-link="#/interventions" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/interventions">Interventions</a>
+      <a data-link="#/indices" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/indices">Indices</a>
+    </nav>
+  </div>
+</header>
+
+<main id="view" class="w-full max-w-7xl mx-auto px-gutter-lg pt-32 flex-1 bg-surface"></main>
+
+<!-- ═══════════ DRAWER ═══════════ -->
+<div id="drawer" class="hidden fixed inset-0 z-[60]">
+  <div class="absolute inset-0 bg-[#0f172a]/50 backdrop-blur-sm" onclick="closeDrawer()"></div>
+  <div id="drawerPanel" class="absolute right-0 top-0 h-full w-full max-w-[520px] bg-surface-container-lowest shadow-2xl overflow-y-auto"></div>
+</div>
+
+<footer class="w-full bg-[#0f172a] text-[#94a3b8] border-t border-[#1e293b] mt-space-xl">
+  <div class="max-w-7xl mx-auto px-gutter-lg py-space-md flex flex-col sm:flex-row items-center justify-between gap-space-sm font-label-mono-sm text-label-mono-sm">
+    <div>Proxy Oracle ASTECH • Schéma <span class="text-[#cbd5e1]">ASTECHIVR</span> • Port <span class="text-[#cbd5e1]">8099</span> • <span class="text-emerald-400">Thick mode actif</span> • <span class="text-emerald-400">SELECT uniquement</span></div>
+    <div>ASTECH Explorer v3.0.0 • <span id="footInfo">PIVRY01</span></div>
+  </div>
+</footer>
+
+<script>
+/* ═══════════════════════════ Helpers ═══════════════════════════ */
+const $ = (s) => document.querySelector(s);
+const view = $('#view');
+const drawer = $('#drawer');
+const drawerPanel = $('#drawerPanel');
+
+const esc = (v) => v === null || v === undefined ? '' : String(v).replace(/[<>&"']/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' }[c]));
+const num = (n) => (n === null || n === undefined || n === '' || isNaN(Number(n))) ? '' : new Intl.NumberFormat('fr-FR').format(Number(n));
+const money = (n) => (n === null || n === undefined || n === '' || isNaN(Number(n))) ? '' : new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(n));
+const dash = '<span class="text-outline">—</span>';
+const cell = (v) => (v === null || v === undefined || v === '') ? dash : esc(v);
+const cellMono = (v, cls) => (v === null || v === undefined || v === '') ? dash : `<span class="font-label-mono-sm text-label-mono-sm ${cls || 'text-on-surface'}">${esc(v)}</span>`;
+
+async function api(path) { const r = await fetch(path); let d; try { d = await r.json(); } catch { d = { error: 'Réponse invalide' }; } if (!r.ok) throw new Error(d.error || ('Erreur ' + r.status)); return d; }
+
+const ROLE_LETTERS = { U: 'Utilisateur', D: 'Demandeur', R: 'Affectataire', I: 'Intervenant', C: 'Conducteur', A: 'Usager', S: 'ATT' };
+const INTERV_TYPES = { PR: 'Préventif', RE: 'Réparation', EN: 'Entretien', CO: 'Contrôle', EV: 'Événement', SC: 'Sortie comptoir', SECU: 'Sécurité', MOBU: 'Maintenance', NID: 'Nettoyage', BANC: 'Bancs', CORB: 'Corbeilles', SIGN: 'Signalisation', SIGV: 'Signalisation verticale', BARRI: 'Barrières', NSTA: 'Non standard' };
+const INDICE_TYPES = { 1: 'IRL', 2: 'ICC', 5: 'ILC', 6: 'ILAT' };
+
+function badge(text, tone, icon) {
+  const tones = {
+    blue: 'bg-blue-100 text-blue-700', green: 'bg-emerald-100 text-emerald-800', amber: 'bg-amber-100 text-amber-800',
+    red: 'bg-error-container text-on-error-container', purple: 'bg-tertiary-fixed text-on-tertiary-fixed',
+    slate: 'bg-surface-container text-on-surface-variant', primary: 'bg-primary-fixed text-on-primary-fixed'
+  };
+  return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-label-mono-sm text-label-mono-sm font-semibold ${tones[tone] || tones.slate}">${icon ? `<span class="material-symbols-outlined text-[13px]">${icon}</span>` : ''}${esc(text)}</span>`;
+}
+function statusBadge(s) {
+  const map = { 'Planifiée': ['blue', 'event'], 'Émise': ['green', 'send'], 'Mandatée': ['purple', 'task_alt'], 'Échue (non émise)': ['amber', 'priority_high'] };
+  const [tone, icon] = map[s] || ['slate', ''];
+  return badge(s, tone, icon);
+}
+function roleBadges(roleapp) {
+  if (!roleapp) return dash;
+  return roleapp.split('').map(l => ROLE_LETTERS[l] ? `<span class="px-1.5 py-0.2 rounded bg-surface-container text-on-surface font-label-mono-sm text-label-mono-sm font-semibold" title="${ROLE_LETTERS[l]}">${l}</span>` : '').join(' ');
+}
+function typeBadge(nb) {
+  return Number(nb) > 0
+    ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-label-mono-sm text-label-mono-sm font-semibold"><span class="material-symbols-outlined text-[13px]">lock_open</span>Utilisateur</span>`
+    : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-mono-sm text-label-mono-sm"><span class="material-symbols-outlined text-[13px]">shield</span>Agent simple</span>`;
+}
+function indiceBadge(typ) { const t = INDICE_TYPES[typ] || ('T' + typ); const tone = typ == 1 ? 'blue' : typ == 2 ? 'amber' : typ == 5 ? 'green' : 'purple'; return badge(t, tone); }
+function intervBadge(etat) { return etat === 'En cours' ? badge('En cours', 'primary', 'pending') : badge('Clôturée', 'slate', 'check_circle'); }
+
+function kpi(label, value, sub, icon, tone) {
+  const tones = { primary: 'text-primary-container', error: 'text-error', tertiary: 'text-tertiary', plain: 'text-on-surface' };
+  return `<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+    <div class="flex items-center justify-between mb-space-sm">
+      <span class="font-title-sm text-title-sm text-secondary uppercase tracking-wider">${esc(label)}</span>
+      <div class="p-1.5 rounded-lg bg-surface-container ${tones[tone] || tones.plain}"><span class="material-symbols-outlined text-[18px]">${icon}</span></div>
+    </div>
+    <div class="flex items-baseline gap-2"><span class="font-headline-xl text-headline-xl ${tones[tone] || tones.plain} tabular">${value}</span></div>
+    ${sub ? `<div class="mt-space-sm text-on-surface-variant font-label-mono-sm text-label-mono-sm">${sub}</div>` : ''}
+  </div>`;
+}
+function card(title, body, actions, subtitle) {
+  return `<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+    <div class="p-space-lg flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+      <div><h2 class="font-headline-sm text-headline-sm text-on-surface">${esc(title)}</h2>${subtitle ? `<p class="font-body-sm text-body-sm text-secondary mt-0.5">${esc(subtitle)}</p>` : ''}</div>
+      ${actions ? `<div class="flex items-center gap-space-sm">${actions}</div>` : ''}
+    </div>
+    <div class="flex-1">${body}</div>
+  </div>`;
+}
+function dataTable(cols, rows, opts = {}) {
+  if (!rows || !rows.length) return `<div class="p-space-xl text-center text-on-surface-variant font-body-sm">${esc(opts.empty || 'Aucun résultat.')}</div>`;
+  const thead = cols.map(c => `<th class="py-2.5 px-3 font-semibold ${c.right ? 'text-right' : ''} ${c.center ? 'text-center' : ''} ${c.w || ''}">${esc(c.label)}</th>`).join('');
+  const body = rows.map((r, i) => {
+    const tds = cols.map(c => {
+      let val;
+      if (c.get) { val = c.get(r); if (val === null || val === undefined || val === '') val = dash; }
+      else { val = cell(r[c.key]); }
+      return `<td class="py-2.5 px-3 align-top ${c.right ? 'text-right' : ''} ${c.center ? 'text-center' : ''} ${c.nowrap === false ? '' : 'whitespace-nowrap'}">${val}</td>`;
+    }).join('');
+    const link = opts.rowLink ? opts.rowLink(r) : null;
+    const attr = link ? `data-link="${esc(link)}"` : (opts.rowAct ? `data-act="${esc(opts.rowAct(r))}"` : '');
+    return `<tr class="border-b border-surface-container-low hover:bg-surface-container-low/60 transition-colors ${link ? 'cursor-pointer' : ''}" ${attr}>${tds}</tr>`;
+  }).join('');
+  return `<div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead><tr class="bg-surface-container text-secondary font-label-mono-sm text-label-mono-sm uppercase tracking-wider">${thead}</tr></thead><tbody class="font-body-sm text-body-sm text-on-surface">${body}</tbody></table></div>`;
+}
+function breadcrumb(items) {
+  return `<div class="flex items-center gap-space-xs text-secondary font-label-mono-sm text-label-mono-sm mb-space-xs">${items.map((it, i) => {
+    const sep = i ? '<span class="material-symbols-outlined text-[14px] text-outline">chevron_right</span>' : '';
+    const inner = it.link ? `<a data-link="${esc(it.link)}" class="text-primary font-semibold cursor-pointer hover:underline" href="${esc(it.link)}">${esc(it.label)}</a>` : `<span class="text-on-surface-variant">${esc(it.label)}</span>`;
+    return sep + inner;
+  }).join('')}</div>`;
+}
+const GMAIL = 'bg-surface-container-low';
+
+/* ═══════════════════════════ State & Router ═══════════════════════════ */
+const state = {
+  q: '',
+  agents: { tab: 'all', service: '', role: '', page: 1, pageSize: 25 },
+  locatif: { tab: 'echeances', mode: 'futures', num: '' },
+  refs: { type: 'biens' },
+  inter: { etat: '', type: '', period: '12m', page: 1 },
+  indices: { type: '', annee: '' }
+};
+
+function parseHash() {
+  const h = (location.hash || '#/dashboard').replace(/^#\/?/, '');
+  const parts = h.split('/').filter(Boolean);
+  return { route: parts[0] || 'dashboard', arg: parts.length > 1 ? decodeURIComponent(parts.slice(1).join('/')) : null };
+}
+function go(hash) { if (location.hash === hash) render(); else location.hash = hash; }
+function setNavActive(route) {
+  document.querySelectorAll('#mainNav a').forEach(a => {
+    const r = a.getAttribute('data-link').replace('#/', '');
+    const on = (route === r) || (route === 'bien' && r === 'locatif') || (route === 'contrat' && r === 'locatif') || (route === 'locataire' && r === 'locatif') || (route === 'agent' && r === 'agents') || (route === 'intervention' && r === 'interventions');
+    a.className = 'navlink text-body-sm font-body-sm pb-2 transition-colors border-b-2 ' + (on ? 'text-white border-primary-container font-semibold' : 'text-[#94a3b8] hover:text-white border-transparent');
+  });
+}
+function loading() { view.innerHTML = '<div class="p-space-xl text-center text-on-surface-variant font-body-sm"><span class="material-symbols-outlined align-middle animate-spin mr-2">progress_activity</span>Chargement des données Oracle…</div>'; }
+function errorBox(msg) { view.innerHTML = `<div class="bg-error-container/40 border border-error/30 text-on-error-container p-space-lg rounded-xl font-body-sm">${esc(msg)}</div>`; }
+
+let pendingFocus = null;
+async function render() {
+  const { route, arg } = parseHash();
+  setNavActive(route);
+  loading();
+  const focusSel = pendingFocus; pendingFocus = null;
+  try {
+    const fns = {
+      dashboard: viewDashboard, agents: viewAgents, synchro: viewSynchro, locatif: viewLocatif,
+      referentiels: viewReferentiels, interventions: viewInterventions, indices: viewIndices,
+      agent: () => viewAgentFiche(arg), bien: () => viewBien(arg), contrat: () => viewContrat(arg),
+      locataire: () => viewLocataire(arg), intervention: () => viewInterventionFiche(arg)
+    };
+    await (fns[route] || viewDashboard)();
+    if (focusSel) { const el = $(focusSel); if (el) { const pos = el.value.length; el.focus(); try { el.setSelectionRange(pos, pos); } catch (e) {} } }
+  } catch (e) { errorBox(e.message); }
+}
+
+/* ═══════════════════════════ DASHBOARD ═══════════════════════════ */
+async function viewDashboard() {
+  const d = await api('/api/dashboard');
+  const k = d.kpi;
+  const kpis = `
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-lg mb-space-xl">
+      ${kpi('Agents & Comptes', num(k.total_agents), `<span class="text-on-surface font-semibold">${num(k.agents_actifs)} actifs</span> · ${num(k.agents_simples)} simples · <span class="text-tertiary font-semibold">${num(k.admins)} admins</span>`, 'badge', 'plain')}
+      ${kpi('Synchro Studio-RH', '<span class="text-[22px]">Non connectée</span>', `<a data-link="#/synchro" class="text-primary font-semibold cursor-pointer hover:underline">Configurer la source →</a>`, 'sync_problem', 'error')}
+      ${kpi('Gestion Locative (≥ 2024)', num(k.biens), `${num(k.contrats_actifs)} contrats actifs · ${num(k.locataires)} locataires`, 'apartment', 'primary')}
+      ${kpi('Quittancement & Échéances', money(d.kpi.montant_echeances), `${num(k.echeances)} échéances prév. · ${num(k.echeances_terminees)} historiques`, 'payments', 'primary')}
+    </div>`;
+
+  const echCols = [
+    { label: 'Échéance', get: r => cellMono(r.date_echeance), right: false },
+    { label: 'Contrat', get: r => `<a data-link="#/contrat/${r.contrat_ref}" class="text-primary font-label-mono-sm hover:underline">${esc(r.contrat || '')}</a>` },
+    { label: 'Locataire', get: r => r.locataire ? `<a data-link="#/locataire/${encodeURIComponent(r.locataire)}" class="hover:underline">${esc(r.locataire)}</a>` : dash },
+    { label: 'Bien', get: r => r.bien_id ? `<a data-link="#/bien/${r.bien_id}" class="hover:underline">${esc(r.bien || r.code_bien || '')}</a>` : dash },
+    { label: 'TTC', right: true, get: r => cellMono(money(r.montant_ttc), 'font-semibold') },
+    { label: 'Statut', center: true, get: r => statusBadge(r.statut) }
+  ];
+  const contratsCols = [
+    { label: 'N° Contrat', get: r => `<a data-link="#/contrat/${r.id}" class="text-primary font-label-mono-sm font-semibold hover:underline">${esc(r.code)}</a>` },
+    { label: 'Titulaire', get: r => r.locataire ? `<a data-link="#/locataire/${encodeURIComponent(r.locataire)}" class="font-semibold hover:underline">${esc(r.locataire)}</a>` : dash },
+    { label: 'Bien', get: r => r.bien_id ? `<a data-link="#/bien/${r.bien_id}" class="hover:underline">${esc(r.bien || '')}</a>` : dash },
+    { label: 'Validité', get: r => cellMono((r.debut_contrat || '?') + ' → ' + (r.fin_contrat || '?'), 'text-secondary') },
+    { label: 'Loyer', right: true, get: r => cellMono(money(r.loyer), 'font-semibold') }
+  ];
+  const indicesHtml = (d.indices || []).map(i => `
+    <div class="flex items-center justify-between p-space-sm rounded bg-surface-container-low">
+      <div><div class="font-title-sm text-title-sm text-on-surface">${esc(INDICE_TYPES[i.typ] || i.cod)}</div><div class="font-label-mono-sm text-label-mono-sm text-secondary">${esc(i.des)}</div></div>
+      <div class="text-right"><div class="font-label-mono-md text-label-mono-md font-bold tabular">${num(i.taux)}</div><span class="font-label-mono-sm text-[10px] text-secondary">${esc(i.datp || '')}</span></div>
+    </div>`).join('') || '<div class="text-on-surface-variant font-body-sm">Aucun indice.</div>';
+
+  view.innerHTML = `
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Vue d\'ensemble', link: null }, { label: 'PIVRY01.ASTECHIVR' }])}
+    <div class="flex items-center gap-space-md mb-space-lg">
+      <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Tableau de bord opérationnel</h1>
+      <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-label-mono-sm text-label-mono-sm"><span class="material-symbols-outlined text-[14px] text-primary">database</span>Mode Lecture Seule</span>
+    </div>
+    <div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm mb-space-xl flex flex-wrap items-center justify-between gap-space-md">
+      <div class="flex flex-wrap items-center gap-space-lg">
+        <div class="flex items-center gap-2"><span class="relative flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-primary-container"></span></span>
+          <div><div class="font-label-mono-sm text-label-mono-sm text-secondary">Ressource Oracle</div><div class="font-label-mono-md text-label-mono-md text-on-surface font-semibold" id="srvInfo">Oracle 19c EE</div></div></div>
+        <div class="h-6 w-px bg-surface-container-high hidden sm:block"></div>
+        <div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-primary">memory</span><div><div class="font-label-mono-sm text-label-mono-sm text-secondary">Driver</div><div class="font-label-mono-md text-label-mono-md text-on-surface">Thick OCI (oracledb)</div></div></div>
+        <div class="h-6 w-px bg-surface-container-high hidden sm:block"></div>
+        <div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-secondary">update</span><div><div class="font-label-mono-sm text-label-mono-sm text-secondary">Synchro RH</div><div class="font-label-mono-md text-label-mono-md text-error font-semibold">Inactive (Studio-RH non branché)</div></div></div>
+      </div>
+      <div class="flex items-center gap-space-xs font-label-mono-sm text-label-mono-sm bg-surface-container px-2.5 py-1 rounded text-on-surface"><span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>Requêtes SELECT</div>
+    </div>
+    ${kpis}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+      <div class="lg:col-span-8 flex flex-col gap-space-lg">
+        ${card('Prochaines échéances locatives', dataTable(echCols, d.prochainesEcheances), `<span class="font-label-mono-sm text-label-mono-sm text-secondary">≥ 01/01/2024</span><a data-link="#/locatif" class="text-primary font-title-sm text-title-sm hover:underline">Tout voir →</a>`, 'Surveillance des loyers à venir')}
+        ${card('Derniers contrats enregistrés', dataTable(contratsCols, d.derniersContrats), `<a data-link="#/locatif" class="text-primary font-title-sm text-title-sm hover:underline">Gestion locative →</a>`)}
+      </div>
+      <div class="lg:col-span-4 flex flex-col gap-space-lg">
+        ${card('Indices INSEE', `<div class="p-space-lg pt-0 space-y-space-sm">${indicesHtml}<a data-link="#/indices" class="block text-center text-primary font-title-sm text-title-sm pt-2 hover:underline">Gérer les indices →</a></div>`)}
+        ${card('GMAO & Interventions', `<div class="px-space-lg pb-space-lg grid grid-cols-2 gap-space-sm">
+            <div class="p-space-sm rounded bg-surface-container-low flex flex-col"><span class="font-headline-md text-headline-md text-on-surface font-bold tabular">${num(k.interventions)}</span><span class="font-body-sm text-[12px] text-secondary">Interventions en cours</span></div>
+            <div class="p-space-sm rounded bg-surface-container-low flex flex-col"><span class="font-headline-md text-headline-md text-tertiary font-bold tabular">${num(k.demandes)}</span><span class="font-body-sm text-[12px] text-secondary">Demandes (DI)</span></div>
+          </div><div class="px-space-lg pb-space-lg"><a data-link="#/interventions" class="text-primary font-title-sm text-title-sm hover:underline">Ouvrir la GMAO →</a></div>`)}
+        ${card('Alerte Synchro RH', `<div class="px-space-lg pb-space-lg"><div class="p-space-sm rounded bg-surface-container-low flex flex-col gap-1">
+            <div class="flex items-center justify-between"><span class="font-title-sm text-title-sm">Source Studio-RH</span>${badge('Non connectée', 'red')}</div>
+            <p class="font-body-sm text-[12px] text-on-surface-variant">La confrontation des matricules (API Studio-RH) n\'est pas encore branchée. Seuls les comptes ASTECH sont exploitables en lecture.</p>
+          </div><a data-link="#/synchro" class="block text-center text-primary font-title-sm text-title-sm pt-3 hover:underline">Ouvrir la réconciliation RH →</a></div>`)}
+      </div>
+    </div>`;
+  api('/api/config').then(c => { $('#srvInfo').textContent = 'Oracle 19c EE (' + c.connectInfo + ')'; $('#footInfo').textContent = c.connectInfo; if (c.studioRh) { const p = $('#studioPill'); p.className = p.className.replace('sync_problem', 'sync'); p.classList.remove('text-[#94a3b8]'); p.classList.add('text-emerald-400'); } }).catch(() => {});
+}
+
+/* ═══════════════════════════ AGENTS ═══════════════════════════ */
+async function viewAgents() {
+  const [stats, services, roles] = await Promise.all([api('/api/agents/stats'), api('/api/services'), api('/api/roles')]);
+  const a = state.agents;
+  const params = new URLSearchParams();
+  if (state.q) params.set('q', state.q);
+  if (a.tab === 'utilisateur' || a.tab === 'simple') params.set('type', a.tab);
+  if (a.tab === 'admin') params.set('admin', '1');
+  if (a.tab === 'inactif') params.set('actif', 'inactif');
+  if (a.service) params.set('service', a.service);
+  if (a.role) params.set('role', a.role);
+  params.set('page', a.page); params.set('pageSize', a.pageSize);
+  const res = await api('/api/agents?' + params.toString());
+  const totalPages = Math.max(1, Math.ceil(res.total / res.pageSize));
+
+  const tabs = [['all', 'Tous', stats.total], ['utilisateur', 'Utilisateurs avec droits', stats.utilisateurs], ['simple', 'Agents simples', stats.agents_simples], ['admin', 'Administrateurs', stats.admins], ['inactif', 'Inactifs', stats.inactifs]];
+  const tabsHtml = tabs.map(([k, label, n]) => `<button data-act="agentTab:${k}" class="px-space-md py-1.5 rounded-md font-title-sm text-title-sm transition-all ${a.tab === k ? 'bg-surface-container-lowest text-primary-container shadow-sm font-semibold' : 'text-on-surface-variant hover:text-on-surface font-medium'}">${label} <span class="ml-1 opacity-70 font-label-mono-sm text-label-mono-sm">${num(n)}</span></button>`).join('');
+
+  const cols = [
+    { label: 'Matricule', get: r => `<span class="font-label-mono-md text-label-mono-md font-bold ${Number(r.nb) > 0 ? 'text-primary' : 'text-secondary'}">${esc(r.matricule)}</span>` },
+    { label: 'Nom & Prénom', get: r => `<div class="font-title-md text-title-md text-on-surface">${esc(r.nom || r.des || '')}</div><div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">${esc(r.email || '')}</div>` },
+    { label: 'Service', get: r => `<div class="text-on-surface">${esc(r.service || '')}</div><div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">${esc(r.sserv || '')}</div>` },
+    { label: 'Type', get: r => typeBadge(r.nb) },
+    { label: 'Droits', get: r => Number(r.nb) > 0 ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container-highest text-primary font-label-mono-sm text-label-mono-sm font-medium">${num(r.nb)} menus</span>` : `<span class="font-label-mono-sm text-label-mono-sm text-outline italic">Aucun droit</span>` },
+    { label: 'Rôles', get: r => roleBadges(r.roleapp) },
+    { label: 'Admin', center: true, get: r => (r.gest === 'O' && r.ordon === 'O' && r.compta === 'O') ? badge('ADMIN', 'purple') : dash },
+    { label: 'Dernière MAJ', get: r => r.maj ? `<div class="font-label-mono-sm text-label-mono-sm text-on-surface">${esc(r.maj)}</div>` : dash }
+  ];
+
+  view.innerHTML = `
+    <div class="bg-surface-container-high px-space-lg py-space-sm rounded-lg mb-space-lg flex flex-wrap items-center justify-between gap-space-sm shadow-sm">
+      <div class="flex items-center gap-space-sm"><span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-on-primary"><span class="material-symbols-outlined text-[16px]">verified_user</span></span>
+        <p class="font-body-sm text-body-sm text-on-surface">Vue <span class="font-label-mono-sm font-semibold text-primary">SBCG_USERPROFIL</span> / <span class="font-label-mono-sm font-semibold text-primary">DEMANDEUR</span> — distinction « utilisateur avec droits » / « agent simple ».</p></div>
+      <span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant bg-surface-container-highest px-2 py-0.5 rounded">${num(res.total)} personnes</span>
+    </div>
+    <div class="mb-space-lg"><span class="font-label-mono-sm text-label-mono-sm uppercase tracking-wider text-primary font-semibold">ASTECH Repository §2.1 • §6.2</span>
+      <h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight leading-none mt-1">Gestion des Agents &amp; Comptes</h1>
+      <p class="font-body-md text-body-md text-on-surface-variant mt-1 max-w-3xl">Qualification des comptes Oracle avec droits (<span class="font-label-mono-sm">SBCG_USERPROFIL</span>) par opposition aux agents de terrain sans profil de connexion (dotations EPI, demandeurs).</p></div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md mb-space-lg">
+      ${kpi('Total Répertoire', num(stats.total), `<span class="text-tertiary font-semibold">${num(stats.admins)} admins</span> · table SBCG_USERS`, 'groups', 'plain')}
+      ${kpi('Comptes actifs', num(stats.actifs), `${num(stats.inactifs)} inactifs · flag DEMANDEUR.SDEM_SIGN='O'`, 'how_to_reg', 'primary')}
+      ${kpi('Utilisateurs avec droits', num(stats.utilisateurs), '≥ 1 profil SBCG_USERPROFIL', 'badge', 'plain')}
+      ${kpi('Agents simples', num(stats.agents_simples), 'Sans droit ASTECH', 'engineering', 'plain')}
+    </div>
+    <div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm mb-space-lg flex flex-col gap-space-md">
+      <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-space-md">
+        <div class="relative flex-1 min-w-[260px]">
+          <span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[20px]">search</span>
+          <input id="agentQ" value="${esc(state.q)}" class="w-full h-10 pl-10 pr-20 rounded-lg bg-surface-container-low text-on-surface placeholder-on-surface-variant font-body-sm focus:outline-none focus:bg-surface-container" placeholder="Rechercher nom, matricule (USR_NAME), service…" />
+          <span class="absolute right-3 top-3 font-label-mono-sm text-label-mono-sm text-on-surface-variant bg-surface-container-highest px-1.5 py-0.5 rounded">LIKE :q</span>
+        </div>
+        <div class="flex items-center p-1 bg-surface-container rounded-lg shrink-0 overflow-x-auto">${tabsHtml}</div>
+      </div>
+      <div class="flex flex-wrap items-center gap-space-sm pt-space-xs">
+        <select data-act="agentService" class="h-8 pl-3 pr-8 rounded bg-surface-container-low text-on-surface font-body-sm focus:outline-none">
+          <option value="">Toutes Directions / Services</option>
+          ${services.rows.map(s => `<option value="${esc(s.code)}" ${a.service === s.code ? 'selected' : ''}>${esc(s.nom)}</option>`).join('')}
+        </select>
+        <select data-act="agentRole" class="h-8 pl-3 pr-8 rounded bg-surface-container-low text-on-surface font-body-sm focus:outline-none">
+          <option value="">Tous Rôles Applicatifs</option>
+          ${roles.map(r => `<option value="${r.lettre}" ${a.role === r.lettre ? 'selected' : ''}>${r.lettre} — ${esc(r.libelle)} (${num(r.nb)})</option>`).join('')}
+        </select>
+        <span class="ml-auto font-label-mono-sm text-label-mono-sm text-on-surface-variant">Filtre : <strong class="text-on-surface">${esc((tabs.find(t => t[0] === a.tab) || [])[1] || '')}</strong> • Résultats : <span class="text-primary font-bold">${num(res.total)}</span></span>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+      <div class="p-space-sm bg-surface-container-low flex items-center justify-between">
+        <span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">Page ${res.page} / ${totalPages}</span>
+        <div class="inline-flex rounded shadow-sm">
+          <button data-act="agentPage:prev" class="w-7 h-7 bg-surface-container-lowest rounded-l flex items-center justify-center text-on-surface-variant hover:text-on-surface disabled:opacity-40" ${a.page <= 1 ? 'disabled' : ''}><span class="material-symbols-outlined text-[16px]">chevron_left</span></button>
+          <button data-act="agentPage:next" class="w-7 h-7 bg-surface-container-lowest rounded-r flex items-center justify-center text-on-surface-variant hover:text-on-surface disabled:opacity-40" ${a.page >= totalPages ? 'disabled' : ''}><span class="material-symbols-outlined text-[16px]">chevron_right</span></button>
+        </div>
+      </div>
+      ${dataTable(cols, res.rows, { rowLink: (r) => '#/agent/' + encodeURIComponent(r.matricule), empty: 'Aucun agent.' })}
+      <div class="px-space-md py-space-sm bg-surface-container-low flex items-center justify-between text-on-surface-variant font-label-mono-sm text-label-mono-sm">
+        <span>Affichage <span class="font-semibold text-on-surface">${res.rows.length ? ((res.page - 1) * res.pageSize + 1) : 0} - ${((res.page - 1) * res.pageSize) + res.rows.length}</span> sur <span class="font-semibold text-on-surface">${num(res.total)}</span></span>
+        <span>Cliquer une ligne pour ouvrir la fiche (droits, groupes, autorisations)</span>
+      </div>
+    </div>`;
+  bindSearch('#agentQ');
+}
+function bindSearch(sel) {
+  const inp = $(sel); if (!inp) return;
+  let t;
+  inp.addEventListener('input', () => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      const r = parseHash().route;
+      state.q = inp.value.trim();
+      if (r === 'agents') state.agents.page = 1;
+      if (r === 'interventions') state.inter.page = 1;
+      pendingFocus = sel;
+      render();
+    }, 400);
+  });
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { state.q = inp.value.trim(); pendingFocus = sel; render(); } });
+}
+
+async function viewAgentFiche(matricule) {
+  const d = await api('/api/agent/' + encodeURIComponent(matricule));
+  const c = d.compte, dem = d.demandeur || {};
+  const admin = dem.gest === 'O' && dem.ordon === 'O' && dem.compta === 'O';
+  const info = [['Schéma', 'ASTECHIVR.SBCG_USERS'], ['Matricule', c.matricule], ['USR_ID', c.usr_id], ['Nom', c.nom],
+    ['Service', dem.sserv], ['Courriel', dem.email], ['Login AD (AUTHSYS)', dem.authsys], ['Date invalidation', c.datinvalid || '—'],
+    ['Inscrit au répertoire (USR_DEM)', c.dem], ['Dernière MAJ', c.maj], ['MAJ mot de passe', c.majpwd]];
+  const droitsRows = (d.droits || []).map(x => `<tr class="border-b border-surface-container-low"><td class="py-2 px-3 font-label-mono-sm">${esc(x.mnu_id)}</td><td class="py-2 px-3">${esc(x.libelle || ('Module ' + (x.module ?? '')))}</td><td class="py-2 px-3 font-label-mono-sm text-secondary">${esc(x.module ?? '')}/${esc(x.onglet ?? '')}</td><td class="py-2 px-3 text-right">${badge('Niv ' + x.auth, x.auth >= 15 ? 'green' : x.auth >= 7 ? 'blue' : 'amber')}</td></tr>`).join('');
+  const groupes = (d.groupes || []).map(g => `<span class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-mono-sm font-medium">${esc(g.code)} — ${esc(g.des || '')}</span>`).join('') || '<span class="text-on-surface-variant font-body-sm">Aucun groupe.</span>';
+  const demandes = (d.demandes || []).map(x => `<div class="p-2 rounded bg-surface-container-low"><div class="font-title-sm">${esc(x.ndt || '')}</div><div class="font-label-mono-sm text-secondary">${esc(x.num)} • ${esc(x.dat || '')}</div></div>`).join('') || '<span class="text-on-surface-variant font-body-sm">Aucune demande.</span>';
+
+  const drawerHtml = `
+    <div class="sticky top-0 bg-surface-container-lowest p-space-lg border-b border-surface-container flex items-start justify-between z-10">
+      <div class="flex items-center gap-space-md">
+        <div class="relative"><div class="w-12 h-12 rounded-lg bg-primary-container text-on-primary flex items-center justify-center font-bold text-[18px]">${esc((c.nom || '?').slice(0, 2))}</div>
+          <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 ${Number(d.droits.length) > 0 ? 'bg-emerald-500' : 'bg-outline'} rounded-full ring-2 ring-surface-container-lowest"></span></div>
+        <div><h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">${esc(c.nom || '')}</h2>
+          <div class="flex items-center gap-2"><span class="px-1.5 py-0.2 rounded bg-secondary-container text-on-secondary-fixed font-label-mono-sm font-semibold">${esc(c.matricule)}</span>${admin ? badge('ADMIN', 'purple') : ''}</div></div>
+      </div>
+      <button onclick="closeDrawer()" class="p-1 rounded text-on-surface-variant hover:bg-surface-container"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="p-space-lg flex flex-col gap-space-lg">
+      <div class="bg-surface-container p-space-md rounded-lg font-body-sm flex flex-col gap-1">
+        ${info.map(([k, v]) => `<div class="flex items-center justify-between"><span class="text-on-surface-variant font-label-mono-sm uppercase">${esc(k)}</span><span class="font-label-mono-sm text-on-surface">${cell(v)}</span></div>`).join('')}
+      </div>
+      <div class="flex items-center justify-between font-label-mono-sm"><span class="text-secondary uppercase">Rôle applicatif</span><span>${roleBadges(dem.roleapp) || dash}</span></div>
+      <div class="grid grid-cols-3 gap-2">
+        <div class="p-2 rounded bg-surface-container-low text-center"><div class="font-headline-md font-bold tabular">${num(d.droits.length)}</div><div class="font-label-mono-sm text-secondary">Menus</div></div>
+        <div class="p-2 rounded bg-surface-container-low text-center"><div class="font-headline-md font-bold tabular">${num(d.autorisations.n_auth)}</div><div class="font-label-mono-sm text-secondary">Autorisations</div></div>
+        <div class="p-2 rounded bg-surface-container-low text-center"><div class="font-headline-md font-bold tabular">${num(d.autorisations.n_authp)}</div><div class="font-label-mono-sm text-secondary">Autorisations P</div></div>
+      </div>
+      <div><div class="font-title-sm uppercase tracking-wider text-secondary mb-2">Matrice menus (SBCG_USERPROFIL)</div>
+        <div class="max-h-72 overflow-y-auto rounded-lg bg-surface-container-low">${droitsRows ? `<table class="w-full text-left font-body-sm"><tbody>${droitsRows}</tbody></table>` : '<div class="p-3 text-on-surface-variant font-body-sm">Aucun droit.</div>'}</div></div>
+      <div><div class="font-title-sm uppercase tracking-wider text-secondary mb-2">Groupes applicatifs</div><div class="flex flex-wrap gap-1.5">${groupes}</div></div>
+      <div><div class="font-title-sm uppercase tracking-wider text-secondary mb-2">Dernières demandes (DI)</div><div class="space-y-2">${demandes}</div></div>
+      <div class="p-space-sm rounded bg-surface-container-low text-on-surface-variant font-label-mono-sm text-label-mono-sm flex items-center gap-2"><span class="material-symbols-outlined text-[16px]">info</span>Aucune écriture possible : application en lecture seule.</div>
+    </div>`;
+  openDrawer(drawerHtml);
+}
+
+/* ═══════════════════════════ SYNCHRO RH ═══════════════════════════ */
+async function viewSynchro() {
+  const d = await api('/api/sync/rh/preview');
+  const cols = [
+    { label: 'Matricule (USR_NAME)', get: r => cellMono(r.matricule, 'font-bold text-on-surface') },
+    { label: 'Nom & Prénom', get: r => `<div class="font-title-md text-on-surface">${esc(r.nom || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.email || '')}</div>` },
+    { label: 'Service', get: r => `<div>${esc(r.service || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.sserv || '')}</div>` },
+    { label: 'Statut ASTECH', get: r => Number(r.nb) > 0 ? badge('Actif • ' + r.nb + ' menus', 'green', 'check_circle') : badge('Sans droit', 'slate') },
+    { label: 'Rôle', get: r => roleBadges(r.roleapp) },
+    { label: 'Action (lecture seule)', get: () => `<span class="font-label-mono-sm text-outline italic">indisponible</span>` }
+  ];
+  view.innerHTML = `
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Synchro RH' }, { label: 'Studio-RH ↔ ASTECH' }])}
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md mb-space-lg">
+      <div>
+        <span class="font-label-mono-sm px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-semibold uppercase tracking-wider">Oracle ASTECHIVR ↔ Studio-RH</span>
+        <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight mt-1">Réconciliation Studio-RH ↔ ASTECH</h1>
+        <p class="font-body-md text-body-md text-secondary">Confrontation des matricules agents entre le SIRH et Oracle ASTECHIVR.</p>
+      </div>
+    </div>
+    <div class="p-space-md rounded-xl bg-surface-container-low shadow-sm flex items-start gap-space-md relative overflow-hidden mb-space-lg">
+      <div class="absolute left-0 top-0 bottom-0 w-1.5 ${d.configured ? 'bg-emerald-500' : 'bg-error'}"></div>
+      <span class="material-symbols-outlined text-[24px] ${d.configured ? 'text-emerald-600' : 'text-error'}">${d.configured ? 'verified_user' : 'sync_problem'}</span>
+      <div><div class="font-title-md text-on-surface font-bold">${d.configured ? 'Source Studio-RH connectée' : 'Source Studio-RH non connectée'}</div>
+        <p class="font-body-sm text-on-surface-variant mt-0.5">${esc(d.message)}</p>
+        ${!d.configured ? '<p class="font-label-mono-sm text-secondary mt-1">Variables à renseigner côté serveur : <code class="bg-surface-container px-1 rounded">STUDIO_RH_API_URL</code> et <code class="bg-surface-container px-1 rounded">STUDIO_RH_API_KEY</code>.</p>' : ''}</div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-space-md mb-space-lg">
+      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="flex items-center justify-between"><span class="font-title-sm text-secondary uppercase">Concordants</span><span class="material-symbols-outlined text-outline">check_circle</span></div><div class="font-headline-xl font-bold mt-space-sm tabular">—</div><div class="font-label-mono-sm text-secondary">Source RH requise</div></div>
+      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="flex items-center justify-between"><span class="font-title-sm text-error uppercase font-bold">À désactiver (ASTECH)</span><span class="material-symbols-outlined text-error">person_off</span></div><div class="font-headline-xl font-bold text-error mt-space-sm tabular">—</div><div class="font-label-mono-sm text-secondary">Source RH requise</div></div>
+      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="flex items-center justify-between"><span class="font-title-sm text-primary uppercase font-bold">À créer (ASTECH)</span><span class="material-symbols-outlined text-primary">person_add</span></div><div class="font-headline-xl font-bold mt-space-sm tabular">—</div><div class="font-label-mono-sm text-secondary">Source RH requise</div></div>
+    </div>
+    <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+      <div class="p-space-lg flex items-center justify-between"><div><h2 class="font-headline-sm text-headline-sm">Comptes ASTECH actifs</h2><p class="font-body-sm text-secondary">${num(d.stats.utilisateurs)} utilisateurs avec droits (côté ASTECH uniquement)</p></div>
+        <button disabled class="px-3.5 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-not-allowed">Appliquer la sélection (indisponible)</button></div>
+      ${dataTable(cols, d.agents, { empty: 'Aucun compte actif.' })}
+    </div>`;
+}
+
+/* ═══════════════════════════ LOCATIF ═══════════════════════════ */
+const LOC_TABS = [['echeances', 'Échéancier & Quittances', 'calendar_month'], ['biens', 'Biens immobiliers', 'apartment'], ['baux', 'Baux & Contrats', 'gavel'], ['locataires', 'Locataires', 'groups'], ['revisions', 'Révisions de loyers', 'trending_up']];
+async function viewLocatif() {
+  const t = state.locatif.tab;
+  const subnav = LOC_TABS.map(([k, label, icon]) => `<button data-act="locTab:${k}" class="flex items-center gap-2 px-3.5 py-2 rounded-xl font-title-md whitespace-nowrap transition-colors ${t === k ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container-lowest text-on-surface hover:bg-surface-container shadow-sm'}"><span class="material-symbols-outlined text-[18px] ${t === k ? '' : 'text-secondary'}">${icon}</span>${label}</button>`).join('');
+  const header = `
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Gestion Locative' }])}
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md pb-space-lg">
+      <div>
+        <span class="inline-flex items-center gap-1 text-primary font-label-mono-sm font-semibold bg-primary-fixed px-2 py-0.5 rounded-full"><span class="material-symbols-outlined text-[14px]">tune</span>CUTOFF ≥ 01/01/2024</span>
+        <h1 class="font-headline-lg font-bold text-on-surface tracking-tight mt-1">Gestion Locative du Patrimoine</h1>
+        <p class="font-body-sm text-on-surface-variant">Biens, baux, locataires et quittancement en base Oracle ASTECH.</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-space-sm overflow-x-auto pb-space-sm mb-space-lg">${subnav}</div>`;
+  view.innerHTML = header + '<div id="locBody"></div>';
+  const body = $('#locBody');
+  if (t === 'biens') return locBiens(body);
+  if (t === 'baux') return locBaux(body);
+  if (t === 'locataires') return locLocataires(body);
+  if (t === 'revisions') return locRevisions(body);
+  return locEcheances(body);
+}
+function statutTone(s) { return s === 'Mandatée' ? 'purple' : s === 'Émise' ? 'green' : s === 'Échue (non émise)' ? 'amber' : 'blue'; }
+async function locEcheances(body) {
+  const d = await api('/api/quittances?q=' + encodeURIComponent(state.q));
+  const mode = state.locatif.mode;
+  const rows = mode === 'futures' ? (d.futures || []) : (d.passees || []);
+  const cols = [
+    { label: 'Échéance', get: r => `<div class="font-label-mono-sm font-semibold">${esc(r.date_echeance)}</div><div class="font-label-mono-sm text-secondary">${esc(r.periode || '')}</div>` },
+    { label: 'Quittance', get: r => r.num_quittance ? cellMono(r.num_quittance, 'text-primary') : '<span class="font-label-mono-sm text-outline">— non émise —</span>' },
+    { label: 'Bien', get: r => r.bien_id ? `<a data-link="#/bien/${r.bien_id}" class="font-title-sm hover:underline">${esc(r.bien || r.code_bien || '')}</a><div class="font-label-mono-sm text-secondary">${esc(r.code_bien || '')}</div>` : dash },
+    { label: 'Locataire', get: r => r.locataire ? `<a data-link="#/locataire/${encodeURIComponent(r.locataire)}" class="font-semibold hover:underline">${esc(r.locataire)}</a>` : dash },
+    { label: 'Contrat', get: r => `<a data-link="#/contrat/${r.contrat_ref}" class="text-primary font-label-mono-sm hover:underline">${esc(r.contrat || '')}</a>` },
+    { label: 'HT / TTC', right: true, get: r => `<div class="font-semibold tabular">${money(r.montant_ttc)}</div><div class="font-label-mono-sm text-secondary">${money(r.montant_ht)} HT</div>` },
+    { label: 'Mandat', get: r => r.num_mandat ? cellMono(r.num_mandat, 'text-tertiary') : '<span class="font-label-mono-sm text-outline">non généré</span>' },
+    { label: 'Statut', center: true, get: r => statusBadge(r.statut) }
+  ];
+  body.innerHTML = `
+    <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm mb-space-md flex flex-wrap gap-space-sm items-center">
+      <div class="flex items-center bg-surface-container p-1 rounded-lg">
+        <button data-act="locMode:futures" class="px-3 py-1.5 rounded-md font-title-sm ${mode === 'futures' ? 'bg-surface-container-lowest text-on-surface shadow-sm' : 'text-on-surface-variant'}"><span class="material-symbols-outlined text-[16px] text-primary align-middle">arrow_upward</span> À venir (${num((d.futures || []).length)})</button>
+        <button data-act="locMode:passees" class="px-3 py-1.5 rounded-md font-title-sm ${mode === 'passees' ? 'bg-surface-container-lowest text-on-surface shadow-sm' : 'text-on-surface-variant'}"><span class="material-symbols-outlined text-[16px] align-middle">history</span> Passées (${num((d.passees || []).length)})</button>
+      </div>
+      <div class="relative flex-1 min-w-[240px]"><span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[18px]">search</span>
+        <input id="locQ" value="${esc(state.q)}" class="w-full h-9 pl-9 pr-4 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher locataire, bien, n° quittance…" /></div>
+      <span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant ml-auto">Périmètre ≥ 01/01/2024 • tri ${mode === 'futures' ? 'ASC' : 'DESC'}</span>
+    </div>
+    <div class="rounded-xl bg-surface-container-lowest shadow-sm overflow-hidden">${dataTable(cols, rows, { empty: 'Aucune échéance.' })}</div>`;
+  bindSearch('#locQ');
+}
+async function locBiens(body) {
+  const d = await api('/api/biens?q=' + encodeURIComponent(state.q));
+  body.innerHTML = `
+    <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm mb-space-md flex flex-wrap gap-space-sm items-center">
+      <div class="relative flex-1 min-w-[240px]"><span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[18px]">search</span>
+        <input id="locQ" value="${esc(state.q)}" class="w-full h-9 pl-9 pr-4 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher code, désignation, adresse…" /></div>
+      <span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">${num(d.rows.length)} biens locatifs</span>
+    </div>
+    ${card('Biens locatifs (ARBO + ARBO_LOCATIF)', dataTable([
+      { label: 'Code', get: r => `<span class="font-label-mono-sm font-semibold text-primary">${esc(r.code)}</span>` },
+      { label: 'Désignation', get: r => `<div class="font-title-sm">${esc(r.bien || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.adresse || '')}</div>` },
+      { label: 'Catégorie', get: r => `${cell(r.categorie)}${r.sous_cat ? ' / ' + esc(r.sous_cat) : ''}` },
+      { label: 'Genre', get: r => cell(r.genre) },
+      { label: 'Type logement', get: r => cell(r.type_log) },
+      { label: 'Pièces', right: true, get: r => cell(r.pieces) },
+      { label: 'Surface', right: true, get: r => r.surface ? `${num(r.surface)} m²` : dash }
+    ], d.rows, { rowLink: r => '#/bien/' + r.id }))}`;
+  bindSearch('#locQ');
+}
+async function locBaux(body) {
+  const d = await api('/api/contrats?q=' + encodeURIComponent(state.q));
+  body.innerHTML = `
+    <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm mb-space-md flex flex-wrap gap-space-sm items-center">
+      <div class="relative flex-1 min-w-[240px]"><span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[18px]">search</span>
+        <input id="locQ" value="${esc(state.q)}" class="w-full h-9 pl-9 pr-4 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher n° contrat, locataire, bien…" /></div>
+      <span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">${num(d.rows.length)} contrats</span>
+    </div>
+    ${card('Baux & contrats', dataTable([
+      { label: 'N°', get: r => `<span class="font-label-mono-sm font-semibold text-primary">${esc(r.code)}</span>` },
+      { label: 'Objet', get: r => `<div class="font-title-sm clamp1" style="max-width:320px">${esc(r.objet || '')}</div>` },
+      { label: 'Locataire', get: r => r.locataire ? `<a data-link="#/locataire/${encodeURIComponent(r.locataire)}" class="font-semibold hover:underline">${esc(r.locataire)}</a>` : dash },
+      { label: 'Bien', get: r => cell(r.code_bien) },
+      { label: 'Début', get: r => cell(r.debut_contrat) },
+      { label: 'Fin', get: r => cell(r.fin_contrat) },
+      { label: 'État', center: true, get: r => r.actif === 'O' ? badge('Ouvert', 'green') : r.actif === 'C' ? badge('Clos', 'slate') : badge(r.actif || '?', 'amber') },
+      { label: 'Loyer', right: true, get: r => cellMono(money(r.loyer), 'font-semibold') }
+    ], d.rows, { rowLink: r => '#/contrat/' + r.id }))}`;
+  bindSearch('#locQ');
+}
+async function locLocataires(body) {
+  const d = await api('/api/locataires?q=' + encodeURIComponent(state.q));
+  body.innerHTML = `
+    <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm mb-space-md flex flex-wrap gap-space-sm items-center">
+      <div class="relative flex-1 min-w-[240px]"><span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[18px]">search</span>
+        <input id="locQ" value="${esc(state.q)}" class="w-full h-9 pl-9 pr-4 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher un locataire…" /></div>
+      <span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">${num(d.rows.length)} locataires</span>
+    </div>
+    ${card('Locataires (CONTL_CONTRACTANT)', dataTable([
+      { label: 'Locataire', get: r => `<span class="font-title-md font-semibold">${esc(r.locataire)}</span>` },
+      { label: 'Contrats', right: true, get: r => num(r.nb_contrats) },
+      { label: 'Biens', right: true, get: r => num(r.nb_biens) },
+      { label: 'Loyer max', right: true, get: r => cellMono(money(r.loyer_max), 'font-semibold') }
+    ], d.rows, { rowLink: r => '#/locataire/' + encodeURIComponent(r.locataire) }))}`;
+  bindSearch('#locQ');
+}
+async function locRevisions(body) {
+  const d = await api('/api/revisions?q=' + encodeURIComponent(state.q));
+  body.innerHTML = `
+    <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm mb-space-md flex flex-wrap gap-space-sm items-center">
+      <div class="relative flex-1 min-w-[240px]"><span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[18px]">search</span>
+        <input id="locQ" value="${esc(state.q)}" class="w-full h-9 pl-9 pr-4 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher locataire, contrat, bien…" /></div>
+      <span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">${num(d.rows.length)} révisions</span>
+    </div>
+    ${card('Révisions de loyers (CONTRAT_REVISION)', dataTable([
+      { label: 'Date', get: r => cell(r.dat) },
+      { label: 'Application', get: r => cell(r.dat_appli) },
+      { label: 'Contrat', get: r => `<a data-link="#/contrat/${r.contrat_id}" class="text-primary font-label-mono-sm hover:underline">${esc(r.contrat || '')}</a>` },
+      { label: 'Locataire', get: r => r.locataire ? `<a data-link="#/locataire/${encodeURIComponent(r.locataire)}" class="hover:underline">${esc(r.locataire)}</a>` : dash },
+      { label: 'Indice', get: r => cell(r.indice) },
+      { label: 'Loyer avant', right: true, get: r => money(r.loyer_avant) },
+      { label: 'Loyer après', right: true, get: r => cellMono(money(r.loyer_apres), 'font-semibold') },
+      { label: 'Évolution', right: true, get: r => r.pourc != null ? `<span class="${Number(r.pourc) >= 0 ? 'text-emerald-700' : 'text-error'} font-semibold">${Number(r.pourc).toFixed(2)} %</span>` : dash }
+    ], d.rows, { empty: 'Aucune révision.' }))}`;
+  bindSearch('#locQ');
+}
+function echeancesTable(rows) {
+  return dataTable([
+    { label: 'Échéance', get: r => `<div class="font-label-mono-sm font-semibold">${esc(r.date_echeance)}</div><div class="font-label-mono-sm text-secondary">${esc(r.periode || '')}</div>` },
+    { label: 'Du / Au', get: r => cellMono((r.du || '?') + ' → ' + (r.au || '?'), 'text-secondary') },
+    { label: 'Statut', center: true, get: r => statusBadge(r.statut) },
+    { label: 'HT', right: true, get: r => money(r.montant_ht) },
+    { label: 'TTC', right: true, get: r => cellMono(money(r.montant_ttc), 'font-semibold') },
+    { label: 'N° quittance', get: r => r.num_quittance ? cellMono(r.num_quittance, 'text-primary') : dash },
+    { label: 'Date quit.', get: r => cell(r.date_quittance) },
+    { label: 'Mandat', get: r => cell(r.num_mandat) }
+  ], rows, { empty: 'Aucune échéance.' });
+}
+
+async function viewBien(id) {
+  const d = await api('/api/bien/' + encodeURIComponent(id));
+  const b = d.bien;
+  const infos = [['Code', b.code], ['Désignation', b.bien], ['Nom court', b.nom_court], ['Adresse', b.adresse],
+    ['Catégorie', b.categorie], ['Sous-catégorie', b.sous_cat], ['Genre', b.genre], ['Type logement', b.type_log],
+    ['Destination', b.destination], ['Pièces', b.pieces], ['Surface (m²)', b.surface], ['Tiers', b.tiers], ['Contact', b.contact]]
+    .filter(x => x[1] != null && x[1] !== '');
+  view.innerHTML = `
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Gestion Locative', link: '#/locatif' }, { label: 'Bien' }, { label: b.bien }])}
+    <h1 class="font-headline-lg text-on-surface tracking-tight mb-space-lg">${esc(b.bien)}</h1>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+      <div class="lg:col-span-4">${card('Caractéristiques', `<dl class="px-space-lg pb-space-lg grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 font-body-sm">${infos.map(([k, v]) => `<dt class="text-secondary">${esc(k)}</dt><dd class="text-on-surface">${esc(v)}</dd>`).join('')}</dl>`)}</div>
+      <div class="lg:col-span-8 flex flex-col gap-space-lg">
+        ${card(`Contrats / baux (${d.contrats.length})`, dataTable([
+          { label: 'N°', get: r => `<a data-link="#/contrat/${r.id}" class="text-primary font-label-mono-sm font-semibold hover:underline">${esc(r.code)}</a>` },
+          { label: 'Locataire', get: r => r.locataire ? `<a data-link="#/locataire/${encodeURIComponent(r.locataire)}" class="hover:underline">${esc(r.locataire)}</a>` : dash },
+          { label: 'Entrée', get: r => cell(r.entree) }, { label: 'Sortie', get: r => cell(r.sortie) },
+          { label: 'État', center: true, get: r => r.actif === 'O' ? badge('Ouvert', 'green') : badge(r.actif || '?', 'slate') },
+          { label: 'Loyer', right: true, get: r => cellMono(money(r.loyer), 'font-semibold') }
+        ], d.contrats, { empty: 'Aucun contrat.' }))}
+      </div>
+    </div>
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-space-lg mt-space-lg">
+      ${card(`Échéances à venir (${(d.futures || []).length})`, echeancesTable(d.futures))}
+      ${card(`Échéances passées (${(d.passees || []).length})`, echeancesTable(d.passees))}
+    </div>`;
+}
+async function viewContrat(id) {
+  const d = await api('/api/contrat/' + encodeURIComponent(id));
+  const c = d.contrat;
+  const infos = [['Code', c.code], ['Objet', c.objet], ['Locataire', c.locataire], ['Bien', c.bien],
+    ['Entrée (bail)', c.entree], ['Sortie (bail)', c.sortie], ['Contrat début', c.debut_contrat], ['Contrat fin', c.fin_contrat],
+    ['Quittancement depuis', c.quittance_depuis], ['Clôture', c.cloture], ['Dernière révision', c.derniere_revision],
+    ['Prochaine révision', c.prochaine_revision], ['État', c.actif], ['Loyer', money(c.loyer)], ['Dépôt', money(c.depot)]]
+    .filter(x => x[1] != null && x[1] !== '');
+  view.innerHTML = `
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Gestion Locative', link: '#/locatif' }, { label: 'Contrat' }, { label: c.code }])}
+    <h1 class="font-headline-lg text-on-surface tracking-tight mb-space-lg">Contrat ${esc(c.code)}</h1>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+      <div class="lg:col-span-4 flex flex-col gap-space-lg">${card('Informations', `<dl class="px-space-lg pb-space-lg grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 font-body-sm">${infos.map(([k, v]) => `<dt class="text-secondary">${esc(k)}</dt><dd class="text-on-surface">${esc(v)}</dd>`).join('')}</dl>`)}
+        ${card(`Révisions (${(d.revisions || []).length})`, dataTable([
+          { label: 'Date', get: r => cell(r.dat) },
+          { label: 'Indice', get: r => cell(r.indice) },
+          { label: 'Avant', right: true, get: r => money(r.loyer_avant) },
+          { label: 'Après', right: true, get: r => cellMono(money(r.loyer_apres), 'font-semibold') },
+          { label: '%', right: true, get: r => r.pourc != null ? `<span class="font-semibold">${Number(r.pourc).toFixed(2)} %</span>` : dash }
+        ], d.revisions, { empty: 'Aucune révision.' }))}</div>
+      <div class="lg:col-span-8 flex flex-col gap-space-lg">
+        ${card(`Échéances à venir (${(d.futures || []).length})`, echeancesTable(d.futures))}
+        ${card(`Échéances passées (${(d.passees || []).length})`, echeancesTable(d.passees))}
+      </div>
+    </div>`;
+}
+async function viewLocataire(name) {
+  const d = await api('/api/locataire?name=' + encodeURIComponent(name));
+  view.innerHTML = `
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Gestion Locative', link: '#/locatif' }, { label: 'Locataire' }, { label: name }])}
+    <h1 class="font-headline-lg text-on-surface tracking-tight mb-space-lg">${esc(name)}</h1>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+      <div class="lg:col-span-7">${card(`Contrats / biens (${d.contrats.length})`, dataTable([
+        { label: 'N°', get: r => `<a data-link="#/contrat/${r.id}" class="text-primary font-label-mono-sm font-semibold hover:underline">${esc(r.code)}</a>` },
+        { label: 'Bien', get: r => r.bien_id ? `<a data-link="#/bien/${r.bien_id}" class="hover:underline">${esc(r.bien || '')}</a>` : dash },
+        { label: 'Entrée', get: r => cell(r.entree) }, { label: 'Sortie', get: r => cell(r.sortie) },
+        { label: 'Loyer', right: true, get: r => cellMono(money(r.loyer), 'font-semibold') }
+      ], d.contrats, { empty: 'Aucun contrat.' }))}</div>
+      <div class="lg:col-span-5 flex flex-col gap-space-lg">
+        ${card(`Échéances à venir (${(d.futures || []).length})`, echeancesTable(d.futures))}
+        ${card(`Échéances passées (${(d.passees || []).length})`, echeancesTable(d.passees))}
+      </div>
+    </div>`;
+}
+
+/* ═══════════════════════════ RÉFÉRENTIELS ═══════════════════════════ */
+async function viewReferentiels() {
+  const [counts, data] = await Promise.all([api('/api/referentiels-compteurs'), api('/api/referentiels/' + state.refs.type + '?q=' + encodeURIComponent(state.q))]);
+  const c = counts.counts;
+  const types = [['biens', 'Biens & Patrimoine', 'ARBO', c.biens, 'domain'], ['vehicules', 'Véhicules & Parc Roulant', 'PARC', c.vehicules, 'directions_car'], ['materiel', 'Matériel & Stocks', 'STOCK', c.materiel, 'inventory_2'], ['tiers', 'Tiers & Fournisseurs', 'FOURNISSEUR', c.tiers, 'storefront'], ['services', 'Services & Structures', 'SERVICE', c.services, 'corporate_fare'], ['groupes', 'Groupes applicatifs', 'GROUPEUTIL', c.groupes, 'folder_shared']];
+
+  let cols;
+  if (state.refs.type === 'biens') cols = [
+    { label: 'Code', get: r => `<span class="font-label-mono-sm font-semibold text-primary">${esc(r.code)}</span>` },
+    { label: 'Désignation', get: r => `<div class="font-title-sm">${esc(r.des || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.adresse || '')}</div>` },
+    { label: 'Genre', get: r => cell(r.genre) }, { label: 'Catégorie', get: r => cell(r.categorie) }, { label: 'Service', get: r => cell(r.service) }
+  ];
+  else if (state.refs.type === 'vehicules') cols = [
+    { label: 'Désignation', get: r => `<div class="font-title-sm">${esc(r.des || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.immat || '')}</div>` },
+    { label: 'Marque', get: r => cell(r.marque) }, { label: 'Modèle', get: r => cell(r.modele) },
+    { label: 'Année', get: r => cell(r.annee) }, { label: 'Compteur', right: true, get: r => r.compteur != null ? num(r.compteur) : dash }, { label: 'Service', get: r => cell(r.service) }
+  ];
+  else if (state.refs.type === 'materiel') cols = [
+    { label: 'Réf.', get: r => `<span class="font-label-mono-sm font-semibold text-primary">${esc(r.code)}</span>` },
+    { label: 'Désignation', get: r => `<div class="font-title-sm">${esc(r.des || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.fam || '')}/${esc(r.soufam || '')}</div>` },
+    { label: 'Unité', get: r => cell(r.unit) }, { label: 'Stock', right: true, get: r => cellMono(num(r.qte), 'font-semibold') },
+    { label: 'Min/Max', right: true, get: r => cellMono((num(r.qte_min) || '0') + ' / ' + (num(r.qte_max) || '0'), 'text-secondary') },
+    { label: 'PMP', right: true, get: r => money(r.pamp) }
+  ];
+  else if (state.refs.type === 'tiers') cols = [
+    { label: 'Code', get: r => cellMono(r.code) }, { label: 'Nom', get: r => `<span class="font-title-sm">${esc(r.nom || '')}</span>` },
+    { label: 'Ville', get: r => cell(r.ville) }, { label: 'SIRET', get: r => cellMono(r.siret) }, { label: 'Tél.', get: r => cell(r.tel) }, { label: 'Email', get: r => cell(r.email) },
+    { label: 'Actif', center: true, get: r => r.actif === 'O' ? badge('Actif', 'green') : badge('Inactif', 'slate') }
+  ];
+  else if (state.refs.type === 'services') cols = [
+    { label: 'Code', get: r => cellMono(r.code, 'text-secondary') }, { label: 'Nom', get: r => `<span class="font-title-sm">${esc(r.nom || '')}</span>` },
+    { label: 'Nom long', get: r => cell(r.nom_long) }, { label: 'Actif', center: true, get: r => r.actif === 'O' ? badge('Actif', 'green') : badge('Inactif', 'slate') }
+  ];
+  else cols = [
+    { label: 'Code', get: r => cellMono(r.code, 'text-secondary') }, { label: 'Libellé', get: r => `<span class="font-title-sm">${esc(r.des || '')}</span>` },
+    { label: 'Membres', right: true, get: r => cellMono(num(r.nb_membres), 'font-semibold') }
+  ];
+
+  view.innerHTML = `
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Référentiels' }])}
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-space-md">
+      <div><h1 class="font-headline-lg text-on-surface tracking-tight">Gestion des Référentiels Transverses</h1>
+        <p class="font-body-md text-on-surface-variant">Exploration des catalogues patrimoine, parc roulant et chaîne d'approvisionnement (schéma ASTECHIVR).</p></div>
+    </div>
+    <nav class="flex items-center gap-space-xs overflow-x-auto p-1 bg-surface-container-low rounded-xl mb-space-md shadow-sm">
+      ${types.map(([k, label, tbl, n, icon]) => `<button data-act="refType:${k}" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg font-title-md whitespace-nowrap transition-all ${state.refs.type === k ? 'bg-surface-container-lowest text-primary shadow-sm' : 'text-secondary hover:text-on-surface hover:bg-surface-container'}"><span class="material-symbols-outlined text-[18px]">${icon}</span>${label}<span class="px-1.5 py-0.2 rounded-full ${state.refs.type === k ? 'bg-primary-fixed text-on-primary-fixed' : 'bg-surface-container text-secondary'} font-label-mono-sm text-label-mono-sm">${num(n)}</span></button>`).join('')}
+    </nav>
+    <div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm mb-space-lg flex flex-wrap items-center gap-space-sm">
+      <div class="relative flex-1 min-w-[240px]"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-[18px]">search</span>
+        <input id="refQ" value="${esc(state.q)}" class="w-full h-9 pl-9 pr-24 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher code, libellé, immatriculation…" />
+        <span class="absolute right-2.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded bg-surface-container-high text-primary font-label-mono-sm">SQL LIKE</span></div>
+      <span class="font-label-mono-sm text-label-mono-sm text-secondary"><span class="font-semibold text-on-surface">${num(data.rows.length)}</span> lignes affichées</span>
+    </div>
+    <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">${dataTable(cols, data.rows, { rowLink: r => '#/referentiel/' + state.refs.type + '/' + encodeURIComponent(r.id ?? r.code), empty: 'Aucune entrée.' })}</div>`;
+  bindSearch('#refQ');
+}
+async function viewReferentiel(arg) {
+  const slash = arg.indexOf('/');
+  const type = arg.slice(0, slash), id = arg.slice(slash + 1);
+  if (type === 'biens') return viewBien(id);
+  const data = await api('/api/referentiels/' + type + '/' + encodeURIComponent(id));
+  const row = data.row;
+  const entries = Object.entries(row).filter(([, v]) => v != null && v !== '');
+  openDrawer(`
+    <div class="sticky top-0 bg-surface-container-lowest p-space-lg border-b border-surface-container flex items-center justify-between">
+      <div><h2 class="font-headline-sm font-bold text-on-surface">${esc(row.des || row.nom || id)}</h2><span class="font-label-mono-sm text-secondary">${esc(type)} • ${esc(id)}</span></div>
+      <button onclick="closeDrawer()" class="p-1 rounded hover:bg-surface-container"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="p-space-lg"><dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 font-body-sm">${entries.map(([k, v]) => `<dt class="text-secondary font-label-mono-sm uppercase">${esc(k)}</dt><dd class="text-on-surface">${esc(v)}</dd>`).join('')}</dl></div>`);
+}
+
+/* ═══════════════════════════ INTERVENTIONS ═══════════════════════════ */
+function periodeToDu(p) {
+  const d = new Date();
+  if (p === 'mois') return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10);
+  if (p === 'trimestre') return new Date(d.getFullYear(), d.getMonth() - 3, 1).toISOString().slice(0, 10);
+  if (p === 'annee') { const x = new Date(); x.setFullYear(x.getFullYear() - 1); return x.toISOString().slice(0, 10); }
+  return '';
+}
+async function viewInterventions() {
+  const st = state.inter;
+  const params = new URLSearchParams();
+  if (state.q) params.set('q', state.q);
+  if (st.type) params.set('type', st.type);
+  if (st.etat) params.set('etat', st.etat);
+  if (st.period === 'tout') params.set('tout', '1'); else params.set('du', periodeToDu(st.period));
+  params.set('page', st.page); params.set('pageSize', 50);
+  const [stats, res] = await Promise.all([api('/api/interventions/stats'), api('/api/interventions?' + params.toString())]);
+  const totalPages = Math.max(1, Math.ceil(res.total / res.pageSize));
+  const cols = [
+    { label: 'Réf.', get: r => `<span class="font-label-mono-sm font-semibold text-primary">${esc(r.num)}</span><div class="font-label-mono-sm text-secondary">${esc(r.numdem || '')}</div>` },
+    { label: 'Date', get: r => cellMono(r.dat, 'text-secondary') },
+    { label: 'Type', center: true, get: r => badge(INTERV_TYPES[r.typ] || r.typ || '?', 'slate') },
+    { label: 'Objet & désignation', get: r => `<div class="font-title-sm clamp1" style="max-width:360px">${esc(r.ndt || '')}</div><div class="font-label-mono-sm text-secondary clamp1" style="max-width:360px">${esc(r.libelle || '')}</div>` },
+    { label: 'Localisation', get: r => `${cell(r.code_bien)}<div class="font-label-mono-sm text-secondary">${esc(r.bien || '')}</div>` },
+    { label: 'Service', get: r => cell(r.service) },
+    { label: 'État', center: true, get: r => intervBadge(r.etat) }
+  ];
+  view.innerHTML = `
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Interventions' }, { label: 'GMAO' }])}
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-space-lg">
+      <div><span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-high text-primary font-label-mono-sm"><span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>Tables : INTERVENTIONS • INTERVENTIONSTERMINEES • DEMANDES</span>
+        <h1 class="font-headline-lg text-on-surface tracking-tight mt-1">Gestion des Interventions &amp; GMAO</h1></div>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md mb-space-lg">
+      ${kpi('Interventions en cours', num(stats.en_cours), 'Table INTERVENTIONS', 'engineering', 'primary')}
+      ${kpi('Demandes (DI)', num(stats.demandes), 'Table DEMANDES', 'assignment_late', 'tertiary')}
+      ${kpi('Bons clôturés', num(stats.cloturees), 'Table INTERVENTIONSTERMINEES', 'task_alt', 'plain')}
+      ${kpi('Types actifs', num(stats.par_type.length), 'Répartition par type', 'category', 'plain')}
+    </div>
+    <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm mb-space-lg flex flex-wrap gap-space-sm items-center">
+      <div class="relative flex-1 min-w-[240px]"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">manage_search</span>
+        <input id="interQ" value="${esc(state.q)}" class="w-full h-10 pl-10 pr-24 rounded bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher n° DI/BT, objet, bien, demandeur…" /></div>
+      <select data-act="interPeriod" class="h-9 px-3 rounded-lg bg-surface-container-low font-body-sm">
+        ${[['mois', 'Mois en cours'], ['trimestre', '3 derniers mois'], ['annee', '12 derniers mois'], ['tout', 'Tout l\'historique']].map(([v, l]) => `<option value="${v}" ${st.period === v ? 'selected' : ''}>${l}</option>`).join('')}
+      </select>
+      <select data-act="interEtat" class="h-9 px-3 rounded-lg bg-surface-container-low font-body-sm">
+        <option value="">Tous les états</option><option value="encours" ${st.etat === 'encours' ? 'selected' : ''}>En cours</option><option value="cloturee" ${st.etat === 'cloturee' ? 'selected' : ''}>Clôturées</option>
+      </select>
+      <select data-act="interType" class="h-9 px-3 rounded-lg bg-surface-container-low font-body-sm">
+        <option value="">Tous les types</option>${stats.par_type.map(t => `<option value="${esc(t.typ)}" ${st.type === t.typ ? 'selected' : ''}>${esc(INTERV_TYPES[t.typ] || t.typ)} (${num(t.n)})</option>`).join('')}
+      </select>
+      <span class="ml-auto font-label-mono-sm text-on-surface-variant">${num(res.total)} interventions</span>
+    </div>
+    <div class="rounded-xl bg-surface-container-lowest shadow-sm overflow-hidden">
+      <div class="p-space-sm bg-surface-container-low flex items-center justify-between font-label-mono-sm text-on-surface-variant">
+        <span>Page ${res.page} / ${totalPages}</span>
+        <div class="inline-flex rounded shadow-sm">
+          <button data-act="interPage:prev" class="w-7 h-7 bg-surface-container-lowest rounded-l flex items-center justify-center disabled:opacity-40" ${st.page <= 1 ? 'disabled' : ''}><span class="material-symbols-outlined text-[16px]">chevron_left</span></button>
+          <button data-act="interPage:next" class="w-7 h-7 bg-surface-container-lowest rounded-r flex items-center justify-center disabled:opacity-40" ${st.page >= totalPages ? 'disabled' : ''}><span class="material-symbols-outlined text-[16px]">chevron_right</span></button>
+        </div>
+      </div>
+      ${dataTable(cols, res.rows, { rowLink: r => '#/intervention/' + encodeURIComponent(r.num), empty: 'Aucune intervention sur la période.' })}
+    </div>`;
+  bindSearch('#interQ');
+}
+async function viewInterventionFiche(num) {
+  const d = await api('/api/intervention/' + encodeURIComponent(num));
+  const i = d.intervention;
+  const infos = [['Numéro', i.num], ['Type', INTERV_TYPES[i.typ] || i.typ], ['État', i.etat], ['Date', i.dat], ['Objet', i.ndt],
+    ['Bien', i.code_bien], ['Désignation bien', i.bien], ['Service', i.service], ['Période début', i.deb], ['Période fin', i.fin],
+    ['Demandeur', i.coddem], ['N° demande', i.numdem], ['Affectation', i.aff], ['Terminé', i.term]];
+  view.innerHTML = `
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Interventions', link: '#/interventions' }, { label: i.num }])}
+    <div class="flex items-center gap-3 mb-space-lg">
+      <h1 class="font-headline-lg text-on-surface tracking-tight">Fiche intervention ${esc(i.num)}</h1>${intervBadge(i.etat)}
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+      <div class="lg:col-span-7">${card('Détails techniques', `<dl class="px-space-lg pb-space-lg grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 font-body-sm">${infos.map(([k, v]) => `<dt class="text-secondary">${esc(k)}</dt><dd class="text-on-surface">${cell(v)}</dd>`).join('')}</dl>`)}</div>
+      <div class="lg:col-span-5">${card(`Demandes rattachées (${d.demandes.length})`, dataTable([
+        { label: 'N°', get: r => cellMono(r.num) }, { label: 'Date', get: r => cell(r.dat) },
+        { label: 'Objet', get: r => `<div class="clamp1" style="max-width:240px">${esc(r.ndt || r.libelle || '')}</div>` },
+        { label: 'Urgent', center: true, get: r => r.urgent === 'O' ? badge('Urgent', 'red') : badge('Normal', 'slate') }
+      ], d.demandes, { empty: 'Aucune demande rattachée.' }))}</div>
+    </div>`;
+}
+
+/* ═══════════════════════════ INDICES ═══════════════════════════ */
+async function viewIndices() {
+  const params = new URLSearchParams();
+  if (state.indices.type) params.set('type', state.indices.type);
+  if (state.indices.annee) params.set('annee', state.indices.annee);
+  const d = await api('/api/indices?' + params.toString());
+  const resume = d.resume || [];
+  const annees = [...new Set((await api('/api/indices')).rows.map(r => r.an))].sort((a, b) => b - a).slice(0, 12);
+  const cards = resume.map(r => `<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+      <div class="flex items-center justify-between pb-2"><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-primary"></span><span class="font-title-sm text-secondary uppercase tracking-wider">${esc(INDICE_TYPES[r.typ] || ('Type ' + r.typ))}</span></div>
+        <span class="font-label-mono-sm bg-secondary-container text-on-secondary-fixed px-2 py-0.5 rounded font-semibold">T${esc(r.trim)} ${r.an}</span></div>
+      <div class="py-1"><div class="font-headline-xl font-bold tracking-tight tabular">${num(r.taux)}</div><div class="font-body-sm text-secondary">${esc(r.des)}</div></div>
+      <div class="pt-3 flex items-center justify-between font-label-mono-sm"><span class="inline-flex items-center gap-1 text-emerald-600 font-medium"><span class="material-symbols-outlined text-[16px]">check_circle</span>Référencé ASTECH</span><span class="text-secondary">${esc(r.datp || '')}</span></div>
+    </div>`).join('');
+  view.innerHTML = `
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Indices' }, { label: 'INDICEINSEE' }])}
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md bg-surface-container-lowest p-space-lg rounded-xl shadow-sm mb-space-lg">
+      <div class="space-y-1">
+        <div class="flex items-center gap-space-sm"><span class="px-2 py-0.5 rounded bg-surface-container font-label-mono-sm text-primary font-semibold">TABLE: ASTECHIVR.INDICEINSEE</span>
+          <span class="inline-flex items-center gap-1 font-label-mono-sm text-secondary"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Mise à jour Internet non disponible (lecture seule)</span></div>
+        <h1 class="font-headline-lg text-on-surface tracking-tight">Indices INSEE &amp; Indexations Locatives</h1>
+        <p class="font-body-md text-on-surface-variant max-w-3xl">Séries officielles (IRL, ILAT, ICC, ILC) présentes dans le référentiel Oracle ASTECH. La comparaison avec une source Internet sera ajoutée ultérieurement.</p>
+      </div>
+      <button disabled class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-not-allowed"><span class="material-symbols-outlined text-[20px]">cloud_off</span>Récupération Internet (indisponible)</button>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md mb-space-lg">${cards || '<div class="text-on-surface-variant font-body-sm">Aucun indice.</div>'}</div>
+    <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+      <div class="p-space-lg flex flex-wrap items-center justify-between gap-space-sm bg-surface-container-low/50">
+        <div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-primary text-[22px]">compare_arrows</span><h2 class="font-headline-sm text-on-surface">Référentiel des indices</h2><span class="font-label-mono-sm text-secondary bg-surface-container px-2 py-0.5 rounded">${num(d.rows.length)} lignes</span></div>
+        <div class="flex items-center gap-space-sm">
+          <select data-act="indType" class="h-9 px-3 rounded-lg bg-surface-container-low font-body-sm"><option value="">Tous les types</option>${[1, 2, 5, 6].map(t => `<option value="${t}" ${String(state.indices.type) === String(t) ? 'selected' : ''}>${INDICE_TYPES[t]}</option>`).join('')}</select>
+          <select data-act="indAnnee" class="h-9 px-3 rounded-lg bg-surface-container-low font-body-sm"><option value="">Toutes les années</option>${annees.map(a => `<option value="${a}" ${String(state.indices.annee) === String(a) ? 'selected' : ''}>${a}</option>`).join('')}</select>
+        </div>
+      </div>
+      ${dataTable([
+        { label: 'Type', get: r => indiceBadge(r.typ) },
+        { label: 'Code', get: r => cellMono(r.cod, 'text-on-surface') },
+        { label: 'Libellé', get: r => `<div class="font-title-sm">${esc(r.des || '')}</div>` },
+        { label: 'Année', get: r => cell(r.an) },
+        { label: 'Trim.', center: true, get: r => cell(r.trim) },
+        { label: 'Publication', get: r => cellMono(r.datp, 'text-secondary') },
+        { label: 'ASTECH (insee_taux)', right: true, get: r => cellMono(num(r.taux), 'font-bold') },
+        { label: 'Moyenne', right: true, get: r => r.taux_moyen ? num(r.taux_moyen) : dash }
+      ], d.rows, { empty: 'Aucun indice.' })}
+    </div>`;
+}
+
+/* ═══════════════════════════ Drawer & events ═══════════════════════════ */
+function openDrawer(html) { drawerPanel.innerHTML = html; drawer.classList.remove('hidden'); }
+function closeDrawer() { drawer.classList.add('hidden'); drawerPanel.innerHTML = ''; }
+
+document.addEventListener('click', (e) => {
+  const link = e.target.closest('[data-link]');
+  if (link) { if (e.target.closest('a[href]') && !link.hasAttribute('data-link')) return; e.preventDefault(); go(link.getAttribute('data-link')); return; }
+  const act = e.target.closest('[data-act]');
+  if (!act) return;
+  const [action, value] = act.getAttribute('data-act').split(':');
+  handleAction(action, value, act);
+});
+document.addEventListener('change', (e) => {
+  const act = e.target.closest('[data-act]');
+  if (!act) return;
+  const [action, value] = act.getAttribute('data-act').split(':');
+  handleAction(action, value, e.target);
+});
+function handleAction(action, value, el) {
+  const a = state.agents, l = state.locatif, it = state.inter, ind = state.indices;
+  switch (action) {
+    case 'agentTab': a.tab = value; a.page = 1; viewAgents(); break;
+    case 'agentPage': a.page = value === 'next' ? a.page + 1 : Math.max(1, a.page - 1); viewAgents(); break;
+    case 'agentService': a.service = el.value; a.page = 1; viewAgents(); break;
+    case 'agentRole': a.role = el.value; a.page = 1; viewAgents(); break;
+    case 'locTab': l.tab = value; viewLocatif(); break;
+    case 'locMode': l.mode = value; viewLocatif(); break;
+    case 'refType': state.refs.type = value; state.q = ''; viewReferentiels(); break;
+    case 'interPeriod': it.period = el.value; it.page = 1; viewInterventions(); break;
+    case 'interEtat': it.etat = el.value; it.page = 1; viewInterventions(); break;
+    case 'interType': it.type = el.value; it.page = 1; viewInterventions(); break;
+    case 'interPage': it.page = value === 'next' ? it.page + 1 : Math.max(1, it.page - 1); viewInterventions(); break;
+    case 'indType': ind.type = el.value; viewIndices(); break;
+    case 'indAnnee': ind.annee = el.value; viewIndices(); break;
+  }
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); const s = $('#globalSearch'); if (s) s.focus(); } });
+
+function wireGlobalSearch() {
+  const s = $('#globalSearch');
+  let t;
+  s.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { state.q = s.value.trim(); const r = parseHash().route; if (['agents', 'locatif', 'referentiels', 'interventions'].includes(r)) { if (r === 'agents') state.agents.page = 1; if (r === 'interventions') state.inter.page = 1; pendingFocus = '#globalSearch'; render(); } }, 450); });
+  s.addEventListener('keydown', (e) => { if (e.key === 'Enter') { state.q = s.value.trim(); pendingFocus = '#globalSearch'; render(); } });
+}
+
+window.addEventListener('hashchange', render);
+wireGlobalSearch();
+render();
+</script>
+</body>
+</html>

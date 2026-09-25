@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"tertiary-fixed":"#eaddff","on-primary-fixed":"#001551","inverse-on-surface":"#eaf1ff","on-secondary-container":"#5c647a","surface-container-highest":"#d3e4fe","inverse-surface":"#213145","secondary-container":"#dae2fd","on-error":"#ffffff","outline-variant":"#c4c5d7","secondary-fixed":"#dae2fd","background":"#f8f9ff","secondary":"#565e74","primary-container":"#1d4ed8","primary-fixed":"#dce1ff","on-tertiary-fixed":"#25005a","error-container":"#ffdad6","on-secondary-fixed":"#131b2e","surface-dim":"#cbdbf5","surface":"#f8f9ff","on-tertiary-fixed-variant":"#5a00c6","on-tertiary":"#ffffff","on-primary-fixed-variant":"#0039b5","primary-fixed-dim":"#b7c4ff","on-error-container":"#93000a","on-tertiary-container":"#dfccff","surface-container-lowest":"#ffffff","outline":"#747686","surface-tint":"#2151da","tertiary":"#5700c0","tertiary-fixed-dim":"#d2bbff","on-secondary-fixed-variant":"#3f465c","on-secondary":"#ffffff","tertiary-container":"#712ae2","surface-container":"#e5eeff","on-primary":"#ffffff","on-surface":"#0b1c30","secondary-fixed-dim":"#bec6e0","primary":"#0037b0","on-background":"#0b1c30","surface-bright":"#f8f9ff","inverse-primary":"#b7c4ff","surface-container-high":"#dce9ff","on-surface-variant":"#434655","surface-variant":"#d3e4fe","error":"#ba1a1a","surface-container-low":"#eff4ff","on-primary-container":"#cad3ff"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-md":"0.75rem","gutter":"1rem","space-lg":"1rem","space-xl":"1.5rem","space-xs":"0.25rem","space-sm":"0.5rem","gutter-lg":"1.5rem","margin-mobile":"0.75rem","margin":"1.25rem"},"fontFamily":{"headline-sm":["Inter"],"headline-md":["Inter"],"headline-lg-mobile":["Inter"],"label-mono-sm":["JetBrains Mono"],"title-sm":["Inter"],"body-md":["Inter"],"label-mono-lg":["JetBrains Mono"],"body-sm":["Inter"],"headline-lg":["Inter"],"title-md":["Inter"],"body-lg":["Inter"],"headline-xl":["Inter"],"label-mono-md":["JetBrains Mono"]},"fontSize":{"headline-sm":["1rem",{"lineHeight":"1.5rem","fontWeight":"600"}],"headline-md":["1.25rem",{"lineHeight":"1.75rem","fontWeight":"600"}],"headline-lg-mobile":["1.25rem",{"lineHeight":"1.75rem","fontWeight":"600"}],"label-mono-sm":["0.6875rem",{"lineHeight":"0.875rem","fontWeight":"500"}],"title-sm":["0.75rem",{"lineHeight":"1rem","fontWeight":"600"}],"body-md":["0.875rem",{"lineHeight":"1.25rem","fontWeight":"400"}],"label-mono-lg":["0.875rem",{"lineHeight":"1.25rem","fontWeight":"500"}],"body-sm":["0.8125rem",{"lineHeight":"1.125rem","fontWeight":"400"}],"headline-lg":["1.5rem",{"lineHeight":"2rem","fontWeight":"600"}],"title-md":["0.875rem",{"lineHeight":"1.25rem","fontWeight":"600"}],"body-lg":["1rem",{"lineHeight":"1.5rem","fontWeight":"400"}],"headline-xl":["2rem",{"lineHeight":"2.5rem","fontWeight":"700"}],"label-mono-md":["0.75rem",{"lineHeight":"1rem","fontWeight":"500"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased min-h-screen flex flex-col"><header class="fixed top-0 w-full z-50 bg-[#0f172a] text-[#cbd5e1] border-b border-[#1e293b]"><div class="h-28 w-full max-w-7xl mx-auto px-gutter-lg flex flex-col justify-between pt-2 pb-0"><div class="flex items-center justify-between gap-space-lg w-full"><div class="flex items-center gap-space-md"><img alt="ASTECH Explorer Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WMLnStoWx_Ec1okqUHw_W5xkatNkd6d8bMrcuFCNNY44PQn-B9h0QisZzuy8YabfC9Dkm0A8F7whDhrJhyM8HVjjc9ly9Anik6C6BNzWXHScR2p0tqdZZZisOUUKeBUMcAu2iWLIDq7pRjVEKUJaFobGMAhl2rUKDJyJ3gviUb3GSnC20-WN_JLStRoXbACy2_W5b0uomwck3xY8NOqtdsqTz7BAd6wKgg2_L-TPFLeaLJPCoWiMAR"/><div class="flex items-center gap-space-sm"><span class="font-headline-md text-headline-md font-bold tracking-tight text-white">ASTECH Explorer</span><span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#1e293b] text-[#94a3b8] font-label-mono-sm text-label-mono-sm border border-[#334155]"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>Oracle 19c • PIVRY01</span></div></div><div class="flex-1 max-w-lg hidden md:block mx-space-md"><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-2.5 text-[#64748b] text-[18px]">search</span><input class="w-full h-8 pl-8 pr-12 rounded bg-[#1e293b] text-white placeholder-[#64748b] font-body-sm text-body-sm border border-[#334155] focus:outline-none focus:border-primary-container" placeholder="Rechercher agent, matricule, contrat, bien..." type="text"/><span class="absolute right-2 font-label-mono-sm text-label-mono-sm text-[#64748b] border border-[#334155] px-1 py-0.2 rounded">⌘K</span></div></div><div class="flex items-center gap-space-md"><span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-[#1e293b] text-[#94a3b8] font-label-mono-sm text-label-mono-sm border border-[#334155]"><span class="material-symbols-outlined text-[15px] text-[#94a3b8]">lock</span>Mode Lecture Seule</span><button class="relative p-1.5 rounded text-[#cbd5e1] hover:text-white hover:bg-[#1e293b] transition-colors"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400 ring-2 ring-[#0f172a]"></span></button><div class="flex items-center gap-space-sm pl-space-sm border-l border-[#1e293b]"><div class="text-right hidden sm:block"><div class="font-title-sm text-title-sm text-white leading-tight">J. Martin</div><div class="font-label-mono-sm text-label-mono-sm text-[#94a3b8]">Administrateur Système</div></div><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-1 ring-[#334155]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDH0AWE6ETB_hKwTpcAAlGfwv0bXJBYRWu7x9xJnJD9cvgyN5L6Z_iHSAEEz7KfbFer1zMhaqwounHYVgWuCkfKngFzfLxbAWdyJucwFWXU0B-XDDoV_Gg0U0lIjX0_CKIJPyzYYJ-LMUWE8FWF2Kba8HFhHYmgywU7B5H6wxVD6ZEHAaze43VM-vxloWEERqtOUmWhPs-r3HMIxMbwSwoyhwIkknQLBt4sh7gm84UdAW_Y0p-hYUI"/></div></div></div><nav class="flex items-center gap-space-lg overflow-x-auto whitespace-nowrap pt-1" data-active-classes="text-white border-b-2 border-primary-container font-semibold"><a aria-current="page" class="pb-2 transition-colors text-white border-b-2 border-primary-container font-semibold" data-path="tableau-de-bord" href="#">Tableau de bord</a><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="agents-et-comptes" href="#">Agents &amp; Comptes</a><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="synchro-rh" href="#">Synchro RH</a><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="gestion-locative" href="#">Gestion Locative</a><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="referentiels" href="#">Référentiels</a><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="interventions" href="#">Interventions</a><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="indices" href="#">Indices</a></nav></div></header><main class="w-full max-w-7xl mx-auto px-gutter-lg pt-28 flex-1 bg-surface"><div class="flex flex-col w-full">
+<!-- Operational Sub-Header Bar -->
+<div class="flex flex-col md:flex-row md:items-center justify-between pb-space-lg mb-space-lg gap-space-md">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs text-secondary font-label-mono-sm text-label-mono-sm mb-space-xs">
+<span>Accueil</span>
+<span class="material-symbols-outlined text-[14px] text-outline">chevron_right</span>
+<span class="text-primary font-semibold">Vue d'ensemble</span>
+<span class="material-symbols-outlined text-[14px] text-outline">chevron_right</span>
+<span class="text-on-surface-variant">PIVRY01.ASTECHIVR</span>
+</div>
+<div class="flex items-center gap-space-md">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Tableau de bord opérationnel</h1>
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-label-mono-sm text-label-mono-sm">
+<span class="material-symbols-outlined text-[14px] text-primary">database</span>
+          Mode Lecture Seule
+        </span>
+</div>
+</div>
+<!-- Actions / Filter Controls -->
+<div class="flex flex-wrap items-center gap-space-sm">
+<div class="relative flex items-center bg-surface-container-lowest rounded shadow-sm px-space-sm py-1.5">
+<span class="material-symbols-outlined text-[16px] text-secondary mr-1.5">calendar_month</span>
+<select class="bg-transparent font-title-md text-title-md text-on-surface outline-none cursor-pointer pr-space-md">
+<option selected="" value="2024-2026">Exercice 2024-2026 (Actif)</option>
+<option value="2023">Historique 2023</option>
+<option value="2022">Historique 2022</option>
+</select>
+</div>
+<button class="flex items-center gap-1.5 px-space-md py-1.5 rounded bg-surface-container-lowest text-primary font-title-md text-title-md shadow-sm hover:bg-surface-container-low transition-colors" id="refreshCacheBtn">
+<span class="material-symbols-outlined text-[18px]" id="refreshIcon">sync</span>
+<span>Actualiser le cache (Proxy :8099)</span>
+</button>
+</div>
+</div>
+<!-- Oracle Node Status Strip -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm mb-space-xl flex flex-wrap items-center justify-between gap-space-md">
+<div class="flex flex-wrap items-center gap-space-lg">
+<div class="flex items-center gap-2">
+<span class="relative flex h-3 w-3">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-primary-container"></span>
+</span>
+<div class="flex flex-col">
+<span class="font-label-mono-sm text-label-mono-sm text-secondary">Ressource Oracle</span>
+<span class="font-label-mono-md text-label-mono-md text-on-surface font-semibold">Oracle 19c EE (10.103.130.25:1523/PIVRY01)</span>
+</div>
+</div>
+<div class="h-6 w-px bg-surface-container-high hidden sm:block"></div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary">memory</span>
+<div class="flex flex-col">
+<span class="font-label-mono-sm text-label-mono-sm text-secondary">Driver Oracle Call Interface</span>
+<span class="font-label-mono-md text-label-mono-md text-on-surface">Client Thick oracledb actif (libclntsh.so)</span>
+</div>
+</div>
+<div class="h-6 w-px bg-surface-container-high hidden sm:block"></div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-secondary">update</span>
+<div class="flex flex-col">
+<span class="font-label-mono-sm text-label-mono-sm text-secondary">État Proxy ASTECH</span>
+<span class="font-label-mono-md text-label-mono-md text-on-surface">Dernière synchro DB : <span class="font-semibold text-primary">il y a 3 min</span></span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-xs font-label-mono-sm text-label-mono-sm bg-surface-container px-2.5 py-1 rounded text-on-surface">
+<span class="inline-block w-2 h-2 rounded-full bg-primary-container"></span>
+      Pool connexions : 18/20 idle • 24.1 ms ping
+    </div>
+</div>
+<!-- Primary Metric Cards Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-lg mb-space-xl">
+<!-- Card 1: Agents & Comptes -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-title-sm text-title-sm text-secondary uppercase tracking-wider">Agents &amp; Comptes</span>
+<div class="p-1.5 rounded-lg bg-surface-container text-primary">
+<span class="material-symbols-outlined text-[18px]">badge</span>
+</div>
+</div>
+<div class="flex items-baseline gap-2 mb-space-sm">
+<span class="font-headline-xl text-headline-xl text-on-surface">4 941</span>
+<span class="font-label-mono-sm text-label-mono-sm px-1.5 py-0.5 rounded bg-surface-container-high text-primary font-semibold">+12 ce mois</span>
+</div>
+</div>
+<div class="pt-space-sm mt-space-xs bg-surface-container-low rounded-lg p-2 flex justify-between items-center text-on-surface-variant font-label-mono-sm text-label-mono-sm">
+<div class="flex flex-col">
+<span class="text-secondary text-[10px]">ACTIFS</span>
+<span class="font-bold text-on-surface">269</span>
+</div>
+<div class="h-4 w-px bg-surface-container-highest"></div>
+<div class="flex flex-col">
+<span class="text-secondary text-[10px]">AGENTS SIMPLES</span>
+<span class="font-bold text-on-surface">4 672</span>
+</div>
+<div class="h-4 w-px bg-surface-container-highest"></div>
+<div class="flex flex-col">
+<span class="text-secondary text-[10px]">ADMINS</span>
+<span class="font-bold text-primary font-semibold">30</span>
+</div>
+</div>
+</div>
+<!-- Card 2: Alerte Synchro Studio-RH -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden">
+<div class="absolute top-0 right-0 w-24 h-24 bg-error-container/30 rounded-bl-full pointer-events-none"></div>
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-title-sm text-title-sm text-secondary uppercase tracking-wider">Synchro Studio-RH</span>
+<div class="p-1.5 rounded-lg bg-error-container text-on-error-container">
+<span class="material-symbols-outlined text-[18px]">warning</span>
+</div>
+</div>
+<div class="flex items-baseline gap-2 mb-space-sm">
+<span class="font-headline-xl text-headline-xl text-error">42</span>
+<span class="font-label-mono-sm text-label-mono-sm px-1.5 py-0.5 rounded bg-error-container text-on-error-container font-semibold">Écarts détectés</span>
+</div>
+<div class="space-y-1 font-body-sm text-body-sm text-on-surface-variant mb-space-sm">
+<div class="flex items-center gap-1.5">
+<span class="font-label-mono-sm text-label-mono-sm text-error font-semibold">× 18</span>
+<span>comptes ASTECH orphelins</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="font-label-mono-sm text-label-mono-sm text-primary font-semibold">+ 24</span>
+<span>agents RH à provisionner</span>
+</div>
+</div>
+</div>
+<button class="w-full mt-2 py-1.5 px-space-sm rounded bg-error-container hover:bg-error/20 text-on-error-container font-title-sm text-title-sm flex items-center justify-center gap-1 transition-colors">
+<span>Examiner la réconciliation</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+<!-- Card 3: Gestion Locative -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-title-sm text-title-sm text-secondary uppercase tracking-wider">Gestion Locative (≥ 2024)</span>
+<div class="p-1.5 rounded-lg bg-surface-container text-primary">
+<span class="material-symbols-outlined text-[18px]">apartment</span>
+</div>
+</div>
+<div class="flex items-baseline gap-2 mb-space-sm">
+<span class="font-headline-xl text-headline-xl text-on-surface">249</span>
+<span class="font-label-mono-sm text-label-mono-sm text-secondary">Biens enregistrés</span>
+</div>
+</div>
+<div class="pt-space-sm mt-space-xs bg-surface-container-low rounded-lg p-2 grid grid-cols-2 gap-2 text-on-surface-variant font-label-mono-sm text-label-mono-sm">
+<div class="flex flex-col">
+<span class="text-secondary text-[10px]">CONTRATS ACTIFS</span>
+<span class="font-bold text-on-surface">263</span>
+</div>
+<div class="flex flex-col">
+<span class="text-secondary text-[10px]">LOCATAIRES</span>
+<span class="font-bold text-on-surface">166</span>
+</div>
+</div>
+</div>
+<!-- Card 4: Quittancement & Échéances -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-title-sm text-title-sm text-secondary uppercase tracking-wider">Quittancement &amp; Échéances</span>
+<div class="p-1.5 rounded-lg bg-secondary-container text-on-secondary-fixed">
+<span class="material-symbols-outlined text-[18px]">payments</span>
+</div>
+</div>
+<div class="flex items-baseline gap-2 mb-space-sm">
+<span class="font-headline-xl text-headline-xl text-on-surface">482 650 €</span>
+<span class="font-label-mono-sm text-label-mono-sm text-secondary">/ mois</span>
+</div>
+</div>
+<div class="pt-space-sm mt-space-xs bg-surface-container-low rounded-lg p-2 flex justify-between items-center text-on-surface-variant font-label-mono-sm text-label-mono-sm">
+<div class="flex flex-col">
+<span class="text-secondary text-[10px]">TAUX ÉMISSION</span>
+<span class="font-bold text-primary">98.2%</span>
+</div>
+<div class="h-4 w-px bg-surface-container-highest"></div>
+<div class="flex flex-col">
+<span class="text-secondary text-[10px]">ÉCHÉANCES PRÉVIS.</span>
+<span class="font-bold text-on-surface">2 925</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Visual Analytics & Status Band -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-space-lg mb-space-xl">
+<!-- Visual Ring & Distribution -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-space-md">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Répartition du Quittancement</h2>
+<p class="font-body-sm text-body-sm text-secondary">Volumes prévisionnels sur le trimestre T1 2026</p>
+</div>
+<span class="material-symbols-outlined text-[20px] text-secondary">pie_chart</span>
+</div>
+<div class="flex items-center justify-center gap-space-lg my-space-sm">
+<div class="relative w-32 h-32 flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 36 36">
+<path class="text-surface-container" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="4"></path>
+<!-- Mandatée (Violet 55%) -->
+<path class="text-tertiary-container" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="55, 100" stroke-width="4"></path>
+<!-- Émise (Vert 30%) offset 55 -->
+<path class="text-primary-container" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="30, 100" stroke-dashoffset="-55" stroke-width="4"></path>
+<!-- Planifiée (10%) offset 85 -->
+<path class="text-secondary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="10, 100" stroke-dashoffset="-85" stroke-width="4"></path>
+</svg>
+<div class="absolute flex flex-col items-center justify-center text-center">
+<span class="font-headline-md text-headline-md text-on-surface">2 925</span>
+<span class="font-label-mono-sm text-[10px] text-secondary">Lignes</span>
+</div>
+</div>
+<div class="flex flex-col gap-1.5 font-label-mono-sm text-label-mono-sm">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-sm bg-tertiary-container"></span>
+<span class="text-on-surface font-semibold">1 608</span>
+<span class="text-secondary">Mandatées (55%)</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-sm bg-primary-container"></span>
+<span class="text-on-surface font-semibold">877</span>
+<span class="text-secondary">Émises (30%)</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-sm bg-secondary"></span>
+<span class="text-on-surface font-semibold">293</span>
+<span class="text-secondary">Planifiées (10%)</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-sm bg-error"></span>
+<span class="text-on-surface font-semibold">147</span>
+<span class="text-secondary">Échues (5%)</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<a class="font-title-sm text-title-sm text-primary hover:underline" href="#">Générer le récapitulatif comptable →</a>
+</div>
+</div>
+<!-- Active Facilities Spotlights (Rich Image Placeholders) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-space-sm">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Sites Principaux Sous Gestion</h2>
+<p class="font-body-sm text-body-sm text-secondary">Supervision patrimoniale PIVRY01</p>
+</div>
+<span class="material-symbols-outlined text-[20px] text-secondary">domain</span>
+</div>
+<div class="grid grid-cols-2 gap-space-sm my-space-xs">
+<div class="relative rounded-lg overflow-hidden h-24 bg-surface-container group">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="A modern industrial cleanroom and scientific research engineering complex exterior in high precision architectural rendering under neutral daylight with glass and brushed steel details." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyYQVLlhHIrEdnpwuQPxUupmM_QssO_TaBaZ-S9SiREZoM5Oj7-Chz4_cZpy3mHZLn-c-46qfvJi4Z47Ef6jZt74BulSKOdwwszd23pilxUWfUgGycYZSmfR7s6jAB4hduJekTEdeVRMoMXgrZovhmL31ux_vQXo4aeXUjR_GoPSUy0jCAwzGBPzFA1HtFJ6HROC7ujlWE-nYKY1STdvbs5DA6CtaZ8BypNffJGoluF5sugpUt8oQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-2 flex flex-col justify-end">
+<span class="font-title-sm text-[11px] text-white truncate font-semibold">Centre R&amp;D Ivry-sur-Seine</span>
+<span class="font-label-mono-sm text-[10px] text-white/80">74 baux • 100% occ.</span>
+</div>
+</div>
+<div class="relative rounded-lg overflow-hidden h-24 bg-surface-container group">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Modern technical logistics park administrative office building with clean corporate facade concrete panels large glazed windows under soft morning light." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHU0R8gZVbE7lK3hZbiMw-wFp_fHBsGqDHXLgRnPxZQSC0vCi1Soc0BfSPiK8XptT8LeV1ESdmK_1JJFhGEfGihRAmBJV_gbe15Ey6kqO6T0vdOjH2tJ4Jbh0bW6UB3wbh5zLVP8JqzbQFXmL_Da51IqCP-p7MFi1sj5juEDUfTcUwpSwdU-ea_K99-QzM14r05WdJQMQLKj8-BLfLn2nSRhM5kV2vvGk3JvbruSOscBOgYTHrx5Y"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-2 flex flex-col justify-end">
+<span class="font-title-sm text-[11px] text-white truncate font-semibold">Hub Logistique Sud Paris</span>
+<span class="font-label-mono-sm text-[10px] text-white/80">38 baux • 94% occ.</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-space-xs font-label-mono-sm text-label-mono-sm text-secondary">
+<span>249 actifs référencés</span>
+<span class="text-primary font-semibold cursor-pointer hover:underline">Voir la cartographie</span>
+</div>
+</div>
+<!-- Quick Operations Dry-Run Deck -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-space-sm">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Simulateur d'Audit Proxy</h2>
+<p class="font-body-sm text-body-sm text-secondary">Mode sécurisé sans altération Oracle</p>
+</div>
+<span class="material-symbols-outlined text-[20px] text-primary">science</span>
+</div>
+<div class="bg-surface-container-low rounded-lg p-space-md space-y-2">
+<div class="flex items-center justify-between font-label-mono-sm text-label-mono-sm">
+<span class="text-secondary">Statut Dry-Run :</span>
+<span class="text-primary font-semibold">Prêt (aucun verrou exclusif)</span>
+</div>
+<div class="flex items-center justify-between font-label-mono-sm text-label-mono-sm">
+<span class="text-secondary">Buffer de cache :</span>
+<span class="text-on-surface font-semibold">4.8 MB / 64 MB alloués</span>
+</div>
+<div class="flex items-center justify-between font-label-mono-sm text-label-mono-sm">
+<span class="text-secondary">Validation schémas :</span>
+<span class="text-on-surface font-semibold">ASTECH_AGENT, GEST_CONTRAT</span>
+</div>
+</div>
+<button class="w-full py-2 px-space-md rounded bg-surface-container-lowest text-primary font-title-md text-title-md hover:bg-surface-container transition-colors shadow-sm flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">play_circle</span>
+<span>Lancer un test de conformité globale</span>
+</button>
+</div>
+</div>
+<!-- Main Section: 2 Column Layout (2/3 + 1/3) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+<!-- Left Column (8 cols = 2/3) -->
+<div class="lg:col-span-8 flex flex-col gap-space-lg">
+<!-- Card: Prochaines échéances locatives -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<div class="p-space-lg flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
+<div>
+<div class="flex items-center gap-space-sm">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Prochaines échéances locatives</h2>
+<span class="font-label-mono-sm text-label-mono-sm px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-medium">≥ 01/01/2024</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary mt-0.5">Surveillance en direct des règlements et facturations de bail</p>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-mono-sm text-label-mono-sm text-secondary">5 / 2 925 affichées</span>
+<button class="px-space-md py-1 rounded bg-surface-container-low text-primary font-title-sm text-title-sm hover:bg-surface-container transition-colors">
+              Exporter CSV
+            </button>
+</div>
+</div>
+<!-- Table Dense -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-secondary font-label-mono-sm text-label-mono-sm uppercase tracking-wider">
+<th class="py-2.5 px-space-md font-medium">Échéance</th>
+<th class="py-2.5 px-space-md font-medium">Réf Contrat</th>
+<th class="py-2.5 px-space-md font-medium">Locataire</th>
+<th class="py-2.5 px-space-md font-medium">Bien Rattaché</th>
+<th class="py-2.5 px-space-md font-medium text-right">Montant TTC</th>
+<th class="py-2.5 px-space-md font-medium text-center">Statut</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm text-on-surface divide-y-0">
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-2.5 px-space-md font-label-mono-sm text-label-mono-sm text-on-surface font-semibold">15/04/2026</td>
+<td class="py-2.5 px-space-md font-label-mono-sm text-label-mono-sm text-primary">CTR-2024-0089</td>
+<td class="py-2.5 px-space-md font-semibold text-on-surface">HEXA TECHNO SAS</td>
+<td class="py-2.5 px-space-md text-on-surface-variant">Bât B - Lot 302 (Ivry)</td>
+<td class="py-2.5 px-space-md text-right font-label-mono-md text-label-mono-md font-semibold">14 250,00 €</td>
+<td class="py-2.5 px-space-md text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-mono-sm text-label-mono-sm font-semibold">
+<span class="material-symbols-outlined text-[13px]">task_alt</span> Mandatée
+                  </span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/60 transition-colors bg-surface-container-lowest">
+<td class="py-2.5 px-space-md font-label-mono-sm text-label-mono-sm text-on-surface font-semibold">10/04/2026</td>
+<td class="py-2.5 px-space-md font-label-mono-sm text-label-mono-sm text-primary">CTR-2024-0104</td>
+<td class="py-2.5 px-space-md font-semibold text-on-surface">BIO-DIAGNOSTICS LAB</td>
+<td class="py-2.5 px-space-md text-on-surface-variant">Ail RDC Labo 12</td>
+<td class="py-2.5 px-space-md text-right font-label-mono-md text-label-mono-md font-semibold">22 180,40 €</td>
+<td class="py-2.5 px-space-md text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-highest text-primary font-label-mono-sm text-label-mono-sm font-semibold">
+<span class="material-symbols-outlined text-[13px]">send</span> Émise
+                  </span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-2.5 px-space-md font-label-mono-sm text-label-mono-sm text-on-surface font-semibold">01/04/2026</td>
+<td class="py-2.5 px-space-md font-label-mono-sm text-label-mono-sm text-primary">CTR-2024-0012</td>
+<td class="py-2.5 px-space-md font-semibold text-on-surface">SOCIÉTÉ CIVILE DU PARC</td>
+<td class="py-2.5 px-space-md text-on-surface-variant">Entrepôt Logistique C4</td>
+<td class="py-2.5 px-space-md text-right font-label-mono-md text-label-mono-md font-semibold">48 900,00 €</td>
+<td class="py-2.5 px-space-md text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-label-mono-sm text-label-mono-sm font-semibold">
+<span class="material-symbols-outlined text-[13px]">event_repeat</span> Planifiée
+                  </span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/60 transition-colors bg-surface-container-lowest">
+<td class="py-2.5 px-space-md font-label-mono-sm text-label-mono-sm text-on-surface font-semibold">28/03/2026</td>
+<td class="py-2.5 px-space-md font-label-mono-sm text-label-mono-sm text-primary">CTR-2024-0199</td>
+<td class="py-2.5 px-space-md font-semibold text-on-surface">PHARMA LOGISTICS EUROPE</td>
+<td class="py-2.5 px-space-md text-on-surface-variant">Zone Froid - Hangar 2</td>
+<td class="py-2.5 px-space-md text-right font-label-mono-md text-label-mono-md font-semibold">31 400,00 €</td>
+<td class="py-2.5 px-space-md text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-mono-sm text-label-mono-sm font-semibold">
+<span class="material-symbols-outlined text-[13px]">priority_high</span> Échue
+                  </span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-2.5 px-space-md font-label-mono-sm text-label-mono-sm text-on-surface font-semibold">25/03/2026</td>
+<td class="py-2.5 px-space-md font-label-mono-sm text-label-mono-sm text-primary">CTR-2024-0045</td>
+<td class="py-2.5 px-space-md font-semibold text-on-surface">ALTAIR CONSULTING</td>
+<td class="py-2.5 px-space-md text-on-surface-variant">Bureaux 4ème Sud</td>
+<td class="py-2.5 px-space-md text-right font-label-mono-md text-label-mono-md font-semibold">8 750,00 €</td>
+<td class="py-2.5 px-space-md text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-highest text-primary font-label-mono-sm text-label-mono-sm font-semibold">
+<span class="material-symbols-outlined text-[13px]">send</span> Émise
+                  </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-space-sm bg-surface-container-low/50 text-center">
+<a class="font-title-sm text-title-sm text-primary hover:underline" href="#">Accéder à toutes les échéances de la gestion locative (2 925 enregistrements) →</a>
+</div>
+</div>
+<!-- Card: Derniers contrats & avenants enregistrés -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<div class="p-space-lg flex items-center justify-between">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Derniers contrats &amp; avenants enregistrés</h2>
+<p class="font-body-sm text-body-sm text-secondary">Synchronisés depuis le référentiel contrat ASTECH</p>
+</div>
+<button class="px-space-md py-1 rounded bg-surface-container-low text-primary font-title-sm text-title-sm hover:bg-surface-container transition-colors">
+            Nouveau contrat
+          </button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-secondary font-label-mono-sm text-label-mono-sm uppercase tracking-wider">
+<th class="py-2.5 px-space-md font-medium">N° Contrat</th>
+<th class="py-2.5 px-space-md font-medium">Titulaire du Bail</th>
+<th class="py-2.5 px-space-md font-medium">Type Bail</th>
+<th class="py-2.5 px-space-md font-medium">Période Validité</th>
+<th class="py-2.5 px-space-md font-medium text-right">Loyer Mensuel</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm text-on-surface">
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-2.5 px-space-md font-label-mono-sm text-label-mono-sm font-semibold text-primary">CTR-2026-0041</td>
+<td class="py-2.5 px-space-md font-semibold text-on-surface">INRAE DÉLÉGATION PARIS</td>
+<td class="py-2.5 px-space-md"><span class="px-2 py-0.5 rounded bg-surface-container font-label-mono-sm text-label-mono-sm text-on-surface">Bail Commercial 3/6/9</span></td>
+<td class="py-2.5 px-space-md font-label-mono-sm text-label-mono-sm text-secondary">01/01/2026 → 31/12/2034</td>
+<td class="py-2.5 px-space-md text-right font-label-mono-md text-label-mono-md font-semibold">18 500,00 €</td>
+</tr>
+<tr class="hover:bg-surface-container-low/60 transition-colors bg-surface-container-lowest">
+<td class="py-2.5 px-space-md font-label-mono-sm text-label-mono-sm font-semibold text-primary">AVN-2026-0012</td>
+<td class="py-2.5 px-space-md font-semibold text-on-surface">THERMO SCIENTIFIC FR</td>
+<td class="py-2.5 px-space-md"><span class="px-2 py-0.5 rounded bg-surface-container font-label-mono-sm text-label-mono-sm text-on-surface">Avenant d'extension</span></td>
+<td class="py-2.5 px-space-md font-label-mono-sm text-label-mono-sm text-secondary">15/02/2026 → 14/02/2029</td>
+<td class="py-2.5 px-space-md text-right font-label-mono-md text-label-mono-md font-semibold">34 200,00 €</td>
+</tr>
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-2.5 px-space-md font-label-mono-sm text-label-mono-sm font-semibold text-primary">CTR-2025-0819</td>
+<td class="py-2.5 px-space-md font-semibold text-on-surface">SERVICES GÉOMATIQUES EST</td>
+<td class="py-2.5 px-space-md"><span class="px-2 py-0.5 rounded bg-surface-container font-label-mono-sm text-label-mono-sm text-on-surface">Convention d'occupation</span></td>
+<td class="py-2.5 px-space-md font-label-mono-sm text-label-mono-sm text-secondary">01/10/2025 → 30/09/2027</td>
+<td class="py-2.5 px-space-md text-right font-label-mono-md text-label-mono-md font-semibold">6 450,00 €</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Right Column (4 cols = 1/3) -->
+<div class="lg:col-span-4 flex flex-col gap-space-lg">
+<!-- Card: Alerte Synchronisation RH -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col">
+<div class="flex items-center justify-between mb-space-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-error text-[20px]">sync_problem</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Alerte Synchro RH</h2>
+</div>
+<span class="font-label-mono-sm text-label-mono-sm px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-semibold">42 Écarts</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary mb-space-md">Désynchronisation entre les bases Studio-RH et les profils Oracle ASTECHIVR.</p>
+<div class="space-y-space-sm mb-space-md">
+<div class="p-space-sm rounded bg-surface-container-low flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-title-sm text-title-sm text-on-surface">DUPONT Marc</span>
+<span class="font-label-mono-sm text-label-mono-sm px-1.5 py-0.2 bg-error-container text-on-error-container rounded">À désactiver</span>
+</div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">Matricule : M04921 • ID ASTECH : 2084</div>
+<p class="font-body-sm text-[12px] text-error">Actif dans ASTECH sans aucun contrat RH valide</p>
+</div>
+<div class="p-space-sm rounded bg-surface-container-low flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-title-sm text-title-sm text-on-surface">BERTRAND Sophie</span>
+<span class="font-label-mono-sm text-label-mono-sm px-1.5 py-0.2 bg-secondary-container text-on-secondary-fixed rounded">À provisionner</span>
+</div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">Matricule : M10834 • CDD Chercheur</div>
+<p class="font-body-sm text-[12px] text-primary">RH actif non présent sur la base ASTECH</p>
+</div>
+<div class="p-space-sm rounded bg-surface-container-low flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-title-sm text-title-sm text-on-surface">KLEIN Thomas</span>
+<span class="font-label-mono-sm text-label-mono-sm px-1.5 py-0.2 bg-error-container text-on-error-container rounded">À désactiver</span>
+</div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">Matricule : M03190 • Fin contrat 31/12/23</div>
+<p class="font-body-sm text-[12px] text-error">Session ASTECH ouverte ces 7 derniers jours</p>
+</div>
+</div>
+<button class="w-full py-2 px-space-md rounded bg-primary text-on-primary font-title-md text-title-md hover:bg-primary-container transition-colors flex items-center justify-center gap-1.5 shadow-sm">
+<span>Ouvrir l'outil de synchronisation RH</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+<!-- Card: Indices INSEE & Révisions -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col">
+<div class="flex items-center justify-between mb-space-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">trending_up</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Indices INSEE &amp; Révisions</h2>
+</div>
+<span class="font-label-mono-sm text-label-mono-sm text-secondary">Source BDM</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary mb-space-md">Paramètres d'indexation légale des baux commerciaux et d'habitation.</p>
+<div class="space-y-space-sm mb-space-md">
+<div class="flex items-center justify-between p-space-sm rounded bg-surface-container-low">
+<div>
+<div class="font-title-sm text-title-sm text-on-surface">IRL (Réf. Loyers)</div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">Trimestre T3 2025</div>
+</div>
+<div class="text-right">
+<div class="font-label-mono-md text-label-mono-md font-bold text-on-surface">144.52</div>
+<span class="inline-flex items-center gap-1 font-label-mono-sm text-[10px] text-primary font-semibold">
+<span class="material-symbols-outlined text-[12px]">check_circle</span> À jour
+              </span>
+</div>
+</div>
+<div class="flex items-center justify-between p-space-sm rounded bg-surface-container-low">
+<div>
+<div class="font-title-sm text-title-sm text-on-surface">ILAT (Tertiaire)</div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">Trimestre T3 2025</div>
+</div>
+<div class="text-right">
+<div class="font-label-mono-md text-label-mono-md font-bold text-on-surface">136.20</div>
+<span class="inline-flex items-center gap-1 font-label-mono-sm text-[10px] text-primary font-semibold">
+<span class="material-symbols-outlined text-[12px]">check_circle</span> À jour
+              </span>
+</div>
+</div>
+<div class="flex items-center justify-between p-space-sm rounded bg-error-container/20">
+<div>
+<div class="font-title-sm text-title-sm text-on-surface">ICC (Coût Construction)</div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">Trimestre T2 2025 (2 189)</div>
+</div>
+<div class="text-right">
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-error-container text-on-error-container font-label-mono-sm text-[11px] font-semibold">
+                T3 dispo
+              </span>
+</div>
+</div>
+</div>
+<button class="w-full py-1.5 px-space-md rounded bg-surface-container-lowest text-primary font-title-sm text-title-sm hover:bg-surface-container transition-colors shadow-sm flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px]">edit_calendar</span>
+<span>Appliquer les révisions d'indices</span>
+</button>
+</div>
+<!-- Card: Activité GMAO & Interventions -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col">
+<div class="flex items-center justify-between mb-space-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">build</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">GMAO &amp; Interventions</h2>
+</div>
+<span class="font-label-mono-sm text-label-mono-sm px-2 py-0.5 rounded bg-surface-container text-on-surface">Module Maintenance</span>
+</div>
+<div class="grid grid-cols-2 gap-space-sm my-space-sm">
+<div class="p-space-sm rounded bg-surface-container-low flex flex-col">
+<span class="font-headline-md text-headline-md text-on-surface font-bold">14</span>
+<span class="font-body-sm text-[12px] text-secondary">Interventions en cours</span>
+</div>
+<div class="p-space-sm rounded bg-surface-container-low flex flex-col">
+<span class="font-headline-md text-headline-md text-error font-bold">3</span>
+<span class="font-body-sm text-[12px] text-secondary">Demandes EPI en attente</span>
+</div>
+</div>
+<div class="space-y-2 mt-2">
+<div class="flex items-center justify-between text-body-sm text-on-surface-variant font-label-mono-sm text-label-mono-sm">
+<span>Dernière DI #8920 (Ascenseur A)</span>
+<span class="text-primary font-semibold">En cours</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-1.5">
+<div class="bg-primary h-1.5 rounded-full" style="width: 65%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Micro-interaction for Cache Refresh Button
+  document.getElementById('refreshCacheBtn')?.addEventListener('click', function() {
+    const icon = document.getElementById('refreshIcon');
+    if (!icon) return;
+    icon.classList.add('animate-spin');
+    setTimeout(() => {
+      icon.classList.remove('animate-spin');
+    }, 1200);
+  });
+</script></main><footer class="w-full bg-[#0f172a] text-[#94a3b8] border-t border-[#1e293b] mt-space-xl"><div class="max-w-7xl mx-auto px-gutter-lg py-space-md flex flex-col sm:flex-row items-center justify-between gap-space-sm font-label-mono-sm text-label-mono-sm"><div>Proxy Oracle ASTECH • Schéma <span class="text-[#cbd5e1]">ASTECHIVR</span> • Port <span class="text-[#cbd5e1]">8099</span> • <span class="text-emerald-400">Thick mode actif</span></div><div>ASTECH Explorer v2.4.12 • Session PIVRY01-PROD-01</div></div></footer></body></html>

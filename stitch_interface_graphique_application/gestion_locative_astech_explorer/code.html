@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"tertiary-fixed":"#eaddff","on-primary-fixed":"#001551","inverse-on-surface":"#eaf1ff","on-secondary-container":"#5c647a","surface-container-highest":"#d3e4fe","inverse-surface":"#213145","secondary-container":"#dae2fd","on-error":"#ffffff","outline-variant":"#c4c5d7","secondary-fixed":"#dae2fd","background":"#f8f9ff","secondary":"#565e74","primary-container":"#1d4ed8","primary-fixed":"#dce1ff","on-tertiary-fixed":"#25005a","error-container":"#ffdad6","on-secondary-fixed":"#131b2e","surface-dim":"#cbdbf5","surface":"#f8f9ff","on-tertiary-fixed-variant":"#5a00c6","on-tertiary":"#ffffff","on-primary-fixed-variant":"#0039b5","primary-fixed-dim":"#b7c4ff","on-error-container":"#93000a","on-tertiary-container":"#dfccff","surface-container-lowest":"#ffffff","outline":"#747686","surface-tint":"#2151da","tertiary":"#5700c0","tertiary-fixed-dim":"#d2bbff","on-secondary-fixed-variant":"#3f465c","on-secondary":"#ffffff","tertiary-container":"#712ae2","surface-container":"#e5eeff","on-primary":"#ffffff","on-surface":"#0b1c30","secondary-fixed-dim":"#bec6e0","primary":"#0037b0","on-background":"#0b1c30","surface-bright":"#f8f9ff","inverse-primary":"#b7c4ff","surface-container-high":"#dce9ff","on-surface-variant":"#434655","surface-variant":"#d3e4fe","error":"#ba1a1a","surface-container-low":"#eff4ff","on-primary-container":"#cad3ff"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-md":"0.75rem","gutter":"1rem","space-lg":"1rem","space-xl":"1.5rem","space-xs":"0.25rem","space-sm":"0.5rem","gutter-lg":"1.5rem","margin-mobile":"0.75rem","margin":"1.25rem"},"fontFamily":{"headline-sm":["Inter"],"headline-md":["Inter"],"headline-lg-mobile":["Inter"],"label-mono-sm":["JetBrains Mono"],"title-sm":["Inter"],"body-md":["Inter"],"label-mono-lg":["JetBrains Mono"],"body-sm":["Inter"],"headline-lg":["Inter"],"title-md":["Inter"],"body-lg":["Inter"],"headline-xl":["Inter"],"label-mono-md":["JetBrains Mono"]},"fontSize":{"headline-sm":["1rem",{"lineHeight":"1.5rem","fontWeight":"600"}],"headline-md":["1.25rem",{"lineHeight":"1.75rem","fontWeight":"600"}],"headline-lg-mobile":["1.25rem",{"lineHeight":"1.75rem","fontWeight":"600"}],"label-mono-sm":["0.6875rem",{"lineHeight":"0.875rem","fontWeight":"500"}],"title-sm":["0.75rem",{"lineHeight":"1rem","fontWeight":"600"}],"body-md":["0.875rem",{"lineHeight":"1.25rem","fontWeight":"400"}],"label-mono-lg":["0.875rem",{"lineHeight":"1.25rem","fontWeight":"500"}],"body-sm":["0.8125rem",{"lineHeight":"1.125rem","fontWeight":"400"}],"headline-lg":["1.5rem",{"lineHeight":"2rem","fontWeight":"600"}],"title-md":["0.875rem",{"lineHeight":"1.25rem","fontWeight":"600"}],"body-lg":["1rem",{"lineHeight":"1.5rem","fontWeight":"400"}],"headline-xl":["2rem",{"lineHeight":"2.5rem","fontWeight":"700"}],"label-mono-md":["0.75rem",{"lineHeight":"1rem","fontWeight":"500"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased min-h-screen flex flex-col"><header class="fixed top-0 w-full z-50 bg-[#0f172a] text-[#cbd5e1] border-b border-[#1e293b]"><div class="h-28 w-full max-w-7xl mx-auto px-gutter-lg flex flex-col justify-between pt-2 pb-0"><div class="flex items-center justify-between gap-space-lg w-full"><div class="flex items-center gap-space-md"><img alt="ASTECH Explorer Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WMLnStoWx_Ec1okqUHw_W5xkatNkd6d8bMrcuFCNNY44PQn-B9h0QisZzuy8YabfC9Dkm0A8F7whDhrJhyM8HVjjc9ly9Anik6C6BNzWXHScR2p0tqdZZZisOUUKeBUMcAu2iWLIDq7pRjVEKUJaFobGMAhl2rUKDJyJ3gviUb3GSnC20-WN_JLStRoXbACy2_W5b0uomwck3xY8NOqtdsqTz7BAd6wKgg2_L-TPFLeaLJPCoWiMAR"/><div class="flex items-center gap-space-sm"><span class="font-headline-md text-headline-md font-bold tracking-tight text-white">ASTECH Explorer</span><span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#1e293b] text-[#94a3b8] font-label-mono-sm text-label-mono-sm border border-[#334155]"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>Oracle 19c • PIVRY01</span></div></div><div class="flex-1 max-w-lg hidden md:block mx-space-md"><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-2.5 text-[#64748b] text-[18px]">search</span><input class="w-full h-8 pl-8 pr-12 rounded bg-[#1e293b] text-white placeholder-[#64748b] font-body-sm text-body-sm border border-[#334155] focus:outline-none focus:border-primary-container" placeholder="Rechercher agent, matricule, contrat, bien..." type="text"/><span class="absolute right-2 font-label-mono-sm text-label-mono-sm text-[#64748b] border border-[#334155] px-1 py-0.2 rounded">⌘K</span></div></div><div class="flex items-center gap-space-md"><span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-[#1e293b] text-[#94a3b8] font-label-mono-sm text-label-mono-sm border border-[#334155]"><span class="material-symbols-outlined text-[15px] text-[#94a3b8]">lock</span>Mode Lecture Seule</span><button class="relative p-1.5 rounded text-[#cbd5e1] hover:text-white hover:bg-[#1e293b] transition-colors"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400 ring-2 ring-[#0f172a]"></span></button><div class="flex items-center gap-space-sm pl-space-sm border-l border-[#1e293b]"><div class="text-right hidden sm:block"><div class="font-title-sm text-title-sm text-white leading-tight">J. Martin</div><div class="font-label-mono-sm text-label-mono-sm text-[#94a3b8]">Administrateur Système</div></div><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-1 ring-[#334155]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDH0AWE6ETB_hKwTpcAAlGfwv0bXJBYRWu7x9xJnJD9cvgyN5L6Z_iHSAEEz7KfbFer1zMhaqwounHYVgWuCkfKngFzfLxbAWdyJucwFWXU0B-XDDoV_Gg0U0lIjX0_CKIJPyzYYJ-LMUWE8FWF2Kba8HFhHYmgywU7B5H6wxVD6ZEHAaze43VM-vxloWEERqtOUmWhPs-r3HMIxMbwSwoyhwIkknQLBt4sh7gm84UdAW_Y0p-hYUI"/></div></div></div><nav class="flex items-center gap-space-lg overflow-x-auto whitespace-nowrap pt-1" data-active-classes="text-white border-b-2 border-primary-container font-semibold"><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="tableau-de-bord" href="#">Tableau de bord</a><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="agents-et-comptes" href="#">Agents &amp; Comptes</a><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="synchro-rh" href="#">Synchro RH</a><a aria-current="page" class="pb-2 transition-colors text-white border-b-2 border-primary-container font-semibold" data-path="gestion-locative" href="#">Gestion Locative</a><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="referentiels" href="#">Référentiels</a><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="interventions" href="#">Interventions</a><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="indices" href="#">Indices</a></nav></div></header><main class="w-full max-w-7xl mx-auto px-gutter-lg pt-28 flex-1 bg-surface"><div class="flex flex-col w-full">
+<!-- Sub-header & Module Context -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md pb-space-lg">
+<div>
+<div class="flex items-center gap-space-sm">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-mono-sm text-label-mono-sm font-semibold">
+          REF §2.3 / §3.3 / §4.1 / §6.4
+        </span>
+<span class="inline-flex items-center gap-1 text-primary font-label-mono-sm text-label-mono-sm font-semibold bg-primary-fixed text-on-primary-fixed px-2 py-0.5 rounded-full">
+<span class="material-symbols-outlined text-[14px]">tune</span> CUTOFF ≥ 01/01/2024
+        </span>
+</div>
+<h1 class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight mt-1">Gestion Locative du Patrimoine</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Suivi des biens, baux, locataires et quittancement en base Oracle ASTECH</p>
+</div>
+<!-- Quick Operations Tools -->
+<div class="flex items-center gap-space-sm self-start lg:self-auto">
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-colors shadow-sm font-title-sm text-title-sm">
+<span class="material-symbols-outlined text-[18px] text-secondary">file_download</span>
+        Export Mandats
+      </button>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-colors shadow-sm font-title-sm text-title-sm">
+<span class="material-symbols-outlined text-[18px] text-secondary">calculate</span>
+        Simulation Révision
+      </button>
+<button class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary-container text-on-primary hover:bg-primary transition-colors shadow-sm font-title-sm text-title-sm">
+<span class="material-symbols-outlined text-[18px]">post_add</span>
+        Nouvelle Échéance
+      </button>
+</div>
+</div>
+<!-- Internal Module Navigation Bar -->
+<div class="flex items-center gap-space-sm overflow-x-auto pb-space-sm mb-space-lg">
+<button class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-primary text-on-primary font-title-md text-title-md shadow-sm whitespace-nowrap">
+<span class="material-symbols-outlined text-[18px]">calendar_month</span>
+      Échéancier &amp; Quittances
+      <span class="px-1.5 py-0.2 rounded-full bg-on-primary/20 text-on-primary font-label-mono-sm text-label-mono-sm">5 011</span>
+</button>
+<button class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-colors font-title-md text-title-md shadow-sm whitespace-nowrap">
+<span class="material-symbols-outlined text-[18px] text-secondary">apartment</span>
+      Biens immobiliers (249)
+    </button>
+<button class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-colors font-title-md text-title-md shadow-sm whitespace-nowrap">
+<span class="material-symbols-outlined text-[18px] text-secondary">gavel</span>
+      Baux &amp; Contrats (263)
+    </button>
+<button class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-colors font-title-md text-title-md shadow-sm whitespace-nowrap">
+<span class="material-symbols-outlined text-[18px] text-secondary">groups</span>
+      Locataires (166)
+    </button>
+<button class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-colors font-title-md text-title-md shadow-sm whitespace-nowrap">
+<span class="material-symbols-outlined text-[18px] text-secondary">trending_up</span>
+      Révisions de loyers (315)
+    </button>
+</div>
+<!-- KPI Metric Band with Graphic Sparsity & High Contrast -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md mb-space-lg">
+<!-- KPI 1 -->
+<div class="relative overflow-hidden p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-title-sm text-title-sm text-on-surface-variant uppercase tracking-wider">Échéances prévisionnelles</span>
+<span class="material-symbols-outlined text-[20px] text-primary">schedule</span>
+</div>
+<div class="flex items-baseline gap-2 my-2">
+<span class="font-headline-xl text-headline-xl font-bold text-on-surface">2 925</span>
+<span class="font-label-mono-sm text-label-mono-sm text-primary font-semibold">Flux 2024-2026</span>
+</div>
+<div class="flex items-center justify-between pt-1">
+<div class="w-full bg-surface-container rounded-full h-1.5 overflow-hidden mr-2">
+<div class="bg-primary-container h-full rounded-full" style="width: 58%"></div>
+</div>
+<span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant font-medium whitespace-nowrap">58.4%</span>
+</div>
+</div>
+<!-- KPI 2 -->
+<div class="relative overflow-hidden p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-title-sm text-title-sm text-on-surface-variant uppercase tracking-wider">Soldées / Rapprochées</span>
+<span class="material-symbols-outlined text-[20px] text-secondary">task_alt</span>
+</div>
+<div class="flex items-baseline gap-2 my-2">
+<span class="font-headline-xl text-headline-xl font-bold text-on-surface">2 086</span>
+<span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant font-semibold">Exécutions passées</span>
+</div>
+<div class="flex items-center gap-1.5 font-label-mono-sm text-label-mono-sm text-on-surface-variant">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span>100% rapprochées au GL ASTECH</span>
+</div>
+</div>
+<!-- KPI 3 -->
+<div class="relative overflow-hidden p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-title-sm text-title-sm text-on-surface-variant uppercase tracking-wider">Volume Mensuel Quittancé</span>
+<span class="material-symbols-outlined text-[20px] text-tertiary">euro</span>
+</div>
+<div class="flex items-baseline gap-2 my-2">
+<span class="font-headline-xl text-headline-xl font-bold text-on-surface">482 650 €</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest text-primary font-label-mono-sm text-label-mono-sm font-semibold">+3.18% IRL</span>
+</div>
+<div class="flex items-center justify-between font-label-mono-sm text-label-mono-sm text-on-surface-variant">
+<span>TTC Émis M-1 : 467 775 €</span>
+<span class="text-tertiary font-medium">Tx TVA 20% &amp; Exonéré</span>
+</div>
+</div>
+<!-- KPI 4 -->
+<div class="relative overflow-hidden p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-title-sm text-title-sm text-on-surface-variant uppercase tracking-wider">Statuts Métier Actifs</span>
+<span class="material-symbols-outlined text-[20px] text-secondary">pie_chart</span>
+</div>
+<div class="flex items-baseline gap-2 my-2">
+<span class="font-headline-xl text-headline-xl font-bold text-on-surface">4</span>
+<span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">Cycles d'échéance</span>
+</div>
+<div class="flex items-center gap-1 overflow-x-auto text-[11px] font-label-mono-sm pt-1">
+<span class="px-1.5 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-semibold">Mandatée</span>
+<span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-semibold">Émise</span>
+<span class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-semibold">Échue</span>
+<span class="px-1.5 py-0.5 rounded bg-primary-fixed text-on-primary-fixed font-semibold">Planifiée</span>
+</div>
+</div>
+</div>
+<!-- Layout Grid: Main Workspace + Sliding/Inspection Inspector -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-space-lg items-start">
+<!-- Main Left/Center Content Area (8 Cols on XL) -->
+<div class="xl:col-span-8 flex flex-col gap-space-md">
+<!-- Filtering & Toolbar Surface -->
+<div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
+<!-- Top Toolbar Row: Sub-tabs and Date range -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-sm">
+<!-- View Sub-tabs -->
+<div class="flex items-center bg-surface-container p-1 rounded-lg">
+<button class="px-3 py-1.5 rounded-md bg-surface-container-lowest text-on-surface font-title-sm text-title-sm shadow-sm transition-all flex items-center gap-1.5" id="tab-upcoming" onclick="switchView('upcoming')">
+<span class="material-symbols-outlined text-[16px] text-primary">arrow_upward</span>
+              À venir (Planifiées / À émettre)
+              <span class="ml-1 px-1.5 py-0.2 rounded-full bg-primary-fixed text-on-primary-fixed font-label-mono-sm text-label-mono-sm">2 925</span>
+</button>
+<button class="px-3 py-1.5 rounded-md text-on-surface-variant hover:text-on-surface font-title-sm text-title-sm transition-all flex items-center gap-1.5" id="tab-history" onclick="switchView('history')">
+<span class="material-symbols-outlined text-[16px]">history</span>
+              Passées / Historique
+              <span class="ml-1 px-1.5 py-0.2 rounded-full bg-surface-container-high text-on-surface-variant font-label-mono-sm text-label-mono-sm">2 086</span>
+</button>
+</div>
+<!-- Date Range & Refresh -->
+<div class="flex items-center gap-2">
+<div class="flex items-center px-3 py-1.5 bg-surface-container-low rounded-lg font-label-mono-sm text-label-mono-sm text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant mr-2">date_range</span>
+<span>≥ 01/01/2024</span>
+<span class="mx-1.5 text-outline">→</span>
+<span class="font-semibold text-primary">31/12/2026</span>
+</div>
+<button class="p-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface-variant transition-colors" title="Actualiser la vue">
+<span class="material-symbols-outlined text-[18px]">refresh</span>
+</button>
+</div>
+</div>
+<!-- Secondary Filter Controls -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-space-sm pt-space-xs">
+<!-- Status Filter -->
+<div class="flex flex-col gap-1">
+<label class="font-label-mono-sm text-label-mono-sm text-on-surface-variant uppercase font-medium">Statut d'échéance</label>
+<div class="relative">
+<select class="w-full h-9 pl-3 pr-8 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none appearance-none" id="statusFilter" onchange="filterStatus(this.value)">
+<option value="ALL">Tous les statuts</option>
+<option value="MANDATED">Mandatée (Violet)</option>
+<option value="ISSUED">Émise (Vert)</option>
+<option value="DUE">Échue non émise (Ambre/Rouge)</option>
+<option value="PLANNED">Planifiée (Bleu)</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-2 text-[18px] pointer-events-none text-on-surface-variant">expand_more</span>
+</div>
+</div>
+<!-- Asset / Building Selector (ARBO) -->
+<div class="flex flex-col gap-1">
+<label class="font-label-mono-sm text-label-mono-sm text-on-surface-variant uppercase font-medium">Bien / Immeuble (ARBO)</label>
+<div class="relative">
+<input class="w-full h-9 pl-3 pr-8 rounded-lg bg-surface-container-low text-on-surface placeholder:text-on-surface-variant font-body-sm text-body-sm focus:outline-none" placeholder="Filtrer code bien, ex: BAT-004..." type="text"/>
+<span class="material-symbols-outlined absolute right-2.5 top-2 text-[18px] text-on-surface-variant pointer-events-none">domain</span>
+</div>
+</div>
+<!-- Tenant Filter (CONTL_CONTRACTANT) -->
+<div class="flex flex-col gap-1">
+<label class="font-label-mono-sm text-label-mono-sm text-on-surface-variant uppercase font-medium">Locataire (Contractant)</label>
+<div class="relative">
+<input class="w-full h-9 pl-3 pr-8 rounded-lg bg-surface-container-low text-on-surface placeholder:text-on-surface-variant font-body-sm text-body-sm focus:outline-none" placeholder="Raison sociale ou nom..." type="text"/>
+<span class="material-symbols-outlined absolute right-2.5 top-2 text-[18px] text-on-surface-variant pointer-events-none">person_search</span>
+</div>
+</div>
+</div>
+<!-- Filter Chips / Summary -->
+<div class="flex items-center flex-wrap gap-1.5 pt-1">
+<span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant mr-1">Filtres actifs:</span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container-high text-on-surface font-label-mono-sm text-label-mono-sm">
+            Mode : Planifiées prioritaires
+            <span class="material-symbols-outlined text-[13px] cursor-pointer">close</span>
+</span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container-high text-on-surface font-label-mono-sm text-label-mono-sm">
+            Oracle Instance : PIVRY01
+          </span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container-high text-on-surface font-label-mono-sm text-label-mono-sm">
+            Périmètre : Bail Actif
+          </span>
+<button class="text-primary font-label-mono-sm text-label-mono-sm font-semibold hover:underline ml-auto">
+            Réinitialiser
+          </button>
+</div>
+</div>
+<!-- Data Table Container -->
+<div class="rounded-xl bg-surface-container-lowest shadow-sm overflow-hidden flex flex-col">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-title-sm text-title-sm uppercase tracking-wider">
+<th class="py-2.5 px-3 w-8">
+<input class="rounded bg-surface-container text-primary-container focus:ring-0" type="checkbox"/>
+</th>
+<th class="py-2.5 px-3">Quittance (CONTEC_NUMQUIT)</th>
+<th class="py-2.5 px-3">Échéance</th>
+<th class="py-2.5 px-3">Bien / Localisation</th>
+<th class="py-2.5 px-3">Locataire</th>
+<th class="py-2.5 px-3 text-right">Montants (HT / TTC)</th>
+<th class="py-2.5 px-3">Mandat ASTECH</th>
+<th class="py-2.5 px-3">Statut</th>
+<th class="py-2.5 px-3 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm text-on-surface" id="scheduleTableBody">
+<!-- Row 1: Planifiée (Bleu) -->
+<tr class="hover:bg-surface-container-low/60 cursor-pointer transition-colors" onclick="selectContract('Q-2024-00918', 'SCI DU PARC D\'AFFAIRES', 'BAT-PARIS-08 / ETG-3', 'LOC-2021-042', 'IRL-2024-T1', '1 420.50 €', '1 465.68 €', '2024-06-01', 'MAN-884129', 'Planifiée')">
+<td class="py-3 px-3">
+<input class="rounded bg-surface-container text-primary focus:ring-0" onclick="event.stopPropagation()" type="checkbox"/>
+</td>
+<td class="py-3 px-3">
+<div class="font-label-mono-sm text-label-mono-sm font-bold text-primary">Q-2024-00918</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">CTR# 2021-042</div>
+</td>
+<td class="py-3 px-3 whitespace-nowrap">
+<div class="font-title-sm text-title-sm text-on-surface">01/06/2024</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">T2 2024 (M3)</div>
+</td>
+<td class="py-3 px-3">
+<div class="font-title-sm text-title-sm text-on-surface">BAT-PARIS-08 • Bureaux 301</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant truncate max-w-[180px]">142 Rue de Rivoli, 75001 Paris</div>
+</td>
+<td class="py-3 px-3">
+<div class="font-title-sm text-title-sm font-semibold text-on-surface">SCI DU PARC D'AFFAIRES</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">SIRET 491 829 110 00021</div>
+</td>
+<td class="py-3 px-3 text-right whitespace-nowrap">
+<div class="font-title-sm text-title-sm font-bold text-on-surface">1 465,68 € TTC</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">1 221,40 € HT (20% TVA)</div>
+</td>
+<td class="py-3 px-3 whitespace-nowrap">
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">-- Non généré --</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">GF: À imputer</div>
+</td>
+<td class="py-3 px-3 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-mono-sm text-label-mono-sm font-semibold bg-blue-100 text-blue-700">
+<span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span> Planifiée
+                  </span>
+</td>
+<td class="py-3 px-3 text-right whitespace-nowrap" onclick="event.stopPropagation()">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1 rounded text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors" title="Détail quittance">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+<button class="p-1 rounded text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors" title="Générer avis d'échéance">
+<span class="material-symbols-outlined text-[18px]">receipt_long</span>
+</button>
+<button class="p-1 rounded text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors" title="Historique des révisions">
+<span class="material-symbols-outlined text-[18px]">query_stats</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2: Échue non émise (Ambre/Rouge) -->
+<tr class="hover:bg-surface-container-low/60 cursor-pointer transition-colors bg-amber-500/5" onclick="selectContract('Q-2024-00845', 'LOGISTIX EXPRESS SAS', 'DEP-LIL-01 / ENTREPOT NORD', 'LOC-2019-112', 'ILAT-2024-T1', '12 850.00 €', '15 420.00 €', '01/05/2024', 'MAN-PENDING', 'Échue')">
+<td class="py-3 px-3">
+<input class="rounded bg-surface-container text-primary focus:ring-0" onclick="event.stopPropagation()" type="checkbox"/>
+</td>
+<td class="py-3 px-3">
+<div class="font-label-mono-sm text-label-mono-sm font-bold text-amber-700">Q-2024-00845</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">CTR# 2019-112</div>
+</td>
+<td class="py-3 px-3 whitespace-nowrap">
+<div class="font-title-sm text-title-sm text-amber-800 font-bold">01/05/2024</div>
+<div class="font-label-mono-sm text-label-mono-sm text-amber-700 font-semibold">Retard : +24j</div>
+</td>
+<td class="py-3 px-3">
+<div class="font-title-sm text-title-sm text-on-surface">DEP-LIL-01 • Plateforme Fret</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant truncate max-w-[180px]">Zone Industrielle de Lesquin, Lille</div>
+</td>
+<td class="py-3 px-3">
+<div class="font-title-sm text-title-sm font-semibold text-on-surface">LOGISTIX EXPRESS SAS</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">SIRET 812 404 901 00018</div>
+</td>
+<td class="py-3 px-3 text-right whitespace-nowrap">
+<div class="font-title-sm text-title-sm font-bold text-on-surface">15 420,00 € TTC</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">12 850,00 € HT</div>
+</td>
+<td class="py-3 px-3 whitespace-nowrap">
+<div class="font-label-mono-sm text-label-mono-sm text-amber-700 font-semibold">En attente GF</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">Blocage : Index ILAT</div>
+</td>
+<td class="py-3 px-3 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-mono-sm text-label-mono-sm font-semibold bg-amber-100 text-amber-800">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse"></span> Échue non émise
+                  </span>
+</td>
+<td class="py-3 px-3 text-right whitespace-nowrap" onclick="event.stopPropagation()">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1 rounded text-amber-700 hover:bg-amber-100 transition-colors" title="Forcer quittancement">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+</button>
+<button class="p-1 rounded text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors" title="Générer avis">
+<span class="material-symbols-outlined text-[18px]">receipt_long</span>
+</button>
+<button class="p-1 rounded text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors" title="Historique">
+<span class="material-symbols-outlined text-[18px]">query_stats</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3: Émise (Vert) -->
+<tr class="hover:bg-surface-container-low/60 cursor-pointer transition-colors" onclick="selectContract('Q-2024-00712', 'CENTRE MEDICAL MONCEAU', 'BAT-MON-02 / RDC MEDICAL', 'LOC-2022-008', 'IRL-2023-T4', '3 100.00 €', '3 100.00 €', '01/05/2024', 'MAN-772109', 'Émise')">
+<td class="py-3 px-3">
+<input class="rounded bg-surface-container text-primary focus:ring-0" onclick="event.stopPropagation()" type="checkbox"/>
+</td>
+<td class="py-3 px-3">
+<div class="font-label-mono-sm text-label-mono-sm font-bold text-primary">Q-2024-00712</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">CTR# 2022-008</div>
+</td>
+<td class="py-3 px-3 whitespace-nowrap">
+<div class="font-title-sm text-title-sm text-on-surface">01/05/2024</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">Émise le 28/04/2024</div>
+</td>
+<td class="py-3 px-3">
+<div class="font-title-sm text-title-sm text-on-surface">BAT-MON-02 • RDC Médical</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant truncate max-w-[180px]">88 Boulevard Malesherbes, 75008</div>
+</td>
+<td class="py-3 px-3">
+<div class="font-title-sm text-title-sm font-semibold text-on-surface">CENTRE MÉDICAL MONCEAU</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">SIRET 530 198 002 00014</div>
+</td>
+<td class="py-3 px-3 text-right whitespace-nowrap">
+<div class="font-title-sm text-title-sm font-bold text-on-surface">3 100,00 € TTC</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">3 100,00 € HT (Exonéré art. 261-4)</div>
+</td>
+<td class="py-3 px-3 whitespace-nowrap">
+<div class="font-label-mono-sm text-label-mono-sm font-semibold text-on-surface">MAN-772109</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">DATGF: 02/05/2024</div>
+</td>
+<td class="py-3 px-3 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-mono-sm text-label-mono-sm font-semibold bg-emerald-100 text-emerald-800">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> Émise
+                  </span>
+</td>
+<td class="py-3 px-3 text-right whitespace-nowrap" onclick="event.stopPropagation()">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1 rounded text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors" title="Visualiser PDF quittance">
+<span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+</button>
+<button class="p-1 rounded text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors" title="Renvoyer au contractant">
+<span class="material-symbols-outlined text-[18px]">send</span>
+</button>
+<button class="p-1 rounded text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors" title="Historique">
+<span class="material-symbols-outlined text-[18px]">query_stats</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4: Mandatée (Violet) -->
+<tr class="hover:bg-surface-container-low/60 cursor-pointer transition-colors" onclick="selectContract('Q-2024-00654', 'ATELIER D\'ARCHITECTURE V&amp;C', 'BAT-LYON-04 / LOFT TECH', 'LOC-2020-033', 'ICC-2023-T3', '2 150.00 €', '2 580.00 €', '01/04/2024', 'MAN-699410', 'Mandatée')">
+<td class="py-3 px-3">
+<input class="rounded bg-surface-container text-primary focus:ring-0" onclick="event.stopPropagation()" type="checkbox"/>
+</td>
+<td class="py-3 px-3">
+<div class="font-label-mono-sm text-label-mono-sm font-bold text-tertiary">Q-2024-00654</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">CTR# 2020-033</div>
+</td>
+<td class="py-3 px-3 whitespace-nowrap">
+<div class="font-title-sm text-title-sm text-on-surface">01/04/2024</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">Validé comptabilité</div>
+</td>
+<td class="py-3 px-3">
+<div class="font-title-sm text-title-sm text-on-surface">BAT-LYON-04 • Espace Créatif</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant truncate max-w-[180px]">12 Quai Saint-Antoine, Lyon</div>
+</td>
+<td class="py-3 px-3">
+<div class="font-title-sm text-title-sm font-semibold text-on-surface">ATELIER D'ARCHI V&amp;C</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">SIRET 409 778 123 00039</div>
+</td>
+<td class="py-3 px-3 text-right whitespace-nowrap">
+<div class="font-title-sm text-title-sm font-bold text-on-surface">2 580,00 € TTC</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">2 150,00 € HT</div>
+</td>
+<td class="py-3 px-3 whitespace-nowrap">
+<div class="font-label-mono-sm text-label-mono-sm font-bold text-tertiary">MAN-699410</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">DATGF: 15/04/2024</div>
+</td>
+<td class="py-3 px-3 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-mono-sm text-label-mono-sm font-semibold bg-tertiary-fixed text-on-tertiary-fixed">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> Mandatée
+                  </span>
+</td>
+<td class="py-3 px-3 text-right whitespace-nowrap" onclick="event.stopPropagation()">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1 rounded text-tertiary hover:bg-tertiary-fixed transition-colors" title="Fiche mandat Oracle">
+<span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+</button>
+<button class="p-1 rounded text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors" title="Visualiser quittance">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+<button class="p-1 rounded text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors" title="Historique">
+<span class="material-symbols-outlined text-[18px]">query_stats</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 5: Planifiée (Bleu) -->
+<tr class="hover:bg-surface-container-low/60 cursor-pointer transition-colors" onclick="selectContract('Q-2024-00919', 'NOVA BIOTECH SAS', 'BAT-NORD-03 / LABO RECHERCHE', 'LOC-2023-019', 'ILAT-2024-T1', '8 400.00 €', '10 080.00 €', '01/06/2024', 'MAN-884130', 'Planifiée')">
+<td class="py-3 px-3">
+<input class="rounded bg-surface-container text-primary focus:ring-0" onclick="event.stopPropagation()" type="checkbox"/>
+</td>
+<td class="py-3 px-3">
+<div class="font-label-mono-sm text-label-mono-sm font-bold text-primary">Q-2024-00919</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">CTR# 2023-019</div>
+</td>
+<td class="py-3 px-3 whitespace-nowrap">
+<div class="font-title-sm text-title-sm text-on-surface">01/06/2024</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">Cycle Mensuel M6</div>
+</td>
+<td class="py-3 px-3">
+<div class="font-title-sm text-title-sm text-on-surface">BAT-NORD-03 • Salle Blanche B</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant truncate max-w-[180px]">Parc Technologique, Nantes</div>
+</td>
+<td class="py-3 px-3">
+<div class="font-title-sm text-title-sm font-semibold text-on-surface">NOVA BIOTECH SAS</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">SIRET 910 882 104 00012</div>
+</td>
+<td class="py-3 px-3 text-right whitespace-nowrap">
+<div class="font-title-sm text-title-sm font-bold text-on-surface">10 080,00 € TTC</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">8 400,00 € HT</div>
+</td>
+<td class="py-3 px-3 whitespace-nowrap">
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">-- Non généré --</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">En attente validation</div>
+</td>
+<td class="py-3 px-3 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-mono-sm text-label-mono-sm font-semibold bg-blue-100 text-blue-700">
+<span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span> Planifiée
+                  </span>
+</td>
+<td class="py-3 px-3 text-right whitespace-nowrap" onclick="event.stopPropagation()">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1 rounded text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors" title="Détail quittance">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+<button class="p-1 rounded text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors" title="Générer avis">
+<span class="material-symbols-outlined text-[18px]">receipt_long</span>
+</button>
+<button class="p-1 rounded text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors" title="Historique">
+<span class="material-symbols-outlined text-[18px]">query_stats</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Footer / Pagination -->
+<div class="p-space-md bg-surface-container-low/50 flex flex-col sm:flex-row items-center justify-between gap-space-sm font-label-mono-sm text-label-mono-sm text-on-surface-variant">
+<div class="flex items-center gap-2">
+<span>Affichage de 1 à 5 sur 2 925 échéances filtrées</span>
+<span class="px-2 py-0.5 bg-surface-container rounded text-on-surface">Curseur ASTECH #CONTEC_01</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="px-2.5 py-1 rounded bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-50">Précédent</button>
+<button class="px-2.5 py-1 rounded bg-primary text-on-primary font-bold">1</button>
+<button class="px-2.5 py-1 rounded bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors">2</button>
+<button class="px-2.5 py-1 rounded bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors">3</button>
+<span class="px-1 text-outline">...</span>
+<button class="px-2.5 py-1 rounded bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors">585</button>
+<button class="px-2.5 py-1 rounded bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors">Suivant</button>
+</div>
+</div>
+</div>
+<!-- Real-Time Oracle Database Sync Footnote Card -->
+<div class="p-space-md rounded-xl bg-surface-container flex items-center justify-between gap-space-md">
+<div class="flex items-center gap-3">
+<div class="p-2 rounded-lg bg-surface-container-lowest text-primary shadow-sm">
+<span class="material-symbols-outlined text-[22px]">database</span>
+</div>
+<div>
+<div class="font-title-sm text-title-sm text-on-surface font-semibold">Schéma Relationnel ASTECHIVR.CONTRAT_ECHEANCE</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">Jointures actives : IMMO_BIEN (ARBO_CODE) ⇄ LOCATAIRE (TIERS_ID) ⇄ INDICE_HISTO (IND_VAL)</div>
+</div>
+</div>
+<div class="text-right hidden md:block">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-surface-container-lowest text-on-surface font-label-mono-sm text-label-mono-sm shadow-sm">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Buffer synchronisé (0.014s)
+          </span>
+</div>
+</div>
+</div>
+<!-- Inspector / Drawer: Fiche Contrat & Révision d'Indice (4 Cols on XL) -->
+<div class="xl:col-span-4 rounded-xl bg-surface-container-lowest shadow-sm flex flex-col overflow-hidden" id="inspectorPanel">
+<!-- Panel Header -->
+<div class="p-space-md bg-surface-container-high/40 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">assignment</span>
+<h2 class="font-title-md text-title-md font-bold text-on-surface">Fiche Contrat &amp; Révision</h2>
+</div>
+<div class="flex items-center gap-1">
+<span class="px-2 py-0.5 rounded text-blue-700 bg-blue-100 font-label-mono-sm text-label-mono-sm font-semibold" id="panelStatusBadge">Planifiée</span>
+<button class="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container" title="Réduire le volet">
+<span class="material-symbols-outlined text-[18px]">vertical_align_top</span>
+</button>
+</div>
+</div>
+<!-- Asset Visual Identification (Placeholder with precise data-alt) -->
+<div class="relative w-full h-36 bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Modern architectural photography of a corporate commercial building facade with sleek glass panes, crisp blue sky reflection, elegant structural concrete columns, and subtle sun flares, high visual fidelity, clean editorial styling." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAe081DUUUwRQIr1be826Ym3GgWieLkcEc1pQ5DWNDB9fF8yvDILqChVxWH8dXVwm5IFaLS9PDPoYPbJ-s1ssPI-D6ubIJ7ia3o1qeNBg9A_YCyHWcGCJtdG9v-02S0TpNHHYUtrFjGiwuGOF8AMTPW18c1toOGZ1cVHxyfj_91QLlCtkXPcudNAkhMjcFyKiWPw_R7Lry9qi-aXquY4jHAstNwQ9oHHbu1ePU7htCnTKKb4-IHz0U"/>
+<div class="absolute bottom-2 left-2 px-2 py-1 rounded bg-inverse-surface/80 text-inverse-on-surface font-label-mono-sm text-label-mono-sm backdrop-blur-sm">
+<span id="panelAssetRef">BAT-PARIS-08 / ETG-3</span>
+</div>
+</div>
+<!-- Panel Body Content -->
+<div class="p-space-md flex flex-col gap-space-md">
+<!-- Contract Primary Information Block -->
+<div>
+<span class="font-label-mono-sm text-label-mono-sm uppercase text-on-surface-variant tracking-wider font-semibold">Contractant &amp; Bail</span>
+<div class="mt-1">
+<div class="font-title-md text-title-md font-bold text-on-surface" id="panelTenant">SCI DU PARC D'AFFAIRES</div>
+<div class="font-label-mono-sm text-label-mono-sm text-primary font-semibold" id="panelContractNum">Contrat Bail Commercial #LOC-2021-042</div>
+</div>
+</div>
+<!-- Dates & Conditions Grid -->
+<div class="grid grid-cols-2 gap-space-sm p-3 rounded-lg bg-surface-container-low font-body-sm text-body-sm">
+<div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">Date Prise d'effet</div>
+<div class="font-title-sm text-title-sm text-on-surface font-semibold">01/01/2021</div>
+</div>
+<div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">Date d'échéance bail</div>
+<div class="font-title-sm text-title-sm text-on-surface font-semibold">31/12/2029 (3/6/9)</div>
+</div>
+<div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">Périodicité Quittanc.</div>
+<div class="font-title-sm text-title-sm text-on-surface font-semibold">Trimestrielle échoir</div>
+</div>
+<div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">Dépôt de Garantie</div>
+<div class="font-title-sm text-title-sm text-on-surface font-semibold">4 260,00 € (Encaissé)</div>
+</div>
+</div>
+<!-- Indexation Formula Detailed Block (Spécification F_CALCUL_REVIS) -->
+<div class="p-space-md rounded-xl bg-surface-container flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5 font-title-sm text-title-sm text-on-surface font-bold">
+<span class="material-symbols-outlined text-[18px] text-tertiary">functions</span>
+              Formule F_CALCUL_REVIS
+            </div>
+<span class="px-2 py-0.5 rounded bg-tertiary-container text-on-tertiary font-label-mono-sm text-label-mono-sm font-semibold" id="panelIndexType">INSEE IRL</span>
+</div>
+<div class="p-2.5 rounded bg-surface-container-lowest font-label-mono-sm text-label-mono-sm text-on-surface space-y-1">
+<div class="text-on-surface-variant">// Règle contractuelle d'indexation</div>
+<div class="text-tertiary font-bold">Loyer_N = Loyer_Base × (Indice_N / Indice_Base)</div>
+<div class="pt-1 text-on-surface-variant">Formule Oracle ASTECH : <span class="text-on-surface font-semibold">PKG_LOYER.CALCUL_INDICE()</span></div>
+</div>
+<!-- Parameter Values Comparison -->
+<div class="flex flex-col gap-2 pt-1 font-label-mono-sm text-label-mono-sm">
+<div class="flex items-center justify-between py-1 border-b border-surface-container-high/60">
+<span class="text-on-surface-variant">Indice de référence Base (I0)</span>
+<span class="font-bold text-on-surface">131.67 (T1 2021)</span>
+</div>
+<div class="flex items-center justify-between py-1 border-b border-surface-container-high/60">
+<span class="text-on-surface-variant">Indice Courant N-1 (IN)</span>
+<span class="font-bold text-primary">142.06 (T1 2024)</span>
+</div>
+<div class="flex items-center justify-between py-1 border-b border-surface-container-high/60">
+<span class="text-on-surface-variant">Coefficient d'évolution</span>
+<span class="font-bold text-emerald-700">+3.18 %</span>
+</div>
+<div class="flex items-center justify-between py-1">
+<span class="text-on-surface-variant">Loyer de Base d'Origine</span>
+<span class="font-semibold text-on-surface">1 376,72 € HT</span>
+</div>
+</div>
+<!-- Computed Result Highlight -->
+<div class="p-3 rounded-lg bg-primary-fixed text-on-primary-fixed flex items-center justify-between">
+<div>
+<div class="font-label-mono-sm text-label-mono-sm uppercase font-semibold text-on-primary-fixed-variant">Loyer Révisé Actif</div>
+<div class="font-headline-md text-headline-md font-bold text-on-primary-fixed" id="panelCalculatedHt">1 420,50 € HT</div>
+</div>
+<span class="material-symbols-outlined text-[28px] text-primary">verified</span>
+</div>
+</div>
+<!-- Historic Auditing & Dry-run verification -->
+<div class="space-y-2">
+<div class="flex items-center justify-between font-label-mono-sm text-label-mono-sm text-on-surface-variant">
+<span>Dernière révision appliquée :</span>
+<span class="font-semibold text-on-surface">01/01/2024 (Agent J. Martin)</span>
+</div>
+<div class="flex items-center justify-between font-label-mono-sm text-label-mono-sm text-on-surface-variant">
+<span>Prochaine révision requise :</span>
+<span class="font-bold text-primary">01/01/2025</span>
+</div>
+</div>
+<!-- Inspector Action Buttons -->
+<div class="flex flex-col gap-2 pt-2">
+<button class="w-full py-2 px-3 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-title-sm text-title-sm flex items-center justify-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[18px]">history_edu</span>
+            Consulter l'avenant du bail
+          </button>
+<button class="w-full py-2 px-3 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-title-sm text-title-sm flex items-center justify-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[18px]">receipt</span>
+            Générer Décompte de Charges
+          </button>
+<button class="w-full py-2 px-3 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title-sm text-title-sm flex items-center justify-center gap-2 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">checklist</span>
+            Appliquer Nouvelle Révision (F_CALCUL_REVIS)
+          </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Dynamic Contract Inspection Trigger
+  function selectContract(quitNum, tenant, asset, contract, indexCode, ht, ttc, date, mandate, status) {
+    document.getElementById('panelTenant').innerText = tenant;
+    document.getElementById('panelContractNum').innerText = 'Contrat Bail Commercial #' + contract;
+    document.getElementById('panelAssetRef').innerText = asset;
+    document.getElementById('panelIndexType').innerText = 'INSEE ' + indexCode;
+    document.getElementById('panelCalculatedHt').innerText = ht;
+    
+    var badge = document.getElementById('panelStatusBadge');
+    badge.innerText = status;
+    badge.className = 'px-2 py-0.5 rounded font-label-mono-sm text-label-mono-sm font-semibold ';
+    
+    if (status === 'Planifiée') {
+      badge.className += 'bg-blue-100 text-blue-700';
+    } else if (status === 'Échue') {
+      badge.className += 'bg-amber-100 text-amber-800';
+    } else if (status === 'Émise') {
+      badge.className += 'bg-emerald-100 text-emerald-800';
+    } else if (status === 'Mandatée') {
+      badge.className += 'bg-purple-100 text-purple-800';
+    }
+  }
+
+  // Switch between Upcoming and Past tabs
+  function switchView(mode) {
+    var upBtn = document.getElementById('tab-upcoming');
+    var histBtn = document.getElementById('tab-history');
+
+    if (mode === 'upcoming') {
+      upBtn.className = "px-3 py-1.5 rounded-md bg-surface-container-lowest text-on-surface font-title-sm text-title-sm shadow-sm transition-all flex items-center gap-1.5";
+      histBtn.className = "px-3 py-1.5 rounded-md text-on-surface-variant hover:text-on-surface font-title-sm text-title-sm transition-all flex items-center gap-1.5";
+    } else {
+      histBtn.className = "px-3 py-1.5 rounded-md bg-surface-container-lowest text-on-surface font-title-sm text-title-sm shadow-sm transition-all flex items-center gap-1.5";
+      upBtn.className = "px-3 py-1.5 rounded-md text-on-surface-variant hover:text-on-surface font-title-sm text-title-sm transition-all flex items-center gap-1.5";
+    }
+  }
+
+  // Simple client-side status filter demonstration
+  function filterStatus(val) {
+    var rows = document.querySelectorAll('#scheduleTableBody tr');
+    rows.forEach(function(row) {
+      if (val === 'ALL') {
+        row.style.display = '';
+      } else if (val === 'MANDATED' && !row.innerText.includes('Mandatée')) {
+        row.style.display = 'none';
+      } else if (val === 'ISSUED' && !row.innerText.includes('Émise')) {
+        row.style.display = 'none';
+      } else if (val === 'DUE' && !row.innerText.includes('Échue')) {
+        row.style.display = 'none';
+      } else if (val === 'PLANNED' && !row.innerText.includes('Planifiée')) {
+        row.style.display = 'none';
+      } else {
+        row.style.display = '';
+      }
+    });
+  }
+</script></main><footer class="w-full bg-[#0f172a] text-[#94a3b8] border-t border-[#1e293b] mt-space-xl"><div class="max-w-7xl mx-auto px-gutter-lg py-space-md flex flex-col sm:flex-row items-center justify-between gap-space-sm font-label-mono-sm text-label-mono-sm"><div>Proxy Oracle ASTECH • Schéma <span class="text-[#cbd5e1]">ASTECHIVR</span> • Port <span class="text-[#cbd5e1]">8099</span> • <span class="text-emerald-400">Thick mode actif</span></div><div>ASTECH Explorer v2.4.12 • Session PIVRY01-PROD-01</div></div></footer></body></html>

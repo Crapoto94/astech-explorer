@@ -1,0 +1,20 @@
+services:
+  astech-explorer:
+    build:
+      context: .
+    image: astech-explorer:latest
+    container_name: astech-explorer
+    ports:
+      - "8099:8099"
+    environment:
+      PORT: "8099"
+      # Connexion Oracle ASTECH (le mot de passe vient du fichier .env, jamais commité)
+      ORACLE_ASTECH_HOST: "${ORACLE_ASTECH_HOST:-10.103.130.25}"
+      ORACLE_ASTECH_PORT: "${ORACLE_ASTECH_PORT:-1523}"
+      ORACLE_ASTECH_SERVICE: "${ORACLE_ASTECH_SERVICE:-PIVRY01}"
+      ORACLE_ASTECH_USER: "${ORACLE_ASTECH_USER:-ASTECHIVR}"
+      ORACLE_ASTECH_PASSWORD: "${ORACLE_ASTECH_PASSWORD}"
+      # Source Studio-RH (optionnelle). Laisser vide tant que non fournie.
+      STUDIO_RH_API_URL: "${STUDIO_RH_API_URL:-}"
+      STUDIO_RH_API_KEY: "${STUDIO_RH_API_KEY:-}"
+    restart: unless-stopped

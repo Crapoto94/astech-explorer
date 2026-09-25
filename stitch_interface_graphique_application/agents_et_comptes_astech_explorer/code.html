@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"tertiary-fixed":"#eaddff","on-primary-fixed":"#001551","inverse-on-surface":"#eaf1ff","on-secondary-container":"#5c647a","surface-container-highest":"#d3e4fe","inverse-surface":"#213145","secondary-container":"#dae2fd","on-error":"#ffffff","outline-variant":"#c4c5d7","secondary-fixed":"#dae2fd","background":"#f8f9ff","secondary":"#565e74","primary-container":"#1d4ed8","primary-fixed":"#dce1ff","on-tertiary-fixed":"#25005a","error-container":"#ffdad6","on-secondary-fixed":"#131b2e","surface-dim":"#cbdbf5","surface":"#f8f9ff","on-tertiary-fixed-variant":"#5a00c6","on-tertiary":"#ffffff","on-primary-fixed-variant":"#0039b5","primary-fixed-dim":"#b7c4ff","on-error-container":"#93000a","on-tertiary-container":"#dfccff","surface-container-lowest":"#ffffff","outline":"#747686","surface-tint":"#2151da","tertiary":"#5700c0","tertiary-fixed-dim":"#d2bbff","on-secondary-fixed-variant":"#3f465c","on-secondary":"#ffffff","tertiary-container":"#712ae2","surface-container":"#e5eeff","on-primary":"#ffffff","on-surface":"#0b1c30","secondary-fixed-dim":"#bec6e0","primary":"#0037b0","on-background":"#0b1c30","surface-bright":"#f8f9ff","inverse-primary":"#b7c4ff","surface-container-high":"#dce9ff","on-surface-variant":"#434655","surface-variant":"#d3e4fe","error":"#ba1a1a","surface-container-low":"#eff4ff","on-primary-container":"#cad3ff"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-md":"0.75rem","gutter":"1rem","space-lg":"1rem","space-xl":"1.5rem","space-xs":"0.25rem","space-sm":"0.5rem","gutter-lg":"1.5rem","margin-mobile":"0.75rem","margin":"1.25rem"},"fontFamily":{"headline-sm":["Inter"],"headline-md":["Inter"],"headline-lg-mobile":["Inter"],"label-mono-sm":["JetBrains Mono"],"title-sm":["Inter"],"body-md":["Inter"],"label-mono-lg":["JetBrains Mono"],"body-sm":["Inter"],"headline-lg":["Inter"],"title-md":["Inter"],"body-lg":["Inter"],"headline-xl":["Inter"],"label-mono-md":["JetBrains Mono"]},"fontSize":{"headline-sm":["1rem",{"lineHeight":"1.5rem","fontWeight":"600"}],"headline-md":["1.25rem",{"lineHeight":"1.75rem","fontWeight":"600"}],"headline-lg-mobile":["1.25rem",{"lineHeight":"1.75rem","fontWeight":"600"}],"label-mono-sm":["0.6875rem",{"lineHeight":"0.875rem","fontWeight":"500"}],"title-sm":["0.75rem",{"lineHeight":"1rem","fontWeight":"600"}],"body-md":["0.875rem",{"lineHeight":"1.25rem","fontWeight":"400"}],"label-mono-lg":["0.875rem",{"lineHeight":"1.25rem","fontWeight":"500"}],"body-sm":["0.8125rem",{"lineHeight":"1.125rem","fontWeight":"400"}],"headline-lg":["1.5rem",{"lineHeight":"2rem","fontWeight":"600"}],"title-md":["0.875rem",{"lineHeight":"1.25rem","fontWeight":"600"}],"body-lg":["1rem",{"lineHeight":"1.5rem","fontWeight":"400"}],"headline-xl":["2rem",{"lineHeight":"2.5rem","fontWeight":"700"}],"label-mono-md":["0.75rem",{"lineHeight":"1rem","fontWeight":"500"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased min-h-screen flex flex-col"><header class="fixed top-0 w-full z-50 bg-[#0f172a] text-[#cbd5e1] border-b border-[#1e293b]"><div class="h-28 w-full max-w-7xl mx-auto px-gutter-lg flex flex-col justify-between pt-2 pb-0"><div class="flex items-center justify-between gap-space-lg w-full"><div class="flex items-center gap-space-md"><img alt="ASTECH Explorer Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WMLnStoWx_Ec1okqUHw_W5xkatNkd6d8bMrcuFCNNY44PQn-B9h0QisZzuy8YabfC9Dkm0A8F7whDhrJhyM8HVjjc9ly9Anik6C6BNzWXHScR2p0tqdZZZisOUUKeBUMcAu2iWLIDq7pRjVEKUJaFobGMAhl2rUKDJyJ3gviUb3GSnC20-WN_JLStRoXbACy2_W5b0uomwck3xY8NOqtdsqTz7BAd6wKgg2_L-TPFLeaLJPCoWiMAR"/><div class="flex items-center gap-space-sm"><span class="font-headline-md text-headline-md font-bold tracking-tight text-white">ASTECH Explorer</span><span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#1e293b] text-[#94a3b8] font-label-mono-sm text-label-mono-sm border border-[#334155]"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>Oracle 19c • PIVRY01</span></div></div><div class="flex-1 max-w-lg hidden md:block mx-space-md"><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-2.5 text-[#64748b] text-[18px]">search</span><input class="w-full h-8 pl-8 pr-12 rounded bg-[#1e293b] text-white placeholder-[#64748b] font-body-sm text-body-sm border border-[#334155] focus:outline-none focus:border-primary-container" placeholder="Rechercher agent, matricule, contrat, bien..." type="text"/><span class="absolute right-2 font-label-mono-sm text-label-mono-sm text-[#64748b] border border-[#334155] px-1 py-0.2 rounded">⌘K</span></div></div><div class="flex items-center gap-space-md"><span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-[#1e293b] text-[#94a3b8] font-label-mono-sm text-label-mono-sm border border-[#334155]"><span class="material-symbols-outlined text-[15px] text-[#94a3b8]">lock</span>Mode Lecture Seule</span><button class="relative p-1.5 rounded text-[#cbd5e1] hover:text-white hover:bg-[#1e293b] transition-colors"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400 ring-2 ring-[#0f172a]"></span></button><div class="flex items-center gap-space-sm pl-space-sm border-l border-[#1e293b]"><div class="text-right hidden sm:block"><div class="font-title-sm text-title-sm text-white leading-tight">J. Martin</div><div class="font-label-mono-sm text-label-mono-sm text-[#94a3b8]">Administrateur Système</div></div><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-1 ring-[#334155]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDH0AWE6ETB_hKwTpcAAlGfwv0bXJBYRWu7x9xJnJD9cvgyN5L6Z_iHSAEEz7KfbFer1zMhaqwounHYVgWuCkfKngFzfLxbAWdyJucwFWXU0B-XDDoV_Gg0U0lIjX0_CKIJPyzYYJ-LMUWE8FWF2Kba8HFhHYmgywU7B5H6wxVD6ZEHAaze43VM-vxloWEERqtOUmWhPs-r3HMIxMbwSwoyhwIkknQLBt4sh7gm84UdAW_Y0p-hYUI"/></div></div></div><nav class="flex items-center gap-space-lg overflow-x-auto whitespace-nowrap pt-1" data-active-classes="text-white border-b-2 border-primary-container font-semibold"><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="tableau-de-bord" href="#">Tableau de bord</a><a aria-current="page" class="pb-2 transition-colors text-white border-b-2 border-primary-container font-semibold" data-path="agents-et-comptes" href="#">Agents &amp; Comptes</a><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="synchro-rh" href="#">Synchro RH</a><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="gestion-locative" href="#">Gestion Locative</a><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="referentiels" href="#">Référentiels</a><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="interventions" href="#">Interventions</a><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="indices" href="#">Indices</a></nav></div></header><main class="w-full max-w-7xl mx-auto px-gutter-lg pt-28 flex-1 bg-surface"><div class="flex flex-col w-full">
+<!-- Dynamic Notification / Top Telemetry Banner -->
+<div class="w-full bg-surface-container-high px-space-lg py-space-sm rounded-lg mb-space-lg flex flex-wrap items-center justify-between gap-space-sm shadow-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-on-primary">
+<span class="material-symbols-outlined text-[16px]">sync_saved_locally</span>
+</span>
+<p class="font-body-sm text-body-sm text-on-surface truncate">
+        Base Oracle <span class="font-label-mono-sm text-label-mono-sm font-semibold text-primary">PIVRY01</span> synchronisée avec le SIRH. Dernière validation batch : aujourd'hui à 04:12 CET.
+      </p>
+</div>
+<div class="flex items-center gap-space-md shrink-0">
+<span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span> Vue opérationnelle SBCG_USERPROFIL
+      </span>
+<span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant bg-surface-container-highest px-2 py-0.5 rounded">
+        Dry-Run Test : OK
+      </span>
+</div>
+</div>
+<!-- Page Header With Metrology Subtitle -->
+<div class="flex flex-col lg:flex-row lg:items-end justify-between gap-space-md mb-space-lg">
+<div>
+<div class="flex items-center gap-space-sm mb-space-xs">
+<span class="font-label-mono-sm text-label-mono-sm uppercase tracking-wider text-primary font-semibold">ASTECH Repository §2.1 • §3.1 • §6.2</span>
+<span class="bg-surface-container-highest text-primary-container px-2 py-0.5 rounded-full font-label-mono-sm text-label-mono-sm font-medium">Securité Rôle Niveau 4</span>
+</div>
+<h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight leading-none">
+        Gestion des Agents &amp; Comptes
+      </h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1 max-w-3xl">
+        Qualification des utilisateurs avec droits applicatifs Oracle (<span class="font-label-mono-sm text-label-mono-sm text-on-surface font-medium">SBCG_USERPROFIL</span>) par opposition aux agents de terrain sans profil de connexion (dotations EPI, demandeurs travaux).
+      </p>
+</div>
+<!-- Global CTA Buttons -->
+<div class="flex items-center gap-space-sm shrink-0">
+<button class="h-9 px-space-md rounded bg-surface-container-lowest text-on-surface font-title-sm text-title-sm shadow-sm hover:bg-surface-container flex items-center gap-1.5 transition-colors" id="btn-export-csv">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">file_download</span>
+        Exporter la liste CSV
+      </button>
+<button class="h-9 px-space-md rounded bg-primary-container text-on-primary font-title-sm text-title-sm shadow-md hover:bg-primary flex items-center gap-1.5 transition-all">
+<span class="material-symbols-outlined text-[18px]">person_add</span>
+        + Nouvel agent (manuel)
+      </button>
+</div>
+</div>
+<!-- KPI Statistical Syntheses Grid (4 Bento Cards) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md mb-space-lg">
+<!-- Card 1: Total Repertoire -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+<div class="flex items-center justify-between text-on-surface-variant mb-space-xs">
+<span class="font-title-sm text-title-sm">Total Répertoire</span>
+<span class="material-symbols-outlined text-primary text-[20px]">groups</span>
+</div>
+<div class="flex items-baseline gap-space-sm">
+<span class="font-headline-xl text-headline-xl font-bold text-on-surface tracking-tight">4 941</span>
+<span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">personnes</span>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between font-label-mono-sm text-label-mono-sm">
+<span class="text-primary font-semibold">100% Référentiel SIRH</span>
+<span class="text-on-surface-variant">Table DEMANDEUR</span>
+</div>
+<div class="absolute -right-4 -bottom-4 w-16 h-16 bg-surface-container rounded-full opacity-40 pointer-events-none"></div>
+</div>
+<!-- Card 2: Active Users with Rights -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+<div class="flex items-center justify-between text-on-surface-variant mb-space-xs">
+<span class="font-title-sm text-title-sm">Utilisateurs avec Droits</span>
+<span class="material-symbols-outlined text-primary-container text-[20px]">badge</span>
+</div>
+<div class="flex items-baseline gap-space-sm">
+<span class="font-headline-xl text-headline-xl font-bold text-primary-container tracking-tight">269</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-label-mono-sm text-label-mono-sm font-semibold">
+          Actifs (5.4%)
+        </span>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between font-label-mono-sm text-label-mono-sm">
+<span class="text-on-surface-variant font-medium">Oracle SBCG_USERPROFIL</span>
+<span class="text-primary font-semibold">• Sessions OK</span>
+</div>
+<div class="absolute -right-4 -bottom-4 w-16 h-16 bg-secondary-container rounded-full opacity-40 pointer-events-none"></div>
+</div>
+<!-- Card 3: Plain Agents (EPI/Demandeurs) -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+<div class="flex items-center justify-between text-on-surface-variant mb-space-xs">
+<span class="font-title-sm text-title-sm">Agents Simples (Terrain / EPI)</span>
+<span class="material-symbols-outlined text-secondary text-[20px]">engineering</span>
+</div>
+<div class="flex items-baseline gap-space-sm">
+<span class="font-headline-xl text-headline-xl font-bold text-on-surface tracking-tight">4 672</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-mono-sm text-label-mono-sm font-semibold">
+          Sans compte
+        </span>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between font-label-mono-sm text-label-mono-sm">
+<span class="text-on-surface-variant">Bénéficiaires Dotations</span>
+<span class="text-on-surface font-medium">94.6% Effectif</span>
+</div>
+<div class="absolute -right-4 -bottom-4 w-16 h-16 bg-surface-container-high rounded-full opacity-30 pointer-events-none"></div>
+</div>
+<!-- Card 4: Global Administrators -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+<div class="flex items-center justify-between text-on-surface-variant mb-space-xs">
+<span class="font-title-sm text-title-sm">Administrateurs Globaux</span>
+<span class="material-symbols-outlined text-tertiary text-[20px]">admin_panel_settings</span>
+</div>
+<div class="flex items-baseline gap-space-sm">
+<span class="font-headline-xl text-headline-xl font-bold text-tertiary tracking-tight">30</span>
+<span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-mono-sm text-label-mono-sm font-bold">
+          Périmètre PIVRY
+        </span>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between font-label-mono-sm text-label-mono-sm">
+<span class="text-tertiary font-semibold">Privilèges Niv. 99</span>
+<span class="text-on-surface-variant font-medium">MFA Forcé</span>
+</div>
+<div class="absolute -right-4 -bottom-4 w-16 h-16 bg-tertiary-fixed rounded-full opacity-30 pointer-events-none"></div>
+</div>
+</div>
+<!-- Advanced Toolbar & Filter Controls -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm mb-space-lg flex flex-col gap-space-md">
+<!-- Row 1: Search and Filter Pills -->
+<div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-space-md">
+<!-- Search Input (UPPER LIKE :q style) -->
+<div class="relative flex-1 min-w-[280px]">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[20px]">search</span>
+<input class="w-full h-10 pl-10 pr-24 rounded-lg bg-surface-container-low text-on-surface placeholder-on-surface-variant font-body-sm text-body-sm focus:outline-none focus:bg-surface-container transition-all" id="search-input" placeholder="Rechercher par nom, matricule (USR_NAME), service (UPPER LIKE :q)..." type="text"/>
+<span class="absolute right-3 top-2.5 font-label-mono-sm text-label-mono-sm text-on-surface-variant bg-surface-container-highest px-1.5 py-0.5 rounded">
+          SQL LIKE
+        </span>
+</div>
+<!-- Segmented View Filter Tabs -->
+<div class="flex items-center p-1 bg-surface-container rounded-lg shrink-0 overflow-x-auto">
+<button class="filter-tab px-space-md py-1.5 rounded-md font-title-sm text-title-sm bg-surface-container-lowest text-primary-container shadow-sm font-semibold transition-all" data-filter="all">
+          Tous <span class="ml-1 opacity-70 font-label-mono-sm text-label-mono-sm">4 941</span>
+</button>
+<button class="filter-tab px-space-md py-1.5 rounded-md font-title-sm text-title-sm text-on-surface-variant hover:text-on-surface font-medium transition-all" data-filter="users">
+          Utilisateurs avec droits <span class="ml-1 opacity-70 font-label-mono-sm text-label-mono-sm">269</span>
+</button>
+<button class="filter-tab px-space-md py-1.5 rounded-md font-title-sm text-title-sm text-on-surface-variant hover:text-on-surface font-medium transition-all" data-filter="simple">
+          Agents simples <span class="ml-1 opacity-70 font-label-mono-sm text-label-mono-sm">4 672</span>
+</button>
+<button class="filter-tab px-space-md py-1.5 rounded-md font-title-sm text-title-sm text-on-surface-variant hover:text-on-surface font-medium transition-all" data-filter="admins">
+          Administrateurs <span class="ml-1 opacity-70 font-label-mono-sm text-label-mono-sm">30</span>
+</button>
+<button class="filter-tab px-space-md py-1.5 rounded-md font-title-sm text-title-sm text-on-surface-variant hover:text-on-surface font-medium transition-all" data-filter="inactive">
+          Inactifs <span class="ml-1 opacity-70 font-label-mono-sm text-label-mono-sm">18</span>
+</button>
+</div>
+</div>
+<!-- Row 2: Secondary Dropdown Filters and Micro Indicators -->
+<div class="flex flex-wrap items-center justify-between gap-space-md pt-space-xs">
+<div class="flex flex-wrap items-center gap-space-sm">
+<!-- Service Filter Dropdown -->
+<div class="relative">
+<select class="h-8 pl-3 pr-8 rounded bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none appearance-none cursor-pointer" id="service-filter">
+<option value="">Toutes Directions / Services</option>
+<option value="DIR_BAT">Direction des Bâtiments</option>
+<option value="ESP_VERT">Espaces Verts &amp; Biodiversité</option>
+<option value="VOIRIE">Voirie &amp; Infrastructure</option>
+<option value="DSI">Direction des Systèmes d'Info</option>
+<option value="LOGISTIQUE">Magasin Général &amp; Logistique</option>
+<option value="FINANCES">Finances &amp; Commandes</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-2 pointer-events-none text-on-surface-variant text-[16px]">expand_more</span>
+</div>
+<!-- Role Filter Dropdown -->
+<div class="relative">
+<select class="h-8 pl-3 pr-8 rounded bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none appearance-none cursor-pointer" id="role-filter">
+<option value="">Tous Rôles Applicatifs (U/D/R/I/C/A/S)</option>
+<option value="A">A - Administrateur Système</option>
+<option value="G">G - Gestionnaire Patrimoine</option>
+<option value="O">O - Ordonnanceur Travaux</option>
+<option value="C">C - Comptable &amp; Engagements</option>
+<option value="D">D - Demandeur de Travaux</option>
+<option value="S">S - Superviseur Chantier</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-2 pointer-events-none text-on-surface-variant text-[16px]">expand_more</span>
+</div>
+<!-- Dry Run Simulator Trigger -->
+<button class="h-8 px-3 rounded bg-surface-container-low text-primary-container font-label-mono-sm text-label-mono-sm hover:bg-surface-container flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[16px]">science</span>
+          Simuler impact rôles (Dry-Run)
+        </button>
+</div>
+<div class="flex items-center gap-space-sm font-label-mono-sm text-label-mono-sm text-on-surface-variant">
+<span>Filtre actif : <strong class="text-on-surface font-semibold" id="active-filter-label">Tous</strong></span>
+<span>•</span>
+<span>Résultats : <span class="text-primary font-bold" id="results-count">4 941</span></span>
+</div>
+</div>
+</div>
+<!-- Main Content Layout : High Density Table + Sliding Inspector Drawer Side-by-Side -->
+<div class="flex flex-col xl:flex-row items-start gap-space-lg w-full relative mb-space-xl">
+<!-- Left Area : High Density Data Table -->
+<div class="w-full xl:flex-1 bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<!-- Table Header & Bulk Controls -->
+<div class="p-space-sm bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<input class="w-4 h-4 rounded text-primary-container bg-surface-container cursor-pointer" id="select-all" type="checkbox"/>
+<label class="font-label-mono-sm text-label-mono-sm text-on-surface-variant select-none" for="select-all">
+            Sélectionner la page (25 lignes)
+          </label>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">Page 1 / 198</span>
+<div class="inline-flex rounded shadow-sm">
+<button class="w-7 h-7 bg-surface-container-lowest rounded-l flex items-center justify-center text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined text-[16px]">chevron_left</span>
+</button>
+<button class="w-7 h-7 bg-surface-container-lowest rounded-r flex items-center justify-center text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Scrollable Data Grid -->
+<div class="w-full overflow-x-auto">
+<table class="w-full text-left border-collapse min-w-[980px]">
+<thead>
+<tr class="bg-surface-container text-on-surface-variant font-label-mono-sm text-label-mono-sm uppercase tracking-wider">
+<th class="py-2.5 px-3 w-10"></th>
+<th class="py-2.5 px-3 font-semibold">Matricule</th>
+<th class="py-2.5 px-3 font-semibold">Nom &amp; Prénom</th>
+<th class="py-2.5 px-3 font-semibold">Service / Sous-service</th>
+<th class="py-2.5 px-3 font-semibold">Type de Compte</th>
+<th class="py-2.5 px-3 font-semibold">Profil &amp; Droits</th>
+<th class="py-2.5 px-3 font-semibold">Rôles Applicatifs</th>
+<th class="py-2.5 px-3 font-semibold text-center">Admin</th>
+<th class="py-2.5 px-3 font-semibold">Dernière MAJ</th>
+<th class="py-2.5 px-3 text-right font-semibold">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y-0" id="agent-table-body">
+<!-- Row 1 : Selected Agent (ALAIN MOREAU - M01048) -->
+<tr class="agent-row bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer" data-admin="false" data-id="M01048" data-service="DIR_BAT" data-type="user">
+<td class="py-2.5 px-3 text-center">
+<input checked="" class="w-4 h-4 rounded text-primary-container bg-surface-container cursor-pointer" type="checkbox"/>
+</td>
+<td class="py-2.5 px-3">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+<span class="font-label-mono-md text-label-mono-md font-bold text-primary">M01048</span>
+</div>
+</td>
+<td class="py-2.5 px-3">
+<div class="font-title-md text-title-md text-on-surface">MOREAU Alain</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">a.moreau@astech-ivry.fr</div>
+</td>
+<td class="py-2.5 px-3">
+<div class="font-body-sm text-body-sm text-on-surface">Direction Bâtiments</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">BAT_ELEC_NORD</div>
+</td>
+<td class="py-2.5 px-3">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-label-mono-sm text-label-mono-sm font-semibold">
+<span class="material-symbols-outlined text-[14px]">lock_open</span> Utilisateur
+                </span>
+</td>
+<td class="py-2.5 px-3">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container-highest text-primary font-label-mono-sm text-label-mono-sm font-medium">
+                  14 menus (Niv 15)
+                </span>
+</td>
+<td class="py-2.5 px-3">
+<div class="flex items-center gap-1 flex-wrap">
+<span class="px-1.5 py-0.2 rounded bg-surface-container text-on-surface font-label-mono-sm text-label-mono-sm font-semibold">Gest</span>
+<span class="px-1.5 py-0.2 rounded bg-surface-container text-on-surface font-label-mono-sm text-label-mono-sm font-semibold">Ordon</span>
+</div>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="text-on-surface-variant opacity-30 font-label-mono-sm text-label-mono-sm">—</span>
+</td>
+<td class="py-2.5 px-3">
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface">Hier 16:45</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">PIVRY-SRV02</div>
+</td>
+<td class="py-2.5 px-3 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="px-2 py-1 rounded bg-primary text-on-primary font-label-mono-sm text-label-mono-sm font-medium hover:bg-primary-container transition-colors">
+                    Fiche
+                  </button>
+<button class="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 : Global Admin (JEAN MARTIN - M00001) -->
+<tr class="agent-row hover:bg-surface-container-low transition-colors cursor-pointer" data-admin="true" data-id="M00001" data-service="DSI" data-type="admin">
+<td class="py-2.5 px-3 text-center">
+<input class="w-4 h-4 rounded text-primary-container bg-surface-container cursor-pointer" type="checkbox"/>
+</td>
+<td class="py-2.5 px-3">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="font-label-mono-md text-label-mono-md font-bold text-tertiary">M00001</span>
+</div>
+</td>
+<td class="py-2.5 px-3">
+<div class="font-title-md text-title-md text-on-surface">MARTIN Jean</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">j.martin@astech-ivry.fr</div>
+</td>
+<td class="py-2.5 px-3">
+<div class="font-body-sm text-body-sm text-on-surface">DSI • Infrastructure</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">SYS_ADMIN_PROD</div>
+</td>
+<td class="py-2.5 px-3">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-label-mono-sm text-label-mono-sm font-semibold">
+<span class="material-symbols-outlined text-[14px]">lock_open</span> Utilisateur
+                </span>
+</td>
+<td class="py-2.5 px-3">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-label-mono-sm text-label-mono-sm font-semibold">
+                  Tous menus (Niv 99)
+                </span>
+</td>
+<td class="py-2.5 px-3">
+<div class="flex items-center gap-1 flex-wrap">
+<span class="px-1.5 py-0.2 rounded bg-tertiary text-on-tertiary font-label-mono-sm text-label-mono-sm font-semibold">Admin</span>
+<span class="px-1.5 py-0.2 rounded bg-surface-container text-on-surface font-label-mono-sm text-label-mono-sm font-semibold">Audit</span>
+</div>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded-full bg-tertiary text-on-tertiary font-label-mono-sm text-label-mono-sm font-bold">
+                  ADMIN
+                </span>
+</td>
+<td class="py-2.5 px-3">
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface">Aujourd'hui 08:31</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">PIVRY-SRV01</div>
+</td>
+<td class="py-2.5 px-3 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-mono-sm text-label-mono-sm font-medium hover:bg-surface-container-high transition-colors">
+                    Fiche
+                  </button>
+<button class="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 : Field Agent (EPI / Demandeur) (VALERIE DUPONT - M04921) -->
+<tr class="agent-row hover:bg-surface-container-low transition-colors cursor-pointer" data-admin="false" data-id="M04921" data-service="ESP_VERT" data-type="simple">
+<td class="py-2.5 px-3 text-center">
+<input class="w-4 h-4 rounded text-primary-container bg-surface-container cursor-pointer" type="checkbox"/>
+</td>
+<td class="py-2.5 px-3">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-label-mono-md text-label-mono-md font-bold text-secondary">M04921</span>
+</div>
+</td>
+<td class="py-2.5 px-3">
+<div class="font-title-md text-title-md text-on-surface">DUPONT Valérie</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">v.dupont@ivry-espacesverts.fr</div>
+</td>
+<td class="py-2.5 px-3">
+<div class="font-body-sm text-body-sm text-on-surface">Espaces Verts</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">PARCS_SECTEUR_SUD</div>
+</td>
+<td class="py-2.5 px-3">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-mono-sm text-label-mono-sm font-medium">
+<span class="material-symbols-outlined text-[14px]">shield</span> Agent simple (EPI)
+                </span>
+</td>
+<td class="py-2.5 px-3">
+<span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant italic">
+                  Aucun droit ASTECH
+                </span>
+</td>
+<td class="py-2.5 px-3">
+<span class="px-1.5 py-0.2 rounded bg-surface-container text-on-surface-variant font-label-mono-sm text-label-mono-sm">
+                  Demandeur
+                </span>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="text-on-surface-variant opacity-30 font-label-mono-sm text-label-mono-sm">—</span>
+</td>
+<td class="py-2.5 px-3">
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface">12/03/2024</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">Synchro RH</div>
+</td>
+<td class="py-2.5 px-3 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-mono-sm text-label-mono-sm font-medium hover:bg-surface-container-high transition-colors">
+                    Fiche
+                  </button>
+<button class="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 : Field Agent (EPI / Demandeur) (BERNARD TISSIER - M03112) -->
+<tr class="agent-row hover:bg-surface-container-low transition-colors cursor-pointer" data-admin="false" data-id="M03112" data-service="VOIRIE" data-type="simple">
+<td class="py-2.5 px-3 text-center">
+<input class="w-4 h-4 rounded text-primary-container bg-surface-container cursor-pointer" type="checkbox"/>
+</td>
+<td class="py-2.5 px-3">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-label-mono-md text-label-mono-md font-bold text-secondary">M03112</span>
+</div>
+</td>
+<td class="py-2.5 px-3">
+<div class="font-title-md text-title-md text-on-surface">TISSIER Bernard</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">b.tissier@ivry-voirie.fr</div>
+</td>
+<td class="py-2.5 px-3">
+<div class="font-body-sm text-body-sm text-on-surface">Voirie &amp; Réseaux</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">ASSAINISS_CENTRE</div>
+</td>
+<td class="py-2.5 px-3">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-mono-sm text-label-mono-sm font-medium">
+<span class="material-symbols-outlined text-[14px]">shield</span> Agent simple (EPI)
+                </span>
+</td>
+<td class="py-2.5 px-3">
+<span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant italic">
+                  Aucun droit ASTECH
+                </span>
+</td>
+<td class="py-2.5 px-3">
+<span class="px-1.5 py-0.2 rounded bg-surface-container text-on-surface-variant font-label-mono-sm text-label-mono-sm">
+                  Demandeur
+                </span>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="text-on-surface-variant opacity-30 font-label-mono-sm text-label-mono-sm">—</span>
+</td>
+<td class="py-2.5 px-3">
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface">05/04/2024</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">Synchro RH</div>
+</td>
+<td class="py-2.5 px-3 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-mono-sm text-label-mono-sm font-medium hover:bg-surface-container-high transition-colors">
+                    Fiche
+                  </button>
+<button class="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 5 : User with Rights (SARAH LECLERC - M02844) -->
+<tr class="agent-row hover:bg-surface-container-low transition-colors cursor-pointer" data-admin="false" data-id="M02844" data-service="FINANCES" data-type="user">
+<td class="py-2.5 px-3 text-center">
+<input class="w-4 h-4 rounded text-primary-container bg-surface-container cursor-pointer" type="checkbox"/>
+</td>
+<td class="py-2.5 px-3">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+<span class="font-label-mono-md text-label-mono-md font-bold text-primary">M02844</span>
+</div>
+</td>
+<td class="py-2.5 px-3">
+<div class="font-title-md text-title-md text-on-surface">LECLERC Sarah</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">s.leclerc@astech-ivry.fr</div>
+</td>
+<td class="py-2.5 px-3">
+<div class="font-body-sm text-body-sm text-on-surface">Finances &amp; Achats</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">BUDGET_GMAO</div>
+</td>
+<td class="py-2.5 px-3">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-label-mono-sm text-label-mono-sm font-semibold">
+<span class="material-symbols-outlined text-[14px]">lock_open</span> Utilisateur
+                </span>
+</td>
+<td class="py-2.5 px-3">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container-highest text-primary font-label-mono-sm text-label-mono-sm font-medium">
+                  8 menus (Niv 08)
+                </span>
+</td>
+<td class="py-2.5 px-3">
+<div class="flex items-center gap-1 flex-wrap">
+<span class="px-1.5 py-0.2 rounded bg-surface-container text-on-surface font-label-mono-sm text-label-mono-sm font-semibold">Compta</span>
+</div>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="text-on-surface-variant opacity-30 font-label-mono-sm text-label-mono-sm">—</span>
+</td>
+<td class="py-2.5 px-3">
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface">Aujourd'hui 11:20</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">PIVRY-SRV02</div>
+</td>
+<td class="py-2.5 px-3 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-mono-sm text-label-mono-sm font-medium hover:bg-surface-container-high transition-colors">
+                    Fiche
+                  </button>
+<button class="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 6 : Inactive User (PIERRE COUSIN - M00780) -->
+<tr class="agent-row opacity-60 hover:opacity-100 hover:bg-surface-container-low transition-all cursor-pointer" data-admin="false" data-id="M00780" data-service="LOGISTIQUE" data-type="inactive">
+<td class="py-2.5 px-3 text-center">
+<input class="w-4 h-4 rounded text-primary-container bg-surface-container cursor-pointer" type="checkbox"/>
+</td>
+<td class="py-2.5 px-3">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+<span class="font-label-mono-md text-label-mono-md font-bold text-outline">M00780</span>
+</div>
+</td>
+<td class="py-2.5 px-3">
+<div class="font-title-md text-title-md text-on-surface line-through">COUSIN Pierre</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">p.cousin@astech-ivry.fr</div>
+</td>
+<td class="py-2.5 px-3">
+<div class="font-body-sm text-body-sm text-on-surface">Magasin Général</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">STOCK_CENTRAL</div>
+</td>
+<td class="py-2.5 px-3">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-mono-sm text-label-mono-sm font-semibold">
+                  Compte Verrouillé
+                </span>
+</td>
+<td class="py-2.5 px-3">
+<span class="font-label-mono-sm text-label-mono-sm text-outline">
+                  Droits révoqués
+                </span>
+</td>
+<td class="py-2.5 px-3">
+<span class="px-1.5 py-0.2 rounded bg-surface-container text-on-surface-variant font-label-mono-sm text-label-mono-sm">
+                  Ex-Gest
+                </span>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="text-on-surface-variant opacity-30 font-label-mono-sm text-label-mono-sm">—</span>
+</td>
+<td class="py-2.5 px-3">
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface">01/01/2024</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">Départ Retraite</div>
+</td>
+<td class="py-2.5 px-3 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-mono-sm text-label-mono-sm font-medium hover:bg-surface-container-high transition-colors">
+                    Fiche
+                  </button>
+<button class="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Compact Footer Pagination Status -->
+<div class="px-space-md py-space-sm bg-surface-container-low flex flex-wrap items-center justify-between text-on-surface-variant font-label-mono-sm text-label-mono-sm">
+<div>
+          Affichage des enregistrements <span class="font-semibold text-on-surface">1 - 25</span> sur <span class="font-semibold text-on-surface">4 941</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<span>Lignes par page :</span>
+<select class="bg-surface-container-lowest text-on-surface rounded px-1.5 py-0.5 focus:outline-none">
+<option>25</option>
+<option>50</option>
+<option>100</option>
+</select>
+</div>
+</div>
+</div>
+<!-- Right Sliding Inspector Drawer : Fiche Agent Détaillée (ALAIN MOREAU - M01048) -->
+<div class="w-full xl:w-[420px] shrink-0 bg-surface-container-lowest rounded-xl shadow-md p-space-lg flex flex-col gap-space-lg transition-all" id="agent-detail-drawer">
+<!-- Drawer Header with Oracle Session Identity -->
+<div class="flex items-start justify-between pb-space-sm bg-surface-container-low -mx-space-lg -mt-space-lg p-space-lg rounded-t-xl">
+<div class="flex items-center gap-space-md">
+<div class="relative">
+<img class="w-12 h-12 rounded-lg object-cover shadow-sm ring-1 ring-surface-container-highest" data-alt="Portrait professionnel de style corporate d'un responsable technique et maintenance d'âge mûr, Alain Moreau, en tenue de travail soignée dans un atelier municipal lumineux, tons bleu profond et ardoise." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqHz-37oISxaJl_J0Hjqjlb_zFrTsP-3x0LgfWg79ti0f1IuAcvwNs8dQ2hwvdPiYO6QaHgj-pbd6hpkTbD6hbEooOh9P92Gpyj-HIPBCGPoGOGjRELjmq2uzuyuaLJ7Oze3N2TYflrqmalpF2FENDCazgCWnxaGQug0bVvuSJ9-oJ4gherSYJX80aso9JLruHrB0Q0jyDzYg8xu58V1Psxjx6naavG1xKexD6YPHswTKYyvJN2D4"/>
+<span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-primary-container rounded-full ring-2 ring-surface-container-lowest" title="Compte Actif"></span>
+</div>
+<div>
+<div class="flex items-center gap-space-xs">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">ALAIN MOREAU</h2>
+<span class="px-1.5 py-0.2 rounded bg-secondary-container text-on-secondary-fixed font-label-mono-sm text-label-mono-sm font-semibold">M01048</span>
+</div>
+<p class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">Responsable Cellule Électricité Bâtiments</p>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<button class="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container" title="Fermer le volet">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+</div>
+<!-- Oracle Account Credentials Card -->
+<div class="bg-surface-container p-space-md rounded-lg flex flex-col gap-space-xs font-body-sm text-body-sm">
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant font-label-mono-sm text-label-mono-sm uppercase">Schéma Oracle</span>
+<span class="font-label-mono-sm text-label-mono-sm font-semibold text-primary">ASTECHIVR.DEMANDEUR</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant font-label-mono-sm text-label-mono-sm uppercase">Statut Session</span>
+<span class="inline-flex items-center gap-1 font-label-mono-sm text-label-mono-sm text-primary-container font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse"></span> Connectable • PROD
+          </span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant font-label-mono-sm text-label-mono-sm uppercase">Courriel LDAP</span>
+<span class="font-label-mono-sm text-label-mono-sm text-on-surface">a.moreau@astech-ivry.fr</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant font-label-mono-sm text-label-mono-sm uppercase">Empreinte Hachée</span>
+<span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant font-mono">0x4F92...B81A</span>
+</div>
+</div>
+<!-- Rights & Menus Authorization Matrix (SBCG_USERPROFIL) -->
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[18px]">verified_user</span>
+<span class="font-title-sm text-title-sm text-on-surface font-semibold uppercase tracking-wider">
+              Matrice Menus (SBCG_USERPROFIL)
+            </span>
+</div>
+<span class="font-label-mono-sm text-label-mono-sm text-primary font-bold">14 Menus Actifs</span>
+</div>
+<!-- Bitmask Permission Breakdown -->
+<div class="space-y-1.5 font-label-mono-sm text-label-mono-sm">
+<!-- Item 1 -->
+<div class="p-2 rounded bg-surface-container-low flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">MNU_GMAO_INTERV</span>
+<span class="text-on-surface-variant text-[11px]">Bons de Travaux &amp; Dépannages</span>
+</div>
+<div class="flex items-center gap-1 font-bold">
+<span class="px-1 rounded bg-surface-container-highest text-primary" title="Consultation">C</span>
+<span class="px-1 rounded bg-surface-container-highest text-primary" title="Modification">M</span>
+<span class="px-1 rounded bg-surface-container-highest text-primary" title="Validation">V</span>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="p-2 rounded bg-surface-container-low flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">MNU_STOCK_EPI</span>
+<span class="text-on-surface-variant text-[11px]">Gestion Dotations &amp; Équipements</span>
+</div>
+<div class="flex items-center gap-1 font-bold">
+<span class="px-1 rounded bg-surface-container-highest text-primary" title="Consultation">C</span>
+<span class="px-1 rounded bg-surface-container-highest text-primary" title="Modification">M</span>
+<span class="px-1 rounded bg-surface-container text-outline opacity-40">—</span>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="p-2 rounded bg-surface-container-low flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">MNU_PATRIM_BAT</span>
+<span class="text-on-surface-variant text-[11px]">Référentiel Foncier &amp; Locatif</span>
+</div>
+<div class="flex items-center gap-1 font-bold">
+<span class="px-1 rounded bg-surface-container-highest text-primary" title="Consultation">C</span>
+<span class="px-1 rounded bg-surface-container text-outline opacity-40">—</span>
+<span class="px-1 rounded bg-surface-container text-outline opacity-40">—</span>
+</div>
+</div>
+</div>
+<button class="w-full py-1.5 rounded bg-surface-container hover:bg-surface-container-high text-primary font-label-mono-sm text-label-mono-sm font-semibold flex items-center justify-center gap-1 transition-colors">
+<span>Éditer les 14 profils menus</span>
+<span class="material-symbols-outlined text-[14px]">open_in_new</span>
+</button>
+</div>
+<!-- Oracle User Group Membership (GROUPEUTIL) -->
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-[18px]">folder_shared</span>
+<span class="font-title-sm text-title-sm text-on-surface font-semibold uppercase tracking-wider">
+              Groupes Applicatifs (GROUPEUTIL)
+            </span>
+</div>
+<span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">3 Groupes</span>
+</div>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-mono-sm text-label-mono-sm font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-primary">check</span> GRP_TECH_BAT
+          </span>
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-mono-sm text-label-mono-sm font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-primary">check</span> GRP_VALID_N1
+          </span>
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-mono-sm text-label-mono-sm font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-primary">check</span> GRP_DISPATCH_NORD
+          </span>
+</div>
+</div>
+<!-- EPI Personal Allocations & Intervention Requests Activity -->
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">history</span>
+<span class="font-title-sm text-title-sm text-on-surface font-semibold uppercase tracking-wider">
+              Historique Dotations &amp; Interventions
+            </span>
+</div>
+<span class="font-label-mono-sm text-label-mono-sm text-primary-container font-semibold">2023 - 2025</span>
+</div>
+<div class="relative pl-4 space-y-3 font-body-sm text-body-sm before:content-[''] before:absolute before:left-1.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-surface-container-high">
+<!-- Timeline Entry 1 -->
+<div class="relative">
+<div class="absolute -left-[19px] top-1 w-2.5 h-2.5 rounded-full bg-primary ring-2 ring-surface-container-lowest"></div>
+<div class="font-title-sm text-title-sm text-on-surface">Dotation EPI : Chaussures S3 + Casque Isolant</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">Réf. EPI-2024-889 • Remis par Magasin Sud le 14/01/2025</div>
+</div>
+<!-- Timeline Entry 2 -->
+<div class="relative">
+<div class="absolute -left-[19px] top-1 w-2.5 h-2.5 rounded-full bg-secondary-container ring-2 ring-surface-container-lowest"></div>
+<div class="font-title-sm text-title-sm text-on-surface">Demande DI-89410 : Remplacement TGBT Mairie</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">Clôturé • Pris en charge en 1h45 par l'agent</div>
+</div>
+<!-- Timeline Entry 3 -->
+<div class="relative">
+<div class="absolute -left-[19px] top-1 w-2.5 h-2.5 rounded-full bg-surface-container-highest ring-2 ring-surface-container-lowest"></div>
+<div class="font-title-sm text-title-sm text-on-surface">Habilitation Électrique BR / B2V recyclée</div>
+<div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">Validité jusqu'au 31/10/2026 • Certificat n°IVR-992</div>
+</div>
+</div>
+</div>
+<!-- Action Footer for Selected Agent -->
+<div class="pt-space-md bg-surface-container-low -mx-space-lg -mb-space-lg p-space-lg rounded-b-xl flex items-center justify-between gap-space-sm">
+<button class="flex-1 h-9 rounded bg-surface-container text-error hover:bg-error-container font-title-sm text-title-sm font-semibold transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px]">lock_clock</span>
+          Désactiver compte
+        </button>
+<button class="flex-1 h-9 rounded bg-primary-container text-on-primary hover:bg-primary font-title-sm text-title-sm font-semibold transition-colors flex items-center justify-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[16px]">save</span>
+          Appliquer Droits
+        </button>
+</div>
+</div>
+</div>
+<!-- Inline Vanilla Micro-Interactions Script -->
+<script>
+    (function initAgentManagement() {
+      // Filter Tabs Handling
+      const tabs = document.querySelectorAll('.filter-tab');
+      const rows = document.querySelectorAll('.agent-row');
+      const countLabel = document.getElementById('results-count');
+      const filterLabel = document.getElementById('active-filter-label');
+      const searchInput = document.getElementById('search-input');
+      const serviceSelect = document.getElementById('service-filter');
+
+      function applyFilters() {
+        const activeTab = document.querySelector('.filter-tab.bg-surface-container-lowest');
+        const filterType = activeTab ? activeTab.getAttribute('data-filter') : 'all';
+        const searchTerm = (searchInput ? searchInput.value : '').trim().toLowerCase();
+        const selectedService = (serviceSelect ? serviceSelect.value : '');
+
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+          const rowType = row.getAttribute('data-type');
+          const rowAdmin = row.getAttribute('data-admin');
+          const rowService = row.getAttribute('data-service');
+          const textContent = row.textContent.toLowerCase();
+
+          let matchType = false;
+          if (filterType === 'all') matchType = true;
+          else if (filterType === 'users') matchType = (rowType === 'user' || rowType === 'admin');
+          else if (filterType === 'simple') matchType = (rowType === 'simple');
+          else if (filterType === 'admins') matchType = (rowAdmin === 'true');
+          else if (filterType === 'inactive') matchType = (rowType === 'inactive');
+
+          let matchSearch = (!searchTerm || textContent.includes(searchTerm));
+          let matchService = (!selectedService || rowService === selectedService);
+
+          if (matchType && matchSearch && matchService) {
+            row.style.display = '';
+            visibleCount++;
+          } else {
+            row.style.display = 'none';
+          }
+        });
+
+        if (countLabel) countLabel.textContent = visibleCount.toLocaleString('fr-FR');
+      }
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+          tabs.forEach(t => {
+            t.classList.remove('bg-surface-container-lowest', 'text-primary-container', 'shadow-sm', 'font-semibold');
+            t.classList.add('text-on-surface-variant', 'font-medium');
+          });
+          this.classList.add('bg-surface-container-lowest', 'text-primary-container', 'shadow-sm', 'font-semibold');
+          this.classList.remove('text-on-surface-variant', 'font-medium');
+
+          if (filterLabel) {
+            filterLabel.textContent = this.textContent.trim().split(' ')[0];
+          }
+
+          applyFilters();
+        });
+      });
+
+      if (searchInput) {
+        searchInput.addEventListener('input', applyFilters);
+      }
+      if (serviceSelect) {
+        serviceSelect.addEventListener('change', applyFilters);
+      }
+
+      // Quick row selection visual feedback
+      rows.forEach(row => {
+        row.addEventListener('click', function(e) {
+          if (e.target.tagName.toLowerCase() === 'input') return;
+          rows.forEach(r => r.classList.remove('bg-surface-container-low'));
+          this.classList.add('bg-surface-container-low');
+        });
+      });
+
+      // Quick toast alert on CSV export
+      const exportBtn = document.getElementById('btn-export-csv');
+      if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+          const originalText = exportBtn.innerHTML;
+          exportBtn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">sync</span> Génération CSV...';
+          exportBtn.disabled = true;
+          setTimeout(() => {
+            exportBtn.innerHTML = '<span class="material-symbols-outlined text-[18px] text-primary">done</span> 4 941 agents exportés';
+            setTimeout(() => {
+              exportBtn.innerHTML = originalText;
+              exportBtn.disabled = false;
+            }, 2500);
+          }, 800);
+        });
+      }
+    })();
+  </script>
+</div></main><footer class="w-full bg-[#0f172a] text-[#94a3b8] border-t border-[#1e293b] mt-space-xl"><div class="max-w-7xl mx-auto px-gutter-lg py-space-md flex flex-col sm:flex-row items-center justify-between gap-space-sm font-label-mono-sm text-label-mono-sm"><div>Proxy Oracle ASTECH • Schéma <span class="text-[#cbd5e1]">ASTECHIVR</span> • Port <span class="text-[#cbd5e1]">8099</span> • <span class="text-emerald-400">Thick mode actif</span></div><div>ASTECH Explorer v2.4.12 • Session PIVRY01-PROD-01</div></div></footer></body></html>

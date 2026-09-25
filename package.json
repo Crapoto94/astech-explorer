@@ -1,0 +1,13 @@
+{
+  "name": "astech-explorer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Consultation locale (lecture seule) de la base Oracle ASTECH — biens, contrats, locataires, echeances de loyer. Mode thick (Instant Client).",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "oracledb": "^6.10.0"
+  }
+}

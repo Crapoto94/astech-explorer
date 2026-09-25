@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"tertiary-fixed":"#eaddff","on-primary-fixed":"#001551","inverse-on-surface":"#eaf1ff","on-secondary-container":"#5c647a","surface-container-highest":"#d3e4fe","inverse-surface":"#213145","secondary-container":"#dae2fd","on-error":"#ffffff","outline-variant":"#c4c5d7","secondary-fixed":"#dae2fd","background":"#f8f9ff","secondary":"#565e74","primary-container":"#1d4ed8","primary-fixed":"#dce1ff","on-tertiary-fixed":"#25005a","error-container":"#ffdad6","on-secondary-fixed":"#131b2e","surface-dim":"#cbdbf5","surface":"#f8f9ff","on-tertiary-fixed-variant":"#5a00c6","on-tertiary":"#ffffff","on-primary-fixed-variant":"#0039b5","primary-fixed-dim":"#b7c4ff","on-error-container":"#93000a","on-tertiary-container":"#dfccff","surface-container-lowest":"#ffffff","outline":"#747686","surface-tint":"#2151da","tertiary":"#5700c0","tertiary-fixed-dim":"#d2bbff","on-secondary-fixed-variant":"#3f465c","on-secondary":"#ffffff","tertiary-container":"#712ae2","surface-container":"#e5eeff","on-primary":"#ffffff","on-surface":"#0b1c30","secondary-fixed-dim":"#bec6e0","primary":"#0037b0","on-background":"#0b1c30","surface-bright":"#f8f9ff","inverse-primary":"#b7c4ff","surface-container-high":"#dce9ff","on-surface-variant":"#434655","surface-variant":"#d3e4fe","error":"#ba1a1a","surface-container-low":"#eff4ff","on-primary-container":"#cad3ff"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-md":"0.75rem","gutter":"1rem","space-lg":"1rem","space-xl":"1.5rem","space-xs":"0.25rem","space-sm":"0.5rem","gutter-lg":"1.5rem","margin-mobile":"0.75rem","margin":"1.25rem"},"fontFamily":{"headline-sm":["Inter"],"headline-md":["Inter"],"headline-lg-mobile":["Inter"],"label-mono-sm":["JetBrains Mono"],"title-sm":["Inter"],"body-md":["Inter"],"label-mono-lg":["JetBrains Mono"],"body-sm":["Inter"],"headline-lg":["Inter"],"title-md":["Inter"],"body-lg":["Inter"],"headline-xl":["Inter"],"label-mono-md":["JetBrains Mono"]},"fontSize":{"headline-sm":["1rem",{"lineHeight":"1.5rem","fontWeight":"600"}],"headline-md":["1.25rem",{"lineHeight":"1.75rem","fontWeight":"600"}],"headline-lg-mobile":["1.25rem",{"lineHeight":"1.75rem","fontWeight":"600"}],"label-mono-sm":["0.6875rem",{"lineHeight":"0.875rem","fontWeight":"500"}],"title-sm":["0.75rem",{"lineHeight":"1rem","fontWeight":"600"}],"body-md":["0.875rem",{"lineHeight":"1.25rem","fontWeight":"400"}],"label-mono-lg":["0.875rem",{"lineHeight":"1.25rem","fontWeight":"500"}],"body-sm":["0.8125rem",{"lineHeight":"1.125rem","fontWeight":"400"}],"headline-lg":["1.5rem",{"lineHeight":"2rem","fontWeight":"600"}],"title-md":["0.875rem",{"lineHeight":"1.25rem","fontWeight":"600"}],"body-lg":["1rem",{"lineHeight":"1.5rem","fontWeight":"400"}],"headline-xl":["2rem",{"lineHeight":"2.5rem","fontWeight":"700"}],"label-mono-md":["0.75rem",{"lineHeight":"1rem","fontWeight":"500"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased min-h-screen flex flex-col"><header class="fixed top-0 w-full z-50 bg-[#0f172a] text-[#cbd5e1] border-b border-[#1e293b]"><div class="h-28 w-full max-w-7xl mx-auto px-gutter-lg flex flex-col justify-between pt-2 pb-0"><div class="flex items-center justify-between gap-space-lg w-full"><div class="flex items-center gap-space-md"><img alt="ASTECH Explorer Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WMLnStoWx_Ec1okqUHw_W5xkatNkd6d8bMrcuFCNNY44PQn-B9h0QisZzuy8YabfC9Dkm0A8F7whDhrJhyM8HVjjc9ly9Anik6C6BNzWXHScR2p0tqdZZZisOUUKeBUMcAu2iWLIDq7pRjVEKUJaFobGMAhl2rUKDJyJ3gviUb3GSnC20-WN_JLStRoXbACy2_W5b0uomwck3xY8NOqtdsqTz7BAd6wKgg2_L-TPFLeaLJPCoWiMAR"/><div class="flex items-center gap-space-sm"><span class="font-headline-md text-headline-md font-bold tracking-tight text-white">ASTECH Explorer</span><span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#1e293b] text-[#94a3b8] font-label-mono-sm text-label-mono-sm border border-[#334155]"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>Oracle 19c • PIVRY01</span></div></div><div class="flex-1 max-w-lg hidden md:block mx-space-md"><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-2.5 text-[#64748b] text-[18px]">search</span><input class="w-full h-8 pl-8 pr-12 rounded bg-[#1e293b] text-white placeholder-[#64748b] font-body-sm text-body-sm border border-[#334155] focus:outline-none focus:border-primary-container" placeholder="Rechercher agent, matricule, contrat, bien..." type="text"/><span class="absolute right-2 font-label-mono-sm text-label-mono-sm text-[#64748b] border border-[#334155] px-1 py-0.2 rounded">⌘K</span></div></div><div class="flex items-center gap-space-md"><span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-[#1e293b] text-[#94a3b8] font-label-mono-sm text-label-mono-sm border border-[#334155]"><span class="material-symbols-outlined text-[15px] text-[#94a3b8]">lock</span>Mode Lecture Seule</span><button class="relative p-1.5 rounded text-[#cbd5e1] hover:text-white hover:bg-[#1e293b] transition-colors"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400 ring-2 ring-[#0f172a]"></span></button><div class="flex items-center gap-space-sm pl-space-sm border-l border-[#1e293b]"><div class="text-right hidden sm:block"><div class="font-title-sm text-title-sm text-white leading-tight">J. Martin</div><div class="font-label-mono-sm text-label-mono-sm text-[#94a3b8]">Administrateur Système</div></div><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-1 ring-[#334155]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDH0AWE6ETB_hKwTpcAAlGfwv0bXJBYRWu7x9xJnJD9cvgyN5L6Z_iHSAEEz7KfbFer1zMhaqwounHYVgWuCkfKngFzfLxbAWdyJucwFWXU0B-XDDoV_Gg0U0lIjX0_CKIJPyzYYJ-LMUWE8FWF2Kba8HFhHYmgywU7B5H6wxVD6ZEHAaze43VM-vxloWEERqtOUmWhPs-r3HMIxMbwSwoyhwIkknQLBt4sh7gm84UdAW_Y0p-hYUI"/></div></div></div><nav class="flex items-center gap-space-lg overflow-x-auto whitespace-nowrap pt-1" data-active-classes="text-white border-b-2 border-primary-container font-semibold"><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="tableau-de-bord" href="#">Tableau de bord</a><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="agents-et-comptes" href="#">Agents &amp; Comptes</a><a aria-current="page" class="pb-2 transition-colors text-white border-b-2 border-primary-container font-semibold" data-path="synchro-rh" href="#">Synchro RH</a><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="gestion-locative" href="#">Gestion Locative</a><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="referentiels" href="#">Référentiels</a><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="interventions" href="#">Interventions</a><a class="text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" data-path="indices" href="#">Indices</a></nav></div></header><main class="w-full max-w-7xl mx-auto px-gutter-lg pt-28 flex-1 bg-surface"><div class="flex flex-col w-full">
+<div class="py-space-md">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div>
+<div class="flex items-center gap-space-sm mb-space-xs">
+<span class="font-label-mono-sm text-label-mono-sm px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-semibold tracking-wider uppercase">
+            Oracle ASTECHIVR ↔ Studio-RH Core
+          </span>
+<span class="inline-flex items-center gap-1 font-label-mono-sm text-label-mono-sm text-secondary">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+            Schéma v4.19-PROD
+          </span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">
+          Réconciliation Studio-RH ↔ ASTECH
+        </h1>
+<p class="font-body-md text-body-md text-secondary">
+          Confrontation des matricules agents entre le SIRH Next.js/Prisma et Oracle ASTECHIVR.
+        </p>
+</div>
+<div class="flex items-center gap-space-sm self-start lg:self-auto">
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container-highest transition-colors font-title-md text-title-md" id="btn-export-diff">
+<span class="material-symbols-outlined text-[18px]">download</span>
+          Export Diff CSV
+        </button>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container-highest transition-colors font-title-md text-title-md" id="btn-refresh-cache">
+<span class="material-symbols-outlined text-[18px]">sync</span>
+          Recharger Snapshots
+        </button>
+</div>
+</div>
+<!-- Bannière de workflow sécurisé -->
+<div class="mt-space-md p-space-md rounded-xl bg-surface-container-low shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-md relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary-container"></div>
+<div class="flex items-center gap-space-md pl-space-xs">
+<div class="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[24px]">verified_user</span>
+</div>
+<div>
+<div class="flex items-center gap-space-sm">
+<span class="font-title-md text-title-md text-on-surface font-bold">
+              Mode Écriture Contrôlée
+            </span>
+<span class="px-2 py-0.5 rounded font-label-mono-sm text-label-mono-sm bg-primary-container text-on-primary">
+              Strict Isolation Level: SERIALIZABLE
+            </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+            Toute modification nécessite une prévisualisation (Dry-Run) et génère une entrée non-répudiable au journal d'audit ASTECH.
+          </p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm shrink-0 pl-space-xs sm:pl-0">
+<span class="material-symbols-outlined text-[16px] text-primary">info</span>
+<span class="font-label-mono-sm text-label-mono-sm text-secondary">Proxy Latency: 4ms • Thick Mode OCI</span>
+</div>
+</div>
+<!-- Bandeau compteurs de réconciliation -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md mt-space-md">
+<!-- Volet 1: Concordants -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-title-sm text-title-sm text-secondary uppercase tracking-wider">Agents en synchronie</span>
+<span class="material-symbols-outlined text-[20px] text-outline">check_circle</span>
+</div>
+<div class="mt-space-sm flex items-baseline justify-between">
+<div class="font-headline-xl text-headline-xl text-on-surface tabular-nums">4 917</div>
+<span class="px-2 py-0.5 rounded font-label-mono-sm text-label-mono-sm bg-surface-container text-secondary">
+            99.15 %
+          </span>
+</div>
+<div class="mt-space-sm flex items-center gap-1.5 font-label-mono-sm text-label-mono-sm text-secondary">
+<span class="w-1.5 h-1.5 rounded-full bg-surface-tint"></span>
+          Concordance stricte matricule &amp; statut
+        </div>
+</div>
+<!-- Volet 2: À désactiver -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="flex items-center justify-between">
+<span class="font-title-sm text-title-sm text-error uppercase tracking-wider font-bold">À désactiver dans ASTECH</span>
+<span class="material-symbols-outlined text-[20px] text-error">person_off</span>
+</div>
+<div class="mt-space-sm flex items-baseline justify-between">
+<div class="font-headline-xl text-headline-xl text-error tabular-nums">18</div>
+<span class="px-2 py-0.5 rounded font-label-mono-sm text-label-mono-sm bg-error-container text-on-error-container">
+            Orphelins actifs
+          </span>
+</div>
+<div class="mt-space-sm flex items-center gap-1.5 font-label-mono-sm text-label-mono-sm text-error font-medium">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+          Contrats Studio-RH échus ou inexistants
+        </div>
+</div>
+<!-- Volet 3: À créer -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-title-sm text-title-sm text-primary uppercase tracking-wider font-bold">À créer dans ASTECH</span>
+<span class="material-symbols-outlined text-[20px] text-primary">person_add</span>
+</div>
+<div class="mt-space-sm flex items-baseline justify-between">
+<div class="font-headline-xl text-headline-xl text-on-surface tabular-nums">24</div>
+<span class="px-2 py-0.5 rounded font-label-mono-sm text-label-mono-sm bg-primary-fixed text-on-primary-fixed">
+            En attente
+          </span>
+</div>
+<div class="mt-space-sm flex items-center gap-1.5 font-label-mono-sm text-label-mono-sm text-on-surface-variant font-medium">
+<span class="material-symbols-outlined text-[14px] text-primary">arrow_forward</span>
+          Profils de base à instancier
+        </div>
+</div>
+</div>
+<!-- Barre d'action supérieure et onglets -->
+<div class="mt-space-lg rounded-xl bg-surface-container-lowest shadow-sm p-space-md flex flex-col gap-space-md">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<!-- Onglets -->
+<div class="flex items-center gap-1 bg-surface-container-low p-1 rounded-lg overflow-x-auto">
+<button class="px-3 py-1.5 rounded font-title-md text-title-md bg-surface-container-lowest text-on-surface shadow-sm font-semibold flex items-center gap-1.5" id="tab-desact">
+<span class="material-symbols-outlined text-[16px] text-error">remove_circle_outline</span>
+            À désactiver dans ASTECH
+            <span class="px-1.5 py-0.2 rounded font-label-mono-sm text-label-mono-sm bg-error-container text-on-error-container">18</span>
+</button>
+<button class="px-3 py-1.5 rounded font-title-md text-title-md text-secondary hover:text-on-surface hover:bg-surface-container transition-colors flex items-center gap-1.5" id="tab-creer">
+<span class="material-symbols-outlined text-[16px] text-primary">add_circle_outline</span>
+            À créer dans ASTECH
+            <span class="px-1.5 py-0.2 rounded font-label-mono-sm text-label-mono-sm bg-surface-container-high text-secondary">24</span>
+</button>
+<button class="px-3 py-1.5 rounded font-title-md text-title-md text-secondary hover:text-on-surface hover:bg-surface-container transition-colors flex items-center gap-1.5" id="tab-concord">
+<span class="material-symbols-outlined text-[16px]">task_alt</span>
+            Concordants
+            <span class="px-1.5 py-0.2 rounded font-label-mono-sm text-label-mono-sm bg-surface-container-high text-secondary">4 917</span>
+</button>
+<button class="px-3 py-1.5 rounded font-title-md text-title-md text-secondary hover:text-on-surface hover:bg-surface-container transition-colors flex items-center gap-1.5" id="tab-audit">
+<span class="material-symbols-outlined text-[16px]">receipt_long</span>
+            Journal d'audit
+          </button>
+</div>
+<!-- Boutons d'actions transactionnelles globales -->
+<div class="flex items-center gap-space-sm self-end lg:self-auto">
+<button class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-container-lowest text-primary-container font-title-md text-title-md hover:bg-surface-container transition-all" id="btn-dry-run">
+<span class="material-symbols-outlined text-[18px]">science</span>
+            Simuler (Aperçu Dry-Run)
+          </button>
+<button class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md text-title-md cursor-not-allowed transition-all" disabled="" id="btn-apply-batch">
+<span class="material-symbols-outlined text-[18px]">publish</span>
+<span id="btn-apply-label">Appliquer la sélection (0/18)</span>
+</button>
+</div>
+</div>
+<!-- Filtres rapides -->
+<div class="flex flex-col sm:flex-row items-center gap-space-md pt-space-xs">
+<div class="relative flex-1 w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
+<input class="w-full h-9 pl-9 pr-4 rounded-lg bg-surface-container-low text-on-surface placeholder:text-outline font-body-sm text-body-sm focus:outline-none focus:bg-surface-container-lowest" id="filter-input" placeholder="Filtrer par nom, prénom ou matricule USR_NAME..." type="text"/>
+</div>
+<div class="flex items-center gap-space-sm w-full sm:w-auto">
+<select class="h-9 px-3 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none" id="filter-dept">
+<option value="all">Tous les services (ASTECH)</option>
+<option value="BAT">Direction Bâtiments &amp; Logistique (BAT)</option>
+<option value="VOI">Direction Voirie &amp; Espaces (VOI)</option>
+<option value="INF">Systèmes d'Information &amp; Telecom (INF)</option>
+<option value="HYD">Réseaux Hydrauliques &amp; Eau (HYD)</option>
+</select>
+<select class="h-9 px-3 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none" id="filter-reason">
+<option value="all">Tous motifs d'anomalie</option>
+<option value="exit">Agent sorti (Fin de contrat)</option>
+<option value="missing">Introuvable dans Studio-RH</option>
+</select>
+</div>
+</div>
+</div>
+<!-- Tableau de réconciliation interactif -->
+<div class="mt-space-md rounded-xl bg-surface-container-lowest shadow-sm overflow-hidden">
+<!-- En-tête de sélection groupée -->
+<div class="px-space-lg py-space-sm bg-surface-container-low flex items-center justify-between text-on-surface">
+<div class="flex items-center gap-space-md">
+<label class="inline-flex items-center gap-2 cursor-pointer">
+<input class="w-4 h-4 rounded text-primary-container focus:ring-0" id="select-all" type="checkbox"/>
+<span class="font-title-sm text-title-sm text-on-surface font-semibold">Tout sélectionner (<span id="visible-count">6</span> affichés sur 18)</span>
+</label>
+<span class="hidden px-2 py-0.5 rounded-full font-label-mono-sm text-label-mono-sm bg-primary-fixed text-on-primary-fixed" id="selected-badge">
+            0 sélectionné
+          </span>
+</div>
+<div class="flex items-center gap-space-md font-label-mono-sm text-label-mono-sm text-secondary">
+<span class="flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-error"></span> Risque identifié: Comptes dormants à privilèges
+          </span>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container font-label-mono-sm text-label-mono-sm text-secondary uppercase tracking-wider">
+<th class="py-2.5 px-4 w-10 text-center">#</th>
+<th class="py-2.5 px-4">Matricule</th>
+<th class="py-2.5 px-4">Nom &amp; Prénom (ASTECH)</th>
+<th class="py-2.5 px-4">Service</th>
+<th class="py-2.5 px-4">Statut Actuel ASTECH</th>
+<th class="py-2.5 px-4">Constat Studio-RH (Prisma)</th>
+<th class="py-2.5 px-4">Action Proposée</th>
+<th class="py-2.5 px-4 text-right">Simulation</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container" id="reconciliation-tbody">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low transition-colors group" data-id="USR_09823">
+<td class="py-3 px-4 text-center">
+<input class="row-checkbox w-4 h-4 rounded text-primary-container focus:ring-0" type="checkbox"/>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-mono-md text-label-mono-md font-bold text-on-surface">USR_09823</span>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">SDEM: 44102</div>
+</td>
+<td class="py-3 px-4">
+<div class="font-title-md text-title-md text-on-surface font-semibold">DUBOIS Philippe</div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">p.dubois@ville.fr</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-body-sm text-body-sm text-on-surface">Dir. Bâtiments (BAT)</span>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">Site Ivry Central</div>
+</td>
+<td class="py-3 px-4">
+<div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded font-label-mono-sm text-label-mono-sm bg-error-container text-on-error-container">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                  Actif • 4 profils
+                </div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary mt-0.5">Dernière session: 14/11/2025</div>
+</td>
+<td class="py-3 px-4">
+<div class="font-title-sm text-title-sm text-error font-medium">Contrat rompu</div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">Sortie le 31/12/2025</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-mono-sm text-label-mono-sm px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-medium">
+                  UPDATE USR_ACT = 0 + REVOKE
+                </span>
+</td>
+<td class="py-3 px-4 text-right">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-label-mono-sm text-label-mono-sm bg-surface-container-high text-primary font-semibold">
+<span class="material-symbols-outlined text-[14px]">check</span> Prêt
+                </span>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low transition-colors group" data-id="USR_10129">
+<td class="py-3 px-4 text-center">
+<input class="row-checkbox w-4 h-4 rounded text-primary-container focus:ring-0" type="checkbox"/>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-mono-md text-label-mono-md font-bold text-on-surface">USR_10129</span>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">SDEM: 44219</div>
+</td>
+<td class="py-3 px-4">
+<div class="font-title-md text-title-md text-on-surface font-semibold">GARCIA Elena</div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">e.garcia@ville.fr</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-body-sm text-body-sm text-on-surface">Voirie &amp; Réseaux (VOI)</span>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">Secteur Nord</div>
+</td>
+<td class="py-3 px-4">
+<div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded font-label-mono-sm text-label-mono-sm bg-error-container text-on-error-container">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                  Actif • 2 profils
+                </div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary mt-0.5">Dernière session: 02/01/2026</div>
+</td>
+<td class="py-3 px-4">
+<div class="font-title-sm text-title-sm text-error font-medium">Non référencé</div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">Introuvable dans Studio-RH</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-mono-sm text-label-mono-sm px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-medium">
+                  Désactivation + Archivage
+                </span>
+</td>
+<td class="py-3 px-4 text-right">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-label-mono-sm text-label-mono-sm bg-surface-container-high text-primary font-semibold">
+<span class="material-symbols-outlined text-[14px]">check</span> Prêt
+                </span>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low transition-colors group" data-id="USR_07442">
+<td class="py-3 px-4 text-center">
+<input class="row-checkbox w-4 h-4 rounded text-primary-container focus:ring-0" type="checkbox"/>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-mono-md text-label-mono-md font-bold text-on-surface">USR_07442</span>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">SDEM: 39801</div>
+</td>
+<td class="py-3 px-4">
+<div class="font-title-md text-title-md text-on-surface font-semibold">MOREAU Stéphane</div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">s.moreau@ville.fr</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-body-sm text-body-sm text-on-surface">Systèmes Info (INF)</span>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">Cellule GMAO</div>
+</td>
+<td class="py-3 px-4">
+<div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded font-label-mono-sm text-label-mono-sm bg-error-container text-on-error-container">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                  Actif • 7 profils (Admin)
+                </div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary mt-0.5">Dernière session: Hier 18:22</div>
+</td>
+<td class="py-3 px-4">
+<div class="font-title-sm text-title-sm text-error font-medium">Contrat terminé</div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">Sortie le 15/01/2026</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-mono-sm text-label-mono-sm px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-medium">
+                  UPDATE USR_ACT = 0 + REVOKE
+                </span>
+</td>
+<td class="py-3 px-4 text-right">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-label-mono-sm text-label-mono-sm bg-surface-container-high text-primary font-semibold">
+<span class="material-symbols-outlined text-[14px]">check</span> Prêt
+                </span>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low transition-colors group" data-id="USR_11504">
+<td class="py-3 px-4 text-center">
+<input class="row-checkbox w-4 h-4 rounded text-primary-container focus:ring-0" type="checkbox"/>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-mono-md text-label-mono-md font-bold text-on-surface">USR_11504</span>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">SDEM: 48900</div>
+</td>
+<td class="py-3 px-4">
+<div class="font-title-md text-title-md text-on-surface font-semibold">BENALI Samira</div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">s.benali@ville.fr</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-body-sm text-body-sm text-on-surface">Hydraulique &amp; Eau (HYD)</span>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">Station Sud</div>
+</td>
+<td class="py-3 px-4">
+<div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded font-label-mono-sm text-label-mono-sm bg-error-container text-on-error-container">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                  Actif • 1 profil
+                </div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary mt-0.5">Dernière session: 10/12/2025</div>
+</td>
+<td class="py-3 px-4">
+<div class="font-title-sm text-title-sm text-error font-medium">Contrat suspendu</div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">Congé mobilité 01/01/2026</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-mono-sm text-label-mono-sm px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-medium">
+                  UPDATE USR_ACT = 0
+                </span>
+</td>
+<td class="py-3 px-4 text-right">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-label-mono-sm text-label-mono-sm bg-surface-container-high text-primary font-semibold">
+<span class="material-symbols-outlined text-[14px]">check</span> Prêt
+                </span>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-surface-container-low transition-colors group" data-id="USR_08912">
+<td class="py-3 px-4 text-center">
+<input class="row-checkbox w-4 h-4 rounded text-primary-container focus:ring-0" type="checkbox"/>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-mono-md text-label-mono-md font-bold text-on-surface">USR_08912</span>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">SDEM: 41203</div>
+</td>
+<td class="py-3 px-4">
+<div class="font-title-md text-title-md text-on-surface font-semibold">LEFEBVRE Arnaud</div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">a.lefebvre@ville.fr</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-body-sm text-body-sm text-on-surface">Dir. Bâtiments (BAT)</span>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">Secteur Ouest</div>
+</td>
+<td class="py-3 px-4">
+<div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded font-label-mono-sm text-label-mono-sm bg-error-container text-on-error-container">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                  Actif • 3 profils
+                </div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary mt-0.5">Dernière session: 28/11/2025</div>
+</td>
+<td class="py-3 px-4">
+<div class="font-title-sm text-title-sm text-error font-medium">Non référencé</div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">Matricule purgé Studio-RH</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-mono-sm text-label-mono-sm px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-medium">
+                  Désactivation + Archivage
+                </span>
+</td>
+<td class="py-3 px-4 text-right">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-label-mono-sm text-label-mono-sm bg-surface-container-high text-primary font-semibold">
+<span class="material-symbols-outlined text-[14px]">check</span> Prêt
+                </span>
+</td>
+</tr>
+<!-- Row 6 -->
+<tr class="hover:bg-surface-container-low transition-colors group" data-id="USR_06118">
+<td class="py-3 px-4 text-center">
+<input class="row-checkbox w-4 h-4 rounded text-primary-container focus:ring-0" type="checkbox"/>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-mono-md text-label-mono-md font-bold text-on-surface">USR_06118</span>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">SDEM: 36711</div>
+</td>
+<td class="py-3 px-4">
+<div class="font-title-md text-title-md text-on-surface font-semibold">TISSIER Claire</div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">c.tissier@ville.fr</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-body-sm text-body-sm text-on-surface">Voirie &amp; Réseaux (VOI)</span>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">Secteur Port</div>
+</td>
+<td class="py-3 px-4">
+<div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded font-label-mono-sm text-label-mono-sm bg-error-container text-on-error-container">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                  Actif • 2 profils
+                </div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary mt-0.5">Dernière session: 19/09/2025</div>
+</td>
+<td class="py-3 px-4">
+<div class="font-title-sm text-title-sm text-error font-medium">Contrat rompu</div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary">Sortie le 31/10/2025</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-mono-sm text-label-mono-sm px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-medium">
+                  UPDATE USR_ACT = 0 + REVOKE
+                </span>
+</td>
+<td class="py-3 px-4 text-right">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-label-mono-sm text-label-mono-sm bg-surface-container-high text-primary font-semibold">
+<span class="material-symbols-outlined text-[14px]">check</span> Prêt
+                </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination / info compacte de table -->
+<div class="px-space-lg py-space-sm bg-surface-container-low flex items-center justify-between font-label-mono-sm text-label-mono-sm text-secondary">
+<div>Affichage de 1 à 6 sur 18 agents discordants détectés</div>
+<div class="flex items-center gap-1">
+<button class="px-2 py-1 rounded bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-colors disabled:opacity-40" disabled="">Précédent</button>
+<span class="px-2 py-1 rounded bg-primary-container text-on-primary">1</span>
+<button class="px-2 py-1 rounded bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-colors">2</button>
+<button class="px-2 py-1 rounded bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-colors">3</button>
+<button class="px-2 py-1 rounded bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-colors">Suivant</button>
+</div>
+</div>
+</div>
+<!-- Modale de Dry-Run Preview (cachée par défaut, trigger par JS) -->
+<div class="hidden fixed inset-0 z-50 bg-[#0f172a]/60 backdrop-blur-sm flex items-center justify-center p-4" id="dry-run-modal">
+<div class="bg-surface-container-lowest rounded-xl shadow-2xl max-w-2xl w-full p-space-lg flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">science</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Simulation Dry-Run ASTECH (Rollback Auto)</h2>
+<p class="font-label-mono-sm text-label-mono-sm text-secondary">Transaction Oracle simulée sans validation finale (SET TRANSACTION READ WRITE; SAVEPOINT s1; ... ROLLBACK;)</p>
+</div>
+</div>
+<button class="text-secondary hover:text-on-surface" id="btn-close-modal">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="p-space-md rounded-lg bg-surface-container-low font-label-mono-sm text-label-mono-sm text-on-surface space-y-1.5">
+<div class="text-primary font-bold">&gt; VERIFY_INTEGRITY: 6 USR records selected</div>
+<div>✓ Contraintes d'intégrité référentielle FK_INTERV_USR : 0 blocage détecté</div>
+<div>✓ Réaffectation des bons d'interventions en cours : 14 interventions vers service pool</div>
+<div>✓ Révocation des profils ASTECH (USR_PRF) : 19 liaisons prêtes pour suppression</div>
+<div class="text-secondary">Statut Oracle : SIMULATION VALIDÉE (Temps CPU : 18ms, I/O cost : 12)</div>
+</div>
+<div class="flex items-center justify-end gap-space-sm pt-space-xs">
+<button class="px-3.5 py-1.5 rounded-lg bg-surface-container text-on-surface font-title-md text-title-md hover:bg-surface-container-high transition-colors" id="btn-modal-cancel">
+            Fermer l'aperçu
+          </button>
+<button class="px-4 py-1.5 rounded-lg bg-primary-container text-on-primary font-title-md text-title-md hover:bg-primary transition-colors" id="btn-modal-confirm">
+            Passer à l'application
+          </button>
+</div>
+</div>
+</div>
+<!-- Panneau inférieur 'Journal d'audit des synchronisations récentes' -->
+<div class="mt-space-lg rounded-xl bg-surface-container-lowest shadow-sm p-space-md">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm mb-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[22px] text-primary">history</span>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Journal d'audit des synchronisations récentes</h2>
+<p class="font-body-sm text-body-sm text-secondary">Traçabilité légale et horodatée des écritures Proxy ASTECH (TABLE ASTECH_AUDIT_LOG)</p>
+</div>
+</div>
+<span class="inline-flex items-center gap-1 font-label-mono-sm text-label-mono-sm text-secondary">
+<span class="material-symbols-outlined text-[16px] text-surface-tint">verified</span>
+          Signature SHA-256 active
+        </span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low font-label-mono-sm text-label-mono-sm text-secondary uppercase tracking-wider">
+<th class="py-2 px-3">Horodatage (UTC+1)</th>
+<th class="py-2 px-3">Opérateur</th>
+<th class="py-2 px-3">Action Exécutée</th>
+<th class="py-2 px-3">Statut</th>
+<th class="py-2 px-3 text-right">Clé de transaction</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container font-label-mono-sm text-label-mono-sm">
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-2.5 px-3 text-on-surface font-medium">17/02/2026 09:14:02</td>
+<td class="py-2.5 px-3 text-on-surface">J. Martin (ADM_SYS_01)</td>
+<td class="py-2.5 px-3">
+<span class="text-on-surface font-semibold">Désactivation lot 12 comptes</span>
+<span class="text-secondary ml-1.5">(Campagne départ fin d'année)</span>
+</td>
+<td class="py-2.5 px-3">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-semibold">
+<span class="material-symbols-outlined text-[13px] text-primary">check_circle</span>
+                  Succès (12/12)
+                </span>
+</td>
+<td class="py-2.5 px-3 text-right text-secondary font-mono">
+                TX_88192a40_OCI
+              </td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-2.5 px-3 text-on-surface font-medium">16/02/2026 16:48:19</td>
+<td class="py-2.5 px-3 text-on-surface">J. Martin (ADM_SYS_01)</td>
+<td class="py-2.5 px-3">
+<span class="text-on-surface font-semibold">Création lot 5 agents</span>
+<span class="text-secondary ml-1.5">(Arrivées Direction Voirie)</span>
+</td>
+<td class="py-2.5 px-3">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-semibold">
+<span class="material-symbols-outlined text-[13px] text-primary">check_circle</span>
+                  Succès (5/5)
+                </span>
+</td>
+<td class="py-2.5 px-3 text-right text-secondary font-mono">
+                TX_77014c22_OCI
+              </td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-2.5 px-3 text-on-surface font-medium">16/02/2026 14:10:05</td>
+<td class="py-2.5 px-3 text-on-surface">CRON_ASTECH_PROXY</td>
+<td class="py-2.5 px-3">
+<span class="text-on-surface font-semibold">Synchro différentielle automatique</span>
+<span class="text-secondary ml-1.5">(Prisma sync delta)</span>
+</td>
+<td class="py-2.5 px-3">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-semibold">
+<span class="material-symbols-outlined text-[13px] text-primary">check_circle</span>
+                  Succès
+                </span>
+</td>
+<td class="py-2.5 px-3 text-right text-secondary font-mono">
+                TX_310899ab_SYS
+              </td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-2.5 px-3 text-on-surface font-medium">15/02/2026 11:30:42</td>
+<td class="py-2.5 px-3 text-on-surface">J. Martin (ADM_SYS_01)</td>
+<td class="py-2.5 px-3">
+<span class="text-on-surface font-semibold">Dry-Run Simulation batch</span>
+<span class="text-secondary ml-1.5">(Évaluation de charge)</span>
+</td>
+<td class="py-2.5 px-3">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-secondary font-semibold">
+<span class="material-symbols-outlined text-[13px]">replay</span>
+                  Rollback Simulé
+                </span>
+</td>
+<td class="py-2.5 px-3 text-right text-secondary font-mono">
+                SIM_091811fa_RO
+              </td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<script>
+    (function initReconciliationEngine() {
+      const selectAll = document.getElementById('select-all');
+      const rowCheckboxes = Array.from(document.querySelectorAll('.row-checkbox'));
+      const btnApply = document.getElementById('btn-apply-batch');
+      const btnApplyLabel = document.getElementById('btn-apply-label');
+      const selectedBadge = document.getElementById('selected-badge');
+      const dryRunBtn = document.getElementById('btn-dry-run');
+      const dryRunModal = document.getElementById('dry-run-modal');
+      const closeModalBtn = document.getElementById('btn-close-modal');
+      const cancelModalBtn = document.getElementById('btn-modal-cancel');
+      const confirmModalBtn = document.getElementById('btn-modal-confirm');
+      const filterInput = document.getElementById('filter-input');
+      const filterDept = document.getElementById('filter-dept');
+      const visibleCount = document.getElementById('visible-count');
+
+      function updateBatchState() {
+        const checkedRows = rowCheckboxes.filter(cb => cb.checked);
+        const count = checkedRows.length;
+        
+        btnApplyLabel.textContent = 'Appliquer la sélection (' + count + '/18)';
+        
+        if (count > 0) {
+          btnApply.disabled = false;
+          btnApply.classList.remove('bg-surface-dim', 'text-on-surface-variant', 'cursor-not-allowed');
+          btnApply.classList.add('bg-primary-container', 'text-on-primary', 'hover:bg-primary', 'cursor-pointer');
+          selectedBadge.classList.remove('hidden');
+          selectedBadge.textContent = count + ' sélectionné' + (count > 1 ? 's' : '');
+        } else {
+          btnApply.disabled = true;
+          btnApply.classList.add('bg-surface-dim', 'text-on-surface-variant', 'cursor-not-allowed');
+          btnApply.classList.remove('bg-primary-container', 'text-on-primary', 'hover:bg-primary', 'cursor-pointer');
+          selectedBadge.classList.add('hidden');
+        }
+
+        selectAll.checked = count === rowCheckboxes.length && rowCheckboxes.length > 0;
+      }
+
+      selectAll.addEventListener('change', () => {
+        rowCheckboxes.forEach(cb => {
+          if (!cb.closest('tr').classList.contains('hidden')) {
+            cb.checked = selectAll.checked;
+          }
+        });
+        updateBatchState();
+      });
+
+      rowCheckboxes.forEach(cb => {
+        cb.addEventListener('change', updateBatchState);
+      });
+
+      // Simulation Dry-run Modal
+      function openModal() {
+        dryRunModal.classList.remove('hidden');
+      }
+
+      function closeModal() {
+        dryRunModal.classList.add('hidden');
+      }
+
+      dryRunBtn.addEventListener('click', openModal);
+      closeModalBtn.addEventListener('click', closeModal);
+      cancelModalBtn.addEventListener('click', closeModal);
+      confirmModalBtn.addEventListener('click', () => {
+        closeModal();
+        selectAll.checked = true;
+        rowCheckboxes.forEach(cb => { cb.checked = true; });
+        updateBatchState();
+      });
+
+      // Quick filter
+      function applyFilter() {
+        const query = filterInput.value.toLowerCase().trim();
+        const dept = filterDept.value;
+        let visible = 0;
+
+        document.querySelectorAll('#reconciliation-tbody tr').forEach(row => {
+          const text = row.innerText.toLowerCase();
+          const matchesQuery = query === '' || text.includes(query);
+          const matchesDept = dept === 'all' || text.includes(dept.toLowerCase());
+
+          if (matchesQuery && matchesDept) {
+            row.classList.remove('hidden');
+            visible++;
+          } else {
+            row.classList.add('hidden');
+          }
+        });
+
+        visibleCount.textContent = visible;
+      }
+
+      filterInput.addEventListener('input', applyFilter);
+      filterDept.addEventListener('change', applyFilter);
+
+      btnApply.addEventListener('click', () => {
+        const count = rowCheckboxes.filter(cb => cb.checked).length;
+        if (count === 0) return;
+        
+        const confirmed = window.confirm('Confirmer la désactivation définitive de ' + count + ' agent(s) dans le schéma Oracle ASTECHIVR ? Une trace de sécurité sera immédiatement scellée.');
+        if (confirmed) {
+          alert('Succès : Lot de ' + count + ' agent(s) désactivé(s) dans Oracle ASTECH avec succès. Clé d’audit générée : TX_' + Math.random().toString(36).substr(2, 8).toUpperCase() + '_OCI');
+          rowCheckboxes.forEach(cb => {
+            if (cb.checked) {
+              const row = cb.closest('tr');
+              row.style.opacity = '0.4';
+              cb.disabled = true;
+              cb.checked = false;
+            }
+          });
+          updateBatchState();
+        }
+      });
+    })();
+  </script>
+</div></main><footer class="w-full bg-[#0f172a] text-[#94a3b8] border-t border-[#1e293b] mt-space-xl"><div class="max-w-7xl mx-auto px-gutter-lg py-space-md flex flex-col sm:flex-row items-center justify-between gap-space-sm font-label-mono-sm text-label-mono-sm"><div>Proxy Oracle ASTECH • Schéma <span class="text-[#cbd5e1]">ASTECHIVR</span> • Port <span class="text-[#cbd5e1]">8099</span> • <span class="text-emerald-400">Thick mode actif</span></div><div>ASTECH Explorer v2.4.12 • Session PIVRY01-PROD-01</div></div></footer></body></html>

@@ -1,0 +1,14 @@
+# Contexte Docker minimal : on n'embarque pas l'Instant Client Windows ni node_modules.
+node_modules
+instantclient
+config.json
+*.log
+.git
+.gitignore
+stitch_interface_graphique_application
+MANIFEST.md
+SKILL.md
+README.md
+Dockerfile
+.dockerignore
+docker-compose.yml
