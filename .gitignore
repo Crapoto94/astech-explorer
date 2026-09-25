@@ -3,3 +3,8 @@ instantclient/
 config.json
 .env
 *.log
+
+# Scripts de déploiement locaux (contiennent des identifiants) — ne jamais commiter
+pulldocker.ini
+pulldocker.bat
+pulldocker.ps1

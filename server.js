@@ -30,7 +30,7 @@ let oracledb;
 try { oracledb = require('oracledb'); } catch { oracledb = require(APPDSI + '/node_modules/oracledb'); }
 
 const PORT = process.env.PORT || 8099;
-const LIMIT = Number(process.env.ASTECH_LIMIT || 300);
+const LIMIT = Number(process.env.ASTECH_LIMIT || 50000);
 // Avant 2024 = données d'essai (reprise) : on ne les considère pas pour le locatif.
 const CUTOFF = "DATE '2024-01-01'";
 const IC = process.env.ORACLE_CLIENT_LIB_DIR || path.join(__dirname, 'instantclient', 'instantclient_21_23');
@@ -164,13 +164,14 @@ const ECHEANCE_SELECT = `
   LEFT JOIN CONTRAT_AFF CAF ON CAF.CONTAF_ID = C.CONT_ID AND CAF.CONTAF_PRINC = 'O'
   LEFT JOIN ARBO A ON A.ARB_ID = CAF.CONTAF_ARBID`;
 
-async function echeances(where, binds, limit = 300) {
+async function echeances(where, binds, limit = 5000) {
+  const n = int(limit, 5000, 100000);
   const futures = await exec(`${ECHEANCE_SELECT}
     WHERE ${where} AND X.date_echeance_ts >= TRUNC(SYSDATE)
-    ORDER BY X.date_echeance_ts ASC FETCH FIRST ${int(limit, 300, 2000)} ROWS ONLY`, binds);
+    ORDER BY X.date_echeance_ts ASC FETCH FIRST ${n} ROWS ONLY`, binds, n);
   const passees = await exec(`${ECHEANCE_SELECT}
     WHERE ${where} AND X.date_echeance_ts < TRUNC(SYSDATE) AND X.date_echeance_ts >= ${CUTOFF}
-    ORDER BY X.date_echeance_ts DESC FETCH FIRST ${int(limit, 300, 2000)} ROWS ONLY`, binds);
+    ORDER BY X.date_echeance_ts DESC FETCH FIRST ${n} ROWS ONLY`, binds, n);
   return { futures, passees };
 }
 
@@ -221,7 +222,7 @@ async function getBien(id) {
   if (!bien) return null;
   const contrats = await exec(`${CONTRAT_SELECT} WHERE CAF.CONTAF_ARBID = :id AND CAF.CONTAF_PRINC='O'
     AND (C.CONT_DATFIN IS NULL OR C.CONT_DATFIN >= ${CUTOFF}) ORDER BY C.CONT_DATDEB DESC`, { id });
-  const echs = await echeances(`CAF.CONTAF_ARBID = :id AND CAF.CONTAF_PRINC='O'`, { id }, 100);
+  const echs = await echeances(`CAF.CONTAF_ARBID = :id AND CAF.CONTAF_PRINC='O'`, { id }, 5000);
   return { bien, contrats, ...echs };
 }
 async function listLocataires(term) {
@@ -238,7 +239,7 @@ async function listLocataires(term) {
 async function getLocataire(name) {
   const contrats = await exec(`${CONTRAT_SELECT} WHERE UPPER(CL.CONTL_CONTRACTANT) = UPPER(:name)
     AND (C.CONT_DATFIN IS NULL OR C.CONT_DATFIN >= ${CUTOFF}) ORDER BY C.CONT_DATDEB DESC`, { name });
-  const echs = await echeances(`UPPER(CL.CONTL_CONTRACTANT) = UPPER(:name)`, { name }, 200);
+  const echs = await echeances(`UPPER(CL.CONTL_CONTRACTANT) = UPPER(:name)`, { name }, 5000);
   return { locataire: name, contrats, ...echs };
 }
 async function listContrats(term) {
@@ -251,7 +252,7 @@ async function listContrats(term) {
 async function getContrat(id) {
   const [contrat] = await exec(`${CONTRAT_SELECT} WHERE C.CONT_ID = :id`, { id });
   if (!contrat) return null;
-  const echs = await echeances(`X.contrat_id = :id`, { id }, 300);
+  const echs = await echeances(`X.contrat_id = :id`, { id }, 5000);
   const revisions = await getContratRevisions(id);
   return { contrat, revisions, ...echs };
 }
@@ -264,7 +265,7 @@ async function getContratRevisions(id) {
     FROM CONTRAT_REVISION R
     LEFT JOIN INDICEINSEE IP ON IP.INSEE_ID = R.CONTRV_INSEEP
     LEFT JOIN INDICEINSEE INEW ON INEW.INSEE_ID = R.CONTRV_INSEE
-    WHERE R.CONTRV_CONTID = :id ORDER BY R.CONTRV_DAT DESC NULLS LAST FETCH FIRST 100 ROWS ONLY`, { id });
+    WHERE R.CONTRV_CONTID = :id ORDER BY R.CONTRV_DAT DESC NULLS LAST FETCH FIRST 5000 ROWS ONLY`, { id });
 }
 async function listQuittances(term) {
   const where = `UPPER(NVL(X.periode,' ')||' '||NVL(X.num_quittance,' ')||' '||NVL(CL.CONTL_CONTRACTANT,' ')
@@ -360,7 +361,7 @@ async function getAgent(matricule) {
     FROM SBCG_USERPROFIL p
     LEFT JOIN SBCG_MENUS m ON m.MNU_ID = p.MNU_ID
     LEFT JOIN SBCG_MLANGUE ml ON ml.MLG_ID = m.MNU_IDML AND ml.MLG_LANGID = 1036
-    WHERE p.USR_ID = :id ORDER BY p.MNU_ID FETCH FIRST 400 ROWS ONLY`, { id: compte.usr_id });
+    WHERE p.USR_ID = :id ORDER BY p.MNU_ID FETCH FIRST 5000 ROWS ONLY`, { id: compte.usr_id });
   const groupes = await exec(`SELECT gd.GRUD_GRP AS code, gu.GRU_DES AS des
     FROM GROUPEUTILDETAIL gd LEFT JOIN GROUPEUTIL gu ON gu.GRU_COD = gd.GRUD_GRP
     WHERE gd.GRUD_DEM = :m ORDER BY gd.GRUD_GRP`, { m: matricule });
@@ -370,7 +371,7 @@ async function getAgent(matricule) {
     FROM DUAL`, { m: matricule });
   const demandes = await exec(`SELECT SGESDEM_NUM AS num, TO_CHAR(SGESDEM_DAT,'DD/MM/YYYY') AS dat,
       SGESDEM_NDT AS ndt, SGESDEM_LIBELLE AS libelle
-    FROM DEMANDES WHERE SGESDEM_DEM = :m ORDER BY SGESDEM_DAT DESC NULLS LAST FETCH FIRST 10 ROWS ONLY`, { m: matricule });
+    FROM DEMANDES WHERE SGESDEM_DEM = :m ORDER BY SGESDEM_DAT DESC NULLS LAST FETCH FIRST 200 ROWS ONLY`, { m: matricule });
   return { compte, demandeur, droits, groupes, autorisations: auth || { n_auth: 0, n_authp: 0 }, demandes };
 }
 async function listServices(term) {
@@ -452,6 +453,75 @@ async function studioRhFindByMatricule(matricule) {
 }
 
 const syncCache = { at: 0, scope: '', result: null };
+const syncCondition = (scope) => scope === 'actifs' ? "sign = 'O'" : 'nb > 0';
+async function syncAgents(scope) {
+  // maxRows explicite : toute la base (le défaut LIMIT=300 tronquerait la liste).
+  return exec(`SELECT * FROM (${AGENT_BASE}) WHERE ${syncCondition(scope)} ORDER BY nom NULLS LAST, matricule FETCH FIRST 10000 ROWS ONLY`, {}, 10000);
+}
+async function studioRhFetchAgents() {
+  const base = STUDIO_RH.url.replace(/\/+$/, '');
+  const r = await httpGetJson(`${base}/api/agents/list`, { 'x-api-key': STUDIO_RH.key, accept: 'application/json' }, { insecure: STUDIO_RH.insecure, timeoutMs: 60000 });
+  if (r.status !== 200) throw new Error('API /api/agents/list -> HTTP ' + r.status);
+  const j = JSON.parse(r.body);
+  if (!Array.isArray(j.data)) throw new Error('Réponse inattendue de /api/agents/list');
+  return j.data;
+}
+async function syncCompute(agents, scope, onProgress) {
+  const started = Date.now();
+  const norm = (s) => String(s == null ? '' : s).replace(/\s/g, '');
+  const concordants = [], orphelins_astech = [], erreurs = [];
+  let orphelins_rh = [], rh_mode = 'list', rh_total = 0;
+
+  let rhList = null;
+  try { rhList = await studioRhFetchAgents(); }
+  catch (e) { rh_mode = 'search'; }
+
+  if (rh_mode === 'list') {
+    rh_total = rhList.length;
+    const rhMap = new Map();
+    rhList.forEach(a => { const k = norm(a.matricule); if (k) rhMap.set(k, a); });
+    if (onProgress) { try { onProgress(agents.length, agents.length); } catch { /* client parti */ } }
+    for (const a of agents) {
+      const hit = rhMap.get(norm(a.matricule));
+      if (hit) concordants.push({ matricule: a.matricule, nom: a.nom, service: a.service, nb: a.nb, roleapp: a.roleapp,
+        rh_nom: [hit.prenom, hit.nom].filter(Boolean).join(' '), rh_service: hit.service, rh_email: hit.email });
+      else orphelins_astech.push({ matricule: a.matricule, nom: a.nom, service: a.service, sserv: a.sserv, nb: a.nb,
+        roleapp: a.roleapp, gest: a.gest, ordon: a.ordon, compta: a.compta, email: a.email, maj: a.maj });
+    }
+    const ast = await exec(`SELECT USR_NAME AS matricule FROM SBCG_USERS`, {}, 20000);
+    const astSet = new Set(ast.map(x => norm(x.matricule)));
+    orphelins_rh = rhList
+      .filter(a => { const k = norm(a.matricule); return k && !astSet.has(k); })
+      .map(a => ({ matricule: a.matricule, nom: [a.prenom, a.nom].filter(Boolean).join(' '), service: a.service,
+        direction: a.direction, email: a.email, fonction: a.fonction, rh_id: a.id }));
+  } else {
+    let done = 0;
+    const results = await mapLimit(agents, 10, async (a) => {
+      let r;
+      try { r = await studioRhFindByMatricule(a.matricule); } catch (e) { r = { ok: false, error: e.message }; }
+      done++;
+      if (onProgress && (done % 3 === 0 || done === agents.length)) { try { onProgress(done, agents.length); } catch { /* client parti */ } }
+      return { a, ...r };
+    });
+    for (const r of results) {
+      const a = r.a;
+      if (!r.ok) { erreurs.push({ matricule: a.matricule, nom: a.nom, service: a.service, detail: r.error || ('HTTP ' + r.status) }); continue; }
+      if (r.found) concordants.push({ matricule: a.matricule, nom: a.nom, service: a.service, nb: a.nb, roleapp: a.roleapp,
+        rh_nom: [r.agent.prenom, r.agent.nom].filter(Boolean).join(' '), rh_service: r.agent.service, rh_email: r.agent.email });
+      else orphelins_astech.push({ matricule: a.matricule, nom: a.nom, service: a.service, sserv: a.sserv, nb: a.nb,
+        roleapp: a.roleapp, gest: a.gest, ordon: a.ordon, compta: a.compta, email: a.email, maj: a.maj });
+    }
+  }
+
+  return {
+    configured: true, scope, rh_mode, rh_total, at: new Date().toISOString(), duree_ms: Date.now() - started,
+    stats: { verifies: agents.length, concordants: concordants.length, orphelins_astech: orphelins_astech.length, orphelins_rh: orphelins_rh.length, erreurs: erreurs.length },
+    concordants, orphelins_astech, orphelins_rh, erreurs,
+    note_rh: rh_mode === 'list'
+      ? `Confrontation complète : ${rh_total} agents RH actifs comparés aux comptes ASTECH.`
+      : "Liste RH complète indisponible (/api/agents/list) : confrontation par recherche matricule ; la liste « à créer » n'est pas calculée. Déployez l'endpoint /api/agents/list côté Studio-RH.",
+  };
+}
 async function syncRun(scope, force) {
   if (!STUDIO_RH.configured) return { configured: false, error: "La source Studio-RH n'est pas configurée (STUDIO_RH_API_URL / STUDIO_RH_API_KEY)." };
   scope = scope === 'actifs' ? 'actifs' : 'droits';
@@ -459,47 +529,51 @@ async function syncRun(scope, force) {
   if (!force && syncCache.result && syncCache.scope === scope && (now - syncCache.at) < 10 * 60 * 1000) {
     return { ...syncCache.result, cached: true };
   }
-  const cond = scope === 'actifs' ? "sign = 'O'" : 'nb > 0';
-  const agents = await exec(`SELECT * FROM (${AGENT_BASE}) WHERE ${cond} ORDER BY nom NULLS LAST, matricule FETCH FIRST 4000 ROWS ONLY`);
-  const started = Date.now();
-  const results = await mapLimit(agents, 10, async (a) => {
-    try { const r = await studioRhFindByMatricule(a.matricule); return { a, ...r }; }
-    catch (e) { return { a, ok: false, error: e.message }; }
-  });
-  const concordants = [], orphelins_astech = [], erreurs = [];
-  for (const r of results) {
-    const a = r.a;
-    if (!r.ok) { erreurs.push({ matricule: a.matricule, nom: a.nom, service: a.service, detail: r.error || ('HTTP ' + r.status) }); continue; }
-    if (r.found) concordants.push({ matricule: a.matricule, nom: a.nom, service: a.service, nb: a.nb, roleapp: a.roleapp,
-      rh_nom: [r.agent.prenom, r.agent.nom].filter(Boolean).join(' '), rh_service: r.agent.service, rh_email: r.agent.email });
-    else orphelins_astech.push({ matricule: a.matricule, nom: a.nom, service: a.service, sserv: a.sserv, nb: a.nb,
-      roleapp: a.roleapp, gest: a.gest, ordon: a.ordon, compta: a.compta, email: a.email, maj: a.maj });
-  }
-  const result = {
-    configured: true, scope, at: new Date().toISOString(), duree_ms: Date.now() - started,
-    stats: { verifies: agents.length, concordants: concordants.length, orphelins_astech: orphelins_astech.length, erreurs: erreurs.length },
-    concordants, orphelins_astech, orphelins_rh: [], erreurs,
-    note_rh: "La liste « agents Studio-RH actifs absents d'ASTECH » nécessite l'accès à la liste complète RH, non exposée par l'API (seule /api/agents/search est accessible par clé).",
-  };
+  const agents = await syncAgents(scope);
+  const result = await syncCompute(agents, scope, null);
   syncCache.at = now; syncCache.scope = scope; syncCache.result = result;
   return result;
+}
+// Flux SSE : progression puis résultat final.
+async function syncStream(res, scope) {
+  res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-store', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
+  const send = (obj) => { try { res.write('data: ' + JSON.stringify(obj) + '\n\n'); } catch { /* client parti */ } };
+  if (!STUDIO_RH.configured) { send({ type: 'error', error: "La source Studio-RH n'est pas configurée." }); return res.end(); }
+  scope = scope === 'actifs' ? 'actifs' : 'droits';
+  let closed = false; res.on('close', () => { closed = true; });
+  try {
+    const agents = await syncAgents(scope);
+    send({ type: 'start', total: agents.length, scope });
+    const result = await syncCompute(agents, scope, (done, total) => { if (!closed) send({ type: 'progress', done, total }); });
+    syncCache.at = Date.now(); syncCache.scope = scope; syncCache.result = result;
+    send({ type: 'done', result });
+  } catch (e) {
+    send({ type: 'error', error: e.message });
+  }
+  res.end();
 }
 
 // ─── Référentiels ────────────────────────────────────────────────────────────
 const REF_TYPES = {
   biens: {
     label: 'Biens & Patrimoine (ARBO)',
-    list: (term) => exec(`${BIEN_SELECT_STD}
-      WHERE UPPER(NVL(A.ARB_CODE,' ')||' '||NVL(A.ARB_DES,' ')||' '||NVL(ADR.ARBA_ADR1,' ')||' '||NVL(ADR.ARBA_VILLE,' ')) LIKE :q
-      ORDER BY A.ARB_DES FETCH FIRST ${LIMIT} ROWS ONLY`, { q: '%' + term.toUpperCase() + '%' }),
+    list: (term, opts = {}) => {
+      const binds = { q: '%' + term.toUpperCase() + '%' };
+      const w = [`UPPER(NVL(A.ARB_CODE,' ')||' '||NVL(A.ARB_DES,' ')||' '||NVL(ADR.ARBA_ADR1,' ')||' '||NVL(ADR.ARBA_VILLE,' ')) LIKE :q`];
+      if (opts.genre) { w.push('A.ARB_GENRE = :genre'); binds.genre = opts.genre; }
+      return exec(`${BIEN_SELECT_STD} WHERE ${w.join(' AND ')} ORDER BY A.ARB_DES FETCH FIRST ${LIMIT} ROWS ONLY`, binds, LIMIT);
+    },
   },
   vehicules: {
     label: 'Véhicules & Parc Roulant (PARC)',
-    list: (term) => exec(`SELECT ID_BIEN AS id, DES_BIEN AS des, IMMAT AS immat, MARQUE AS marque, MODELE AS modele,
-        CATEGORIE AS categorie, SERVICE AS service, ANNEE AS annee, COMPTEUR AS compteur, NO_INVENTAIRE AS no_inventaire
-      FROM V_PARC_COMSMA
-      WHERE CATEGORIE = 'GVEH' AND UPPER(NVL(DES_BIEN,' ')||' '||NVL(IMMAT,' ')||' '||NVL(MARQUE,' ')||' '||NVL(MODELE,' ')) LIKE :q
-      ORDER BY DES_BIEN FETCH FIRST ${LIMIT} ROWS ONLY`, { q: '%' + term.toUpperCase() + '%' }),
+    list: (term, opts = {}) => {
+      const binds = { q: '%' + term.toUpperCase() + '%' };
+      const w = [`CATEGORIE = 'GVEH'`, `UPPER(NVL(DES_BIEN,' ')||' '||NVL(IMMAT,' ')||' '||NVL(MARQUE,' ')||' '||NVL(MODELE,' ')) LIKE :q`];
+      if (opts.categorie) { w.push('CATEGORIE = :categorie'); binds.categorie = opts.categorie; }
+      return exec(`SELECT ID_BIEN AS id, DES_BIEN AS des, IMMAT AS immat, MARQUE AS marque, MODELE AS modele,
+          CATEGORIE AS categorie, SERVICE AS service, ANNEE AS annee, COMPTEUR AS compteur, NO_INVENTAIRE AS no_inventaire
+        FROM V_PARC_COMSMA WHERE ${w.join(' AND ')} ORDER BY DES_BIEN FETCH FIRST ${LIMIT} ROWS ONLY`, binds, LIMIT);
+    },
   },
   materiel: {
     label: 'Matériel & Stocks (STOCK)',
@@ -539,6 +613,11 @@ const BIEN_SELECT_STD = `
   LEFT JOIN SOUSCATEGORIE SCAT ON SCAT.SSCAT_COD = A.ARB_SCAT
   LEFT JOIN SERVICE S ON S.SSER_COD = A.ARB_SSERV`;
 
+async function listGenres() {
+  return exec(`SELECT A.ARB_GENRE AS code, NVL(PG.SGEN_DES,'(non classé)') AS genre, COUNT(*) AS n
+    FROM ARBO A LEFT JOIN PATRIGENE PG ON PG.SGEN_COD = A.ARB_GENRE
+    GROUP BY A.ARB_GENRE, PG.SGEN_DES ORDER BY n DESC`, {}, 5000);
+}
 async function refCounts() {
   const [r] = await exec(`SELECT
     (SELECT COUNT(*) FROM ARBO) AS biens,
@@ -633,6 +712,75 @@ async function indicesResume() {
       FROM INDICEINSEE)
     WHERE rn = 1 ORDER BY typ`);
 }
+// Correspondance type ASTECH (INDICEINSEE.INSEE_TYP) -> série INSEE BDM (idbank).
+// Récupérable directement sur https://bdm.insee.fr (sans clé).
+const INSEE_SERIES = {
+  1: { idbank: '001515333', label: 'IRL', des: "Indice de référence des loyers" },
+  2: { idbank: '000008630', label: 'ICC', des: "Indice du coût de la construction" },
+  5: { idbank: '001532540', label: 'ILC', des: "Indice des loyers commerciaux" },
+  6: { idbank: '001617112', label: 'ILAT', des: "Indice des loyers des activités tertiaires" },
+};
+async function fetchInseeObs(idbank, lastN = 12) {
+  const url = `https://bdm.insee.fr/series/sdmx/data/SERIES_BDM/${idbank}?lastNObservations=${int(lastN, 12, 60)}`;
+  let lastErr;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const r = await httpGetJson(url, { 'User-Agent': 'ASTECH-Explorer/3.0', accept: 'application/xml' }, { insecure: false, timeoutMs: 20000 });
+      if (r.status !== 200 || !r.body) throw new Error('HTTP ' + r.status);
+      const obs = [];
+      const re = /<Obs TIME_PERIOD="(\d{4})-Q([1-4])" OBS_VALUE="([^"]+)"/g;
+      let m;
+      while ((m = re.exec(r.body)) !== null) obs.push({ an: Number(m[1]), trim: Number(m[2]), val: Number(m[3]) });
+      const title = (r.body.match(/TITLE_FR="([^"]+)"/) || [])[1] || '';
+      if (!obs.length) throw new Error('aucune observation trimestrielle');
+      return { obs, title };
+    } catch (e) { lastErr = e; await new Promise((res) => setTimeout(res, 600)); }
+  }
+  throw lastErr;
+}
+let inseeCache = { at: 0, result: null };
+async function verifierIndices(force) {
+  if (!force && inseeCache.result && (Date.now() - inseeCache.at) < 60 * 60 * 1000) return { ...inseeCache.result, cached: true };
+  const types = Object.keys(INSEE_SERIES).map(Number);
+  const fetched = {}, errors = [];
+  for (const t of types) {
+    try { fetched[t] = await fetchInseeObs(INSEE_SERIES[t].idbank, 12); }
+    catch (e) { errors.push({ typ: t, label: INSEE_SERIES[t].label, error: e.message }); }
+  }
+  const ast = await exec(`SELECT INSEE_AN AS an, INSEE_TYP AS typ, INSEE_TRIM AS trim, INSEE_TAUX AS taux,
+      INSEE_COD AS cod, INSEE_DES AS des, TO_CHAR(INSEE_DATP,'DD/MM/YYYY') AS datp
+    FROM INDICEINSEE WHERE INSEE_TYP IN (1,2,5,6)`, {}, 10000);
+  const astechMap = new Map();
+  for (const r of ast) astechMap.set(r.typ + ':' + r.an + ':' + String(r.trim), r);
+  const srcMap = new Map();
+  for (const t of types) if (fetched[t]) for (const o of fetched[t].obs) srcMap.set(t + ':' + o.an + ':' + o.trim, o.val);
+  const keys = new Set([...astechMap.keys(), ...srcMap.keys()]);
+  const rows = [];
+  for (const k of keys.values()) {
+    const [ts, ans, trims] = k.split(':');
+    const typ = Number(ts), an = Number(ans), trim = Number(trims);
+    const a = astechMap.get(k), s = srcMap.has(k) ? srcMap.get(k) : null;
+    let statut, ecart = null;
+    if (a && s !== null) { ecart = Number((s - a.taux).toFixed(3)); statut = Math.abs(ecart) < 0.005 ? 'ok' : 'ecart'; }
+    else if (!a && s !== null) statut = 'manquant';
+    else statut = 'source_absente';
+    rows.push({
+      typ, label: INSEE_SERIES[typ].label, an, trim,
+      cod: a ? a.cod : null, des: a ? a.des : (INSEE_SERIES[typ].des + ' ' + an + ' T' + trim),
+      astech: a ? a.taux : null, source: s, ecart, statut, datp: a ? a.datp : null,
+    });
+  }
+  rows.sort((x, y) => (y.an - x.an) || (y.trim - x.trim) || (x.typ - y.typ));
+  const count = (st) => rows.filter((r) => r.statut === st).length;
+  const result = {
+    source: 'INSEE BDM (bdm.insee.fr)', at: new Date().toISOString(),
+    series: INSEE_SERIES,
+    stats: { ok: count('ok'), ecart: count('ecart'), manquant: count('manquant'), source_absente: count('source_absente') },
+    rows, errors,
+  };
+  inseeCache = { at: Date.now(), result };
+  return result;
+}
 
 // ─── HTTP ────────────────────────────────────────────────────────────────────
 function sendJson(res, code, obj) {
@@ -684,10 +832,12 @@ const server = http.createServer(async (req, res) => {
     // Synchronisation RH
     if (p === '/api/sync/rh/preview') return sendJson(res, 200, await syncPreview());
     if (p === '/api/sync/rh/run') return sendJson(res, 200, await syncRun(sp.get('scope'), sp.get('force') === '1'));
+    if (p === '/api/sync/rh/stream') return syncStream(res, sp.get('scope'));
 
     // Référentiels
+    if (p === '/api/referentiels/biens/genres') return sendJson(res, 200, { rows: await listGenres() });
     m = p.match(/^\/api\/referentiels\/([a-z]+)$/);
-    if (m && REF_TYPES[m[1]]) return sendJson(res, 200, { type: m[1], label: REF_TYPES[m[1]].label, rows: await REF_TYPES[m[1]].list(term) });
+    if (m && REF_TYPES[m[1]]) return sendJson(res, 200, { type: m[1], label: REF_TYPES[m[1]].label, rows: await REF_TYPES[m[1]].list(term, { genre: sp.get('genre') || '', categorie: sp.get('categorie') || '' }) });
     m = p.match(/^\/api\/referentiels\/([a-z]+)\/(.+)$/);
     if (m && REF_TYPES[m[1]]) {
       const rows = await REF_TYPES[m[1]].list('');
@@ -704,6 +854,7 @@ const server = http.createServer(async (req, res) => {
 
     // Indices
     if (p === '/api/indices') return sendJson(res, 200, { rows: await listIndices({ type: sp.get('type'), annee: sp.get('annee') }), resume: await indicesResume() });
+    if (p === '/api/indices/verifier') return sendJson(res, 200, await verifierIndices(sp.get('force') === '1'));
 
     sendJson(res, 404, { error: 'Not found' });
   } catch (err) {
