@@ -982,10 +982,13 @@ async function intervKpis() {
            SUM(CASE WHEN X.etat='En cours' THEN 1 ELSE 0 END) AS en_cours
     FROM (${INTERV_UNION}) X
     GROUP BY NVL(X.typ,'(non défini)') ORDER BY n DESC FETCH FIRST 15 ROWS ONLY`);
+  // « Site » = patrimoine bâti : codes ARBO de type SXXX (on exclut les véhicules/parc roulant).
   const by_site = await exec(`
-    SELECT NVL(bien, NVL(code_bien,'(non localisé)')) AS site, COUNT(*) AS n
+    SELECT NVL(code_bien,'(non localisé)') AS code, NVL(bien, NVL(code_bien,'(non localisé)')) AS site, COUNT(*) AS n
     FROM (${INTERV_SELECT})
-    GROUP BY NVL(bien, NVL(code_bien,'(non localisé)')) ORDER BY n DESC FETCH FIRST 12 ROWS ONLY`);
+    WHERE code_bien LIKE 'S%'
+    GROUP BY NVL(code_bien,'(non localisé)'), NVL(bien, NVL(code_bien,'(non localisé)'))
+    ORDER BY n DESC FETCH FIRST 12 ROWS ONLY`);
   const by_service = await exec(`
     SELECT NVL(service,'(non affecté)') AS service, COUNT(*) AS n
     FROM (${INTERV_SELECT})

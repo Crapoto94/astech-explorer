@@ -327,6 +327,8 @@ async function viewDashboard() {
   const d = await api('/api/dashboard');
   const k = d.kpi;
   const ik = d.interventions || { totals: {}, by_type: [], by_site: [], by_service: [], by_demandeur: [] };
+  const intervTypeRows = (ik.by_type || []).map((r) => ({ ...r, label: INTERV_TYPES[r.typ] || r.typ }));
+  const intervSiteRows = (ik.by_site || []).map((r) => ({ ...r, label: (r.site || '—') + (r.code ? ' (' + r.code + ')' : '') }));
   const kpis = `
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-lg mb-space-xl">
       ${kpi('Agents & Comptes', num(k.total_agents), `<span class="text-on-surface font-semibold">${num(k.agents_actifs)} actifs</span> · ${num(k.agents_simples)} simples · <span class="text-tertiary font-semibold">${num(k.admins)} admins</span>`, 'badge', 'plain')}
@@ -404,8 +406,8 @@ async function viewDashboard() {
         ${kpi('Types d\u2019intervention', num((ik.by_type || []).length), 'répartition ci-dessous', 'category', 'primary')}
       </div>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
-        ${card('Par type', `<div class="pb-space-sm">${bilanRows(ik.by_type, 'typ', { tone: 'primary', empty: 'Aucune intervention.' })}</div>`)}
-        ${card('Par site (bien)', `<div class="pb-space-sm">${bilanRows(ik.by_site, 'site', { tone: 'tertiary', empty: 'Aucune intervention.' })}</div>`)}
+        ${card('Par type', `<div class="pb-space-sm">${bilanRows(intervTypeRows, 'label', { tone: 'primary', empty: 'Aucune intervention.' })}</div>`)}
+        ${card('Par site (SXXX)', `<div class="pb-space-sm">${bilanRows(intervSiteRows, 'label', { tone: 'tertiary', empty: 'Aucun site concerné.' })}</div>`)}
         ${card('Par service', `<div class="pb-space-sm">${bilanRows(ik.by_service, 'service', { tone: 'amber', empty: 'Aucune intervention.' })}</div>`)}
         ${card('Par demandeur', `<div class="pb-space-sm">${bilanRows(ik.by_demandeur, 'demandeur', { tone: 'emerald', empty: 'Aucune intervention.' })}</div>`)}
       </div>
