@@ -17,8 +17,10 @@ RUN curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-l
 
 # 3) Expose le dossier des libs Instant Client (chemin versionné -> lien stable).
 RUN set -eux; \
-    libdir="$(dirname "$(find /usr/lib/oracle -name 'libclntsh.so' -type f | head -n1)")"; \
+    libdir="$(dirname "$(find /usr/lib/oracle -name 'libclntsh.so.*' -type f | head -n1)")"; \
+    test -n "$libdir" && test -d "$libdir"; \
     mkdir -p /opt/oracle; \
+    rm -f /opt/oracle/instantclient; \
     ln -s "$libdir" /opt/oracle/instantclient; \
     echo "Instant Client: $libdir"
 ENV ORACLE_CLIENT_LIB_DIR=/opt/oracle/instantclient
