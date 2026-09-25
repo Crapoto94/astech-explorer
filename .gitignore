@@ -3,6 +3,8 @@ instantclient/
 config.json
 .env
 *.log
+api-keys.json
+data/
 
 # Scripts de déploiement locaux (contiennent des identifiants) — ne jamais commiter
 pulldocker.ini
