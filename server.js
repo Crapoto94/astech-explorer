@@ -931,7 +931,7 @@ async function getParcVehicule(id) {
     FROM ARBO_AFFP AF LEFT JOIN DETAIL D ON D.PSOC_COD = AF.ARBFP_SOCCOD WHERE AF.ARBFP_ID = :id`, { id: Number(id) });
   const certifs = await exec(`SELECT VCI_RUBID AS rubrique, VCI_VAL AS valeur FROM VEH_CERTIF WHERE VCI_ARBOID = :id AND VCI_VAL IS NOT NULL AND VCI_VAL <> '0' ORDER BY VCI_RUBID`, { id: Number(id) });
   const interventions = await exec(`SELECT X.num, TO_CHAR(X.dat,'DD/MM/YYYY') AS dat, X.typ, X.ndt, X.etat
-    FROM (${INTERV_SELECT}) X WHERE TO_CHAR(X.arbo) = :id ORDER BY X.dat_ts DESC NULLS LAST FETCH FIRST 25 ROWS ONLY`, { id: String(id) });
+    FROM (${INTERV_UNION}) X WHERE TO_CHAR(X.arbo) = :id ORDER BY X.dat_ts DESC NULLS LAST FETCH FIRST 25 ROWS ONLY`, { id: String(id) });
   return { vehicule: v, arbo: arbo || null, materiel: mate[0] || null, compteurs: nrj || null, affectation, certificats: certifs, interventions };
 }
 
