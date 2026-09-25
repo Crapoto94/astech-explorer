@@ -210,6 +210,7 @@ const GMAIL = 'bg-surface-container-low';
 const state = {
   q: '',
   agents: { tab: 'all', service: '', role: '', page: 1, pageSize: 25 },
+  synchro: { scope: 'droits', tab: 'desactiver', result: null, running: false, error: null },
   locatif: { tab: 'echeances', mode: 'futures', num: '' },
   refs: { type: 'biens' },
   inter: { etat: '', type: '', period: '12m', page: 1 },
@@ -461,41 +462,93 @@ async function viewAgentFiche(matricule) {
 
 /* ═══════════════════════════ SYNCHRO RH ═══════════════════════════ */
 async function viewSynchro() {
-  const d = await api('/api/sync/rh/preview');
-  const cols = [
-    { label: 'Matricule (USR_NAME)', get: r => cellMono(r.matricule, 'font-bold text-on-surface') },
+  const cfg = await api('/api/config');
+  const s = state.synchro;
+  const res = s.result;
+
+  const runBtn = s.running
+    ? `<button disabled class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-wait"><span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>Interrogation de Studio-RH…</button>`
+    : `<button data-act="syncRun" ${cfg.studioRh ? '' : 'disabled'} class="inline-flex items-center gap-2 px-4 py-2 rounded-lg ${cfg.studioRh ? 'bg-primary-container text-on-primary hover:bg-primary shadow-md' : 'bg-surface-dim text-on-surface-variant cursor-not-allowed'} font-title-md transition-all"><span class="material-symbols-outlined text-[18px]">sync</span>Lancer la synchronisation RH</button>`;
+
+  const counters = res ? `
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-space-md mb-space-lg">
+      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="flex items-center justify-between"><span class="font-title-sm text-secondary uppercase">Concordants</span><span class="material-symbols-outlined text-outline">check_circle</span></div><div class="font-headline-xl font-bold mt-space-sm tabular">${num(res.stats.concordants)}</div><div class="font-label-mono-sm text-secondary">matricule présent &amp; actif dans RH</div></div>
+      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="flex items-center justify-between"><span class="font-title-sm text-error uppercase font-bold">À désactiver (ASTECH)</span><span class="material-symbols-outlined text-error">person_off</span></div><div class="font-headline-xl font-bold text-error mt-space-sm tabular">${num(res.stats.orphelins_astech)}</div><div class="font-label-mono-sm text-secondary">absents des agents RH actifs</div></div>
+      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="flex items-center justify-between"><span class="font-title-sm text-primary uppercase font-bold">À créer (ASTECH)</span><span class="material-symbols-outlined text-primary">person_add</span></div><div class="font-headline-xl font-bold mt-space-sm tabular">—</div><div class="font-label-mono-sm text-secondary">liste RH complète non exposée par l'API</div></div>
+      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="flex items-center justify-between"><span class="font-title-sm text-secondary uppercase">Vérifiés / erreurs</span><span class="material-symbols-outlined text-outline">rule</span></div><div class="font-headline-xl font-bold mt-space-sm tabular">${num(res.stats.verifies)} <span class="text-[16px] text-secondary">/ ${num(res.stats.erreurs)}</span></div><div class="font-label-mono-sm text-secondary">${res.scope === 'actifs' ? "périmètre SDEM_SIGN='O'" : 'périmètre comptes avec droits'} • ${(res.duree_ms / 1000).toFixed(1)} s</div></div>
+    </div>` : '';
+
+  const colsOrph = [
+    { label: 'Matricule', get: r => cellMono(r.matricule, 'font-bold text-error') },
     { label: 'Nom & Prénom', get: r => `<div class="font-title-md text-on-surface">${esc(r.nom || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.email || '')}</div>` },
     { label: 'Service', get: r => `<div>${esc(r.service || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.sserv || '')}</div>` },
-    { label: 'Statut ASTECH', get: r => Number(r.nb) > 0 ? badge('Actif • ' + r.nb + ' menus', 'green', 'check_circle') : badge('Sans droit', 'slate') },
-    { label: 'Rôle', get: r => roleBadges(r.roleapp) },
-    { label: 'Action (lecture seule)', get: () => `<span class="font-label-mono-sm text-outline italic">indisponible</span>` }
+    { label: 'Droits', get: r => Number(r.nb) > 0 ? `<span class="px-2 py-0.5 rounded bg-surface-container-highest text-primary font-label-mono-sm font-medium">${num(r.nb)} menus</span>` : badge('sans droit', 'slate') },
+    { label: 'Rôles', get: r => roleBadges(r.roleapp) },
+    { label: 'Admin', center: true, get: r => (r.gest === 'O' && r.ordon === 'O' && r.compta === 'O') ? badge('ADMIN', 'purple') : dash },
+    { label: 'Dernière MAJ', get: r => cellMono(r.maj, 'text-secondary') }
   ];
+  const colsConc = [
+    { label: 'Matricule', get: r => cellMono(r.matricule, 'font-bold text-on-surface') },
+    { label: 'Nom ASTECH', get: r => `<div class="font-title-md text-on-surface">${esc(r.nom || '')}</div>` },
+    { label: 'Agent Studio-RH', get: r => `<div class="font-title-md text-on-surface">${esc(r.rh_nom || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.rh_email || '')}</div>` },
+    { label: 'Service RH', get: r => cell(r.rh_service) },
+    { label: 'Droits ASTECH', right: true, get: r => cellMono(num(r.nb), 'font-semibold') }
+  ];
+  const tabBtn = (k, label, n, tone) => `<button data-act="syncTab:${k}" class="px-3 py-1.5 rounded font-title-md ${s.tab === k ? 'bg-surface-container-lowest text-on-surface shadow-sm font-semibold' : 'text-secondary hover:text-on-surface'}">${label} <span class="px-1.5 py-0.2 rounded ${tone || 'bg-surface-container-high text-secondary'} font-label-mono-sm">${num(n)}</span></button>`;
+
+  const results = res ? `
+    <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+      <div class="px-space-lg py-space-sm bg-surface-container-low flex flex-wrap items-center justify-between gap-space-sm">
+        <div class="flex items-center gap-1 bg-surface-container-low p-1 rounded-lg">
+          ${tabBtn('desactiver', 'À désactiver dans ASTECH', res.orphelins_astech.length, 'bg-error-container text-on-error-container')}
+          ${tabBtn('concordants', 'Concordants', res.concordants.length)}
+        </div>
+        <div class="flex items-center gap-space-md">
+          <span class="font-label-mono-sm text-label-mono-sm text-secondary">Synchro : ${esc(new Date(res.at).toLocaleString('fr-FR'))}${res.cached ? ' (cache)' : ''}</span>
+          <button disabled class="px-3.5 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-not-allowed" title="Application en lecture seule">Appliquer la sélection (indisponible)</button>
+        </div>
+      </div>
+      ${s.tab === 'desactiver' ? dataTable(colsOrph, res.orphelins_astech, { empty: 'Aucune non-concordance : tous les comptes existent dans Studio-RH.' }) : dataTable(colsConc, res.concordants, { empty: 'Aucun concordant.' })}
+    </div>
+    <p class="font-label-mono-sm text-label-mono-sm text-secondary mt-space-md flex items-start gap-2"><span class="material-symbols-outlined text-[16px]">info</span>${esc(res.note_rh)}</p>` : `
+    <div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-xl text-center">
+      <span class="material-symbols-outlined text-[40px] text-outline">compare_arrows</span>
+      <p class="font-body-md text-on-surface-variant mt-2">Aucune synchronisation lancée. Choisis le périmètre puis clique sur « Lancer la synchronisation RH ».</p>
+    </div>`;
+
   view.innerHTML = `
     ${breadcrumb([{ label: 'Accueil' }, { label: 'Synchro RH' }, { label: 'Studio-RH ↔ ASTECH' }])}
     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md mb-space-lg">
       <div>
         <span class="font-label-mono-sm px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-semibold uppercase tracking-wider">Oracle ASTECHIVR ↔ Studio-RH</span>
         <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight mt-1">Réconciliation Studio-RH ↔ ASTECH</h1>
-        <p class="font-body-md text-body-md text-secondary">Confrontation des matricules agents entre le SIRH et Oracle ASTECHIVR.</p>
+        <p class="font-body-md text-body-md text-secondary">Confrontation des matricules agents (clé = matricule / USR_NAME) entre le SIRH et Oracle ASTECHIVR.</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-space-sm">
+        <select data-act="syncScope" class="h-9 px-3 rounded-lg bg-surface-container-low font-body-sm focus:outline-none">
+          <option value="droits" ${s.scope === 'droits' ? 'selected' : ''}>Comptes avec droits (269)</option>
+          <option value="actifs" ${s.scope === 'actifs' ? 'selected' : ''}>Comptes actifs ASTECH (2 655)</option>
+        </select>
+        ${runBtn}
       </div>
     </div>
     <div class="p-space-md rounded-xl bg-surface-container-low shadow-sm flex items-start gap-space-md relative overflow-hidden mb-space-lg">
-      <div class="absolute left-0 top-0 bottom-0 w-1.5 ${d.configured ? 'bg-emerald-500' : 'bg-error'}"></div>
-      <span class="material-symbols-outlined text-[24px] ${d.configured ? 'text-emerald-600' : 'text-error'}">${d.configured ? 'verified_user' : 'sync_problem'}</span>
-      <div><div class="font-title-md text-on-surface font-bold">${d.configured ? 'Source Studio-RH connectée' : 'Source Studio-RH non connectée'}</div>
-        <p class="font-body-sm text-on-surface-variant mt-0.5">${esc(d.message)}</p>
-        ${!d.configured ? '<p class="font-label-mono-sm text-secondary mt-1">Variables à renseigner côté serveur : <code class="bg-surface-container px-1 rounded">STUDIO_RH_API_URL</code> et <code class="bg-surface-container px-1 rounded">STUDIO_RH_API_KEY</code>.</p>' : ''}</div>
+      <div class="absolute left-0 top-0 bottom-0 w-1.5 ${cfg.studioRh ? 'bg-emerald-500' : 'bg-error'}"></div>
+      <span class="material-symbols-outlined text-[24px] ${cfg.studioRh ? 'text-emerald-600' : 'text-error'}">${cfg.studioRh ? 'verified_user' : 'sync_problem'}</span>
+      <div><div class="font-title-md text-on-surface font-bold">${cfg.studioRh ? 'Source Studio-RH connectée' : 'Source Studio-RH non connectée'}</div>
+        <p class="font-body-sm text-on-surface-variant mt-0.5">${cfg.studioRh ? 'API ' + esc(cfg.studioRhUrl || '') + ' — interrogation de /api/agents/search par matricule.' : "Renseigner STUDIO_RH_API_URL et STUDIO_RH_API_KEY (fichier .env ou config.json) côté serveur."}</p></div>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-space-md mb-space-lg">
-      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="flex items-center justify-between"><span class="font-title-sm text-secondary uppercase">Concordants</span><span class="material-symbols-outlined text-outline">check_circle</span></div><div class="font-headline-xl font-bold mt-space-sm tabular">—</div><div class="font-label-mono-sm text-secondary">Source RH requise</div></div>
-      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="flex items-center justify-between"><span class="font-title-sm text-error uppercase font-bold">À désactiver (ASTECH)</span><span class="material-symbols-outlined text-error">person_off</span></div><div class="font-headline-xl font-bold text-error mt-space-sm tabular">—</div><div class="font-label-mono-sm text-secondary">Source RH requise</div></div>
-      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="flex items-center justify-between"><span class="font-title-sm text-primary uppercase font-bold">À créer (ASTECH)</span><span class="material-symbols-outlined text-primary">person_add</span></div><div class="font-headline-xl font-bold mt-space-sm tabular">—</div><div class="font-label-mono-sm text-secondary">Source RH requise</div></div>
-    </div>
-    <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
-      <div class="p-space-lg flex items-center justify-between"><div><h2 class="font-headline-sm text-headline-sm">Comptes ASTECH actifs</h2><p class="font-body-sm text-secondary">${num(d.stats.utilisateurs)} utilisateurs avec droits (côté ASTECH uniquement)</p></div>
-        <button disabled class="px-3.5 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-not-allowed">Appliquer la sélection (indisponible)</button></div>
-      ${dataTable(cols, d.agents, { empty: 'Aucun compte actif.' })}
-    </div>`;
+    ${s.error ? `<div class="bg-error-container/40 border border-error/30 text-on-error-container p-space-md rounded-xl font-body-sm mb-space-lg">${esc(s.error)}</div>` : ''}
+    ${counters}
+    ${results}`;
+}
+async function runSyncRh() {
+  const s = state.synchro;
+  s.running = true; s.error = null;
+  await viewSynchro();
+  try { s.result = await api('/api/sync/rh/run?scope=' + s.scope + '&force=1'); }
+  catch (e) { s.error = e.message; }
+  finally { s.running = false; await viewSynchro(); }
 }
 
 /* ═══════════════════════════ LOCATIF ═══════════════════════════ */
@@ -938,6 +991,9 @@ function handleAction(action, value, el) {
     case 'agentPage': a.page = value === 'next' ? a.page + 1 : Math.max(1, a.page - 1); viewAgents(); break;
     case 'agentService': a.service = el.value; a.page = 1; viewAgents(); break;
     case 'agentRole': a.role = el.value; a.page = 1; viewAgents(); break;
+    case 'syncRun': runSyncRh(); break;
+    case 'syncScope': state.synchro.scope = el.value; state.synchro.result = null; viewSynchro(); break;
+    case 'syncTab': state.synchro.tab = value; viewSynchro(); break;
     case 'locTab': l.tab = value; viewLocatif(); break;
     case 'locMode': l.mode = value; viewLocatif(); break;
     case 'refType': state.refs.type = value; state.q = ''; viewReferentiels(); break;
