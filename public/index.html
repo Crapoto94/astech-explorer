@@ -97,6 +97,7 @@ tailwind.config = {
       <a data-link="#/locatif" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/locatif">Gestion Locative</a>
       <a data-link="#/referentiels" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/referentiels">RÃ©fÃ©rentiels</a>
       <a data-link="#/magasins" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/magasins">Magasins</a>
+      <a data-link="#/parc" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/parc">Parc auto</a>
       <a data-link="#/interventions" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/interventions">Interventions</a>
       <a data-link="#/indices" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/indices">Indices</a>
       <a data-link="#/apikeys" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/apikeys">ClÃ©s API</a>
@@ -282,6 +283,7 @@ const state = {
   synchro: { scope: 'droits', tab: 'desactiver', result: null, running: false, error: null, selected: null, selCreate: null, desact: { plan: null, result: null, busy: false, error: null }, creer: { plan: null, result: null, busy: false, error: null } },
   apikeys: { keys: null, loading: false, error: null, created: null, copied: false },
   magasins: { code: '', enStock: true, list: null },
+  parc: { tab: 'vehicules', service: '', etat: '', page: 1 },
   locatif: { tab: 'echeances', mode: 'futures', num: '' },
   refs: { type: 'biens', genre: '' },
   inter: { etat: '', type: '', period: '12m', page: 1 },
@@ -299,7 +301,7 @@ function go(hash) { if (location.hash === hash) render(); else location.hash = h
 function setNavActive(route) {
   document.querySelectorAll('#mainNav a').forEach(a => {
     const r = a.getAttribute('data-link').replace('#/', '');
-    const on = (route === r) || (route === 'bien' && r === 'locatif') || (route === 'contrat' && r === 'locatif') || (route === 'locataire' && r === 'locatif') || (route === 'agent' && r === 'agents') || (route === 'intervention' && r === 'interventions') || (route === 'magasin' && r === 'magasins');
+    const on = (route === r) || (route === 'bien' && r === 'locatif') || (route === 'contrat' && r === 'locatif') || (route === 'locataire' && r === 'locatif') || (route === 'agent' && r === 'agents') || (route === 'intervention' && r === 'interventions') || (route === 'magasin' && r === 'magasins') || (route === 'vehicule' && r === 'parc');
     a.className = 'navlink text-body-sm font-body-sm pb-2 transition-colors border-b-2 ' + (on ? 'text-white border-primary-container font-semibold' : 'text-[#94a3b8] hover:text-white border-transparent');
   });
 }
@@ -317,6 +319,7 @@ async function render() {
       dashboard: viewDashboard, agents: viewAgents, synchro: viewSynchro, locatif: viewLocatif,
       referentiels: viewReferentiels, interventions: viewInterventions, indices: viewIndices, apikeys: viewApiKeys,
       magasins: () => viewMagasins(arg), magasin: () => viewMagasins(arg),
+      parc: () => viewParc(arg), vehicule: () => viewParcVehicule(arg),
       agent: () => viewAgentFiche(arg), bien: () => viewBien(arg), contrat: () => viewContrat(arg),
       locataire: () => viewLocataire(arg), intervention: () => viewInterventionFiche(arg)
     };
@@ -1384,6 +1387,141 @@ async function runPush(confirmProd) {
 
 
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• DEMANDE D'INTERVENTION â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ═══════════════════════════ PARC AUTOMOBILE ═══════════════════════════ */
+function parcEtatBadge(st) {
+  const s = (st || '').toUpperCase();
+  if (!s) return badge('Non évalué', 'slate');
+  if (/BON|NEUF|TRES BON/.test(s)) return badge(st, 'green');
+  if (/MOYEN|PASSABLE|CORRECT/.test(s)) return badge(st, 'amber');
+  if (/MAUVAIS|HS|HORS|DETERIOR/.test(s)) return badge(st, 'red');
+  return badge(st, 'slate');
+}
+async function viewParc(arg) {
+  const s = state.parc;
+  const d = await api('/api/parc/stats');
+  const list = await api('/api/parc?q=' + encodeURIComponent(state.q) + '&service=' + encodeURIComponent(s.service) + '&etat=' + encodeURIComponent(s.etat) + '&page=' + s.page + '&pageSize=50');
+  const total = list.total, nbPages = Math.max(1, Math.ceil(total / list.pageSize));
+  const cols = [
+    { label: 'Immatriculation', get: r => `<span class="font-label-mono-sm font-bold text-primary">${esc(r.immat || '—')}</span><div class="font-label-mono-sm text-secondary">${esc(r.no_serie || '')}</div>` },
+    { label: 'Véhicule', get: r => `<div class="font-title-sm">${esc(r.des || '')}</div><div class="font-label-mono-sm text-secondary">${esc([r.marque, r.modele].filter(Boolean).join(' ') || '')}${r.annee ? ' · ' + esc(r.annee) : ''}</div>` },
+    { label: 'Service', get: r => cell(r.service) },
+    { label: 'Compteur', right: true, get: r => r.compteur ? cellMono(num(r.compteur) + ' km', 'font-semibold') : dash },
+    { label: 'État', center: true, get: r => parcEtatBadge(r.etat_general) },
+    { label: 'Valeur', right: true, get: r => r.valeur_comptable || r.valeur_estimee ? cellMono(money(r.valeur_comptable || r.valeur_estimee), 'text-secondary') : dash }
+  ];
+  const kpiCards = `
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-space-md mb-space-lg">
+      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="font-title-sm text-secondary uppercase">Véhicules</div><div class="font-headline-xl font-bold text-primary tabular">${num(d.total)}</div><div class="font-label-mono-sm text-secondary">genre GVEH</div></div>
+      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="font-title-sm text-secondary uppercase">Avec compteur</div><div class="font-headline-xl font-bold tabular">${num(d.avec_compteur)}</div><div class="font-label-mono-sm text-secondary">relevés kilométriques</div></div>
+      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="font-title-sm text-secondary uppercase">Conducteurs</div><div class="font-headline-xl font-bold text-tertiary tabular">${num(d.nb_conducteurs || '')}</div><div class="font-label-mono-sm text-secondary">permis enregistrés</div></div>
+      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="font-title-sm text-secondary uppercase">Services</div><div class="font-headline-xl font-bold tabular">${num(d.services.length)}</div><div class="font-label-mono-sm text-secondary">affectations</div></div>
+    </div>`;
+  const permis = s.tab === 'permis' ? await api('/api/parc/permis') : null;
+  const tabBtn = (k, label) => `<button data-act="parcTab:${k}" class="px-3 py-1.5 rounded font-title-md ${s.tab === k ? 'bg-surface-container-lowest text-on-surface shadow-sm font-semibold' : 'text-secondary hover:text-on-surface'}">${label}</button>`;
+  const liste = `
+    <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm mb-space-lg flex flex-wrap gap-space-sm items-center">
+      <div class="relative flex-1 min-w-[220px]"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
+        <input id="parcQ" value="${esc(state.q)}" class="w-full h-10 pl-10 pr-3 rounded bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher immat, marque, modèle, n° série…" /></div>
+      <select data-act="parcService" class="h-9 px-3 rounded-lg bg-surface-container-low font-body-sm"><option value="">Tous les services</option>${d.services.map(x => `<option value="${esc(x)}" ${s.service === x ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>
+      <span class="ml-auto font-label-mono-sm text-on-surface-variant">${num(total)} véhicule(s)</span>
+    </div>
+    <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+      ${dataTable(cols, list.rows, { rowLink: r => '#/parc/' + r.id, empty: 'Aucun véhicule.', key: 'parc_' + (s.service || 'all') })}
+      <div class="p-space-sm flex items-center justify-between border-t border-surface-container font-label-mono-sm">
+        <span class="text-secondary">Page ${s.page} / ${nbPages}</span>
+        <div class="flex gap-1">
+          <button data-act="parcPage:prev" ${s.page <= 1 ? 'disabled' : ''} class="px-2.5 py-1 rounded bg-surface-container-low hover:bg-surface-container disabled:opacity-40">Précédent</button>
+          <button data-act="parcPage:next" ${s.page >= nbPages ? 'disabled' : ''} class="px-2.5 py-1 rounded bg-surface-container-low hover:bg-surface-container disabled:opacity-40">Suivant</button>
+        </div>
+      </div>
+    </div>`;
+  const permisBlock = permis ? `
+    <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+      <div class="p-space-lg bg-surface-container-low/50 flex items-center gap-2"><span class="material-symbols-outlined text-primary">badge</span><h2 class="font-headline-sm text-on-surface">Permis de conduire des agents</h2><span class="font-label-mono-sm text-secondary bg-surface-container px-2 py-0.5 rounded">${num(permis.rows.length)} habilitations · ${num(permis.nb_conducteurs)} conducteurs</span></div>
+      ${dataTable([
+        { label: 'Conducteur', get: r => `<div class="font-title-sm">${esc(r.nom || r.conducteur || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.conducteur || '')}</div>` },
+        { label: 'Catégorie', center: true, get: r => badge(r.categorie || '?', 'primary') },
+        { label: 'Libellé', get: r => `<div class="font-label-mono-sm clamp1" style="max-width:420px">${esc(r.libelle || '')}</div>` },
+        { label: 'Depuis', get: r => cellMono(r.date_cat, 'text-secondary') },
+        { label: 'Validité', get: r => cellMono(r.date_validite, 'text-secondary') }
+      ], permis.rows, { empty: 'Aucun permis.', key: 'permis' })}
+    </div>` : '';
+  view.innerHTML = `
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Parc automobile' }])}
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md mb-space-md">
+      <div>
+        <span class="px-2 py-0.5 rounded bg-surface-container font-label-mono-sm text-primary font-semibold">TABLE: ASTECHIVR.ARBO (GENRE=GVEH) · VUE V_PARC_COMSMA</span>
+        <h1 class="font-headline-lg text-on-surface tracking-tight mt-1">Parc automobile</h1>
+        <p class="font-body-md text-on-surface-variant">Véhicules et matériels roulants, affectations, compteurs, états et permis des conducteurs.</p>
+      </div>
+      <div class="flex items-center gap-1 bg-surface-container-low p-1 rounded-lg">${tabBtn('vehicules', 'Véhicules')}${tabBtn('permis', 'Permis')}</div>
+    </div>
+    ${kpiCards}
+    ${s.tab === 'permis' ? permisBlock : liste}`;
+  bindSearch('#parcQ');
+}
+async function viewParcVehicule(arg) {
+  const d = await api('/api/parc/vehicule/' + encodeURIComponent(arg));
+  const v = d.vehicule || {}, a = d.arbo || {}, m = d.materiel || {}, c = d.compteurs || {};
+  const kv = (label, val) => `<div><div class="font-label-mono-sm text-secondary uppercase">${esc(label)}</div><div class="font-title-md text-on-surface">${val === null || val === undefined || val === '' ? dash : esc(String(val))}</div></div>`;
+  const certRows = (d.certificats || []).map(x => ({ rubrique: x.rubrique, valeur: x.valeur }));
+  const intervCols = [
+    { label: 'Réf.', get: r => cellMono(r.num, 'text-primary font-semibold') },
+    { label: 'Date', get: r => cellMono(r.dat, 'text-secondary') },
+    { label: 'Type', center: true, get: r => badge(INTERV_TYPES[r.typ] || r.typ || '?', 'slate') },
+    { label: 'Objet', get: r => `<div class="font-title-sm clamp1" style="max-width:420px">${esc(r.ndt || '')}</div>` },
+    { label: 'État', center: true, get: r => intervBadge(r.etat) }
+  ];
+  view.innerHTML = `
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Parc automobile', link: '#/parc' }, { label: v.immat || a.code || arg }])}
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-space-lg">
+      <div>
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-high text-primary font-label-mono-sm"><span class="material-symbols-outlined text-[16px]">directions_car</span>${esc(a.code || '')}</span>
+        <h1 class="font-headline-lg text-on-surface tracking-tight mt-1">${esc(v.des || a.des || '')}</h1>
+        <p class="font-label-mono-md text-secondary">${esc(v.immat || a.immat || '')} · ${esc([v.marque, v.modele].filter(Boolean).join(' ') || a.sous_cat_des || '')}${v.annee ? ' · ' + esc(v.annee) : ''}</p>
+      </div>
+      <div class="text-right"><div class="font-label-mono-sm text-secondary">État général</div>${parcEtatBadge(v.etat_general)}</div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg mb-space-lg">
+      ${card('Identification', `<div class="p-space-lg grid grid-cols-2 gap-space-md">
+        ${kv('Immatriculation', v.immat || a.immat)}${kv('N° de série', v.no_serie || a.no_serie)}
+        ${kv('Marque / Modèle', [v.marque, v.modele].filter(Boolean).join(' '))}${kv('Année', v.annee)}
+        ${kv('Catégorie (sous-cat.)', a.sous_cat_des || a.sous_cat)}${kv('N° inventaire', v.no_inventaire)}
+        ${kv('Mise en service', a.date1)}${kv('Réformé', a.reforme === 'O' ? 'Oui' : 'Non')}
+      </div>`)}
+      ${card('Affectation & service', `<div class="p-space-lg grid grid-cols-2 gap-space-md">
+        ${kv('Service', v.service)}${kv('Service (ARBO)', a.sserv)}
+        ${kv('Structure (DETAIL)', (d.affectation && d.affectation[0] && d.affectation[0].structure) || '')}${kv('Affecté depuis', d.affectation && d.affectation[0] && d.affectation[0].depuis)}
+        ${kv('Disponibilité', m.dispo === 'O' ? 'Disponible' : 'Indisponible')}${kv("Garantie jusqu'au", m.date_garantie)}
+        ${kv('Fournisseur', m.fournisseur)}${kv('Alerte', m.alerte === 'O' ? 'Oui' : 'Non')}
+      </div>`)}
+      ${card('Compteurs & kilométrage', `<div class="p-space-lg grid grid-cols-2 gap-space-md">
+        ${kv('Compteur 1', c.compteur1)}${kv('Type', c.type1)}
+        ${kv('Carburant', c.carburant1)}${kv('Dernier relevé', c.date_releve1)}
+        ${kv('Conso 1', c.conso1)}${kv('Compteur 2', c.compteur2)}
+      </div>`)}
+      ${card('État & valorisation', `<div class="p-space-lg grid grid-cols-2 gap-space-md">
+        ${kv('État général', v.etat_general)}${kv('Carrosserie', v.etat_carrosserie)}
+        ${kv('Intérieur', v.etat_interieur)}${kv('Pneumatiques', v.etat_pneus)}
+        ${kv('Valeur comptable', v.valeur_comptable ? money(v.valeur_comptable) : '')}${kv('Valeur estimée', v.valeur_estimee ? money(v.valeur_estimee) : '')}
+        ${kv('Motif avis', v.motif_avis)}${kv('PV / Date', [v.pv_no, v.pv_date].filter(Boolean).join(' · '))}
+      </div>`)}
+    </div>
+    ${(v.etat_meca || v.reparations_faites || v.obs_atelier || v.cr_accident) ? card('Atelier, réparations & sinistres', `<div class="p-space-lg space-y-space-md">
+      ${v.etat_meca ? `<div><div class="font-label-mono-sm text-secondary uppercase">État mécanique</div><div class="font-body-sm text-on-surface whitespace-pre-wrap">${esc(v.etat_meca)}</div></div>` : ''}
+      ${v.reparations_faites ? `<div><div class="font-label-mono-sm text-secondary uppercase">Réparations effectuées</div><div class="font-body-sm text-on-surface whitespace-pre-wrap">${esc(v.reparations_faites)}</div></div>` : ''}
+      ${v.obs_atelier ? `<div><div class="font-label-mono-sm text-secondary uppercase">Observations atelier</div><div class="font-body-sm text-on-surface whitespace-pre-wrap">${esc(v.obs_atelier)}</div></div>` : ''}
+      ${v.cr_accident ? `<div><div class="font-label-mono-sm text-secondary uppercase">Compte-rendu accident</div><div class="font-body-sm text-on-surface whitespace-pre-wrap">${esc(v.cr_accident)}</div></div>` : ''}
+    </div>`) : ''}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
+      ${card('Certificats & rubriques parc', certRows.length ? dataTable([
+        { label: 'Rubrique', get: r => cellMono(r.rubrique, 'text-secondary') },
+        { label: 'Valeur', get: r => esc(r.valeur) }
+      ], certRows, { empty: '—', key: 'certif_' + arg }) : '<div class="p-space-lg font-body-sm text-on-surface-variant">Aucune donnée.</div>')}
+      ${card('Interventions liées', dataTable(intervCols, d.interventions || [], { empty: 'Aucune intervention.', key: 'parcinterv_' + arg, rowLink: r => '#/intervention/' + encodeURIComponent(r.num) }))}
+    </div>`;
+}
+
 // Champs de DEMANDES (lecture seule) + formulaire de saisie. Les listes
 // dÃ©roulantes proviennent de /api/demandes/options (tables de rÃ©fÃ©rence ASTECH).
 const DEMANDE_NATURES = { 1: 'IRL', 2: 'ICC', 5: 'ILC', 6: 'ILAT' };
@@ -1705,6 +1843,9 @@ function handleAction(action, value, el) {
     case 'refType': state.refs.type = value; state.refs.genre = ''; state.q = ''; state.pages = {}; viewReferentiels(); break;
     case 'refGenre': state.refs.genre = value || ''; state.pages = {}; viewReferentiels(); break;
     case 'magasinSel': state.magasins.code = value; state.pages = {}; viewMagasins(); break;
+    case 'parcTab': state.parc.tab = value; viewParc(); break;
+    case 'parcService': state.parc.service = el.value; state.parc.page = 1; viewParc(); break;
+    case 'parcPage': state.parc.page = value === 'next' ? state.parc.page + 1 : Math.max(1, state.parc.page - 1); viewParc(); break;
     case 'magasinEnStock': state.magasins.enStock = el.checked; viewMagasins(); break;
     case 'interPeriod': it.period = el.value; it.page = 1; viewInterventions(); break;
     case 'interEtat': it.etat = el.value; it.page = 1; viewInterventions(); break;
@@ -1753,7 +1894,7 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawe
 function wireGlobalSearch() {
   const s = $('#globalSearch');
   let t;
-  s.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { state.q = s.value.trim(); const r = parseHash().route; if (['agents', 'locatif', 'referentiels', 'interventions', 'magasins', 'magasin'].includes(r)) { if (r === 'agents') state.agents.page = 1; if (r === 'interventions') state.inter.page = 1; pendingFocus = '#globalSearch'; render(); } }, 450); });
+  s.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { state.q = s.value.trim(); const r = parseHash().route; if (['agents', 'locatif', 'referentiels', 'interventions', 'magasins', 'magasin', 'parc', 'vehicule'].includes(r)) { if (r === 'agents') state.agents.page = 1; if (r === 'interventions') state.inter.page = 1; pendingFocus = '#globalSearch'; render(); } }, 450); });
   s.addEventListener('keydown', (e) => { if (e.key === 'Enter') { state.q = s.value.trim(); pendingFocus = '#globalSearch'; render(); } });
 }
 

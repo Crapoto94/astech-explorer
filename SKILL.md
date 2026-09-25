@@ -648,8 +648,27 @@ https://github.com/Crapoto94/astech), port **8099** :
   ID 402 « TRIM 04 » stocké trim 3).
   ⚠️ Modifier `INSEE_TAUX` d'un indice référencé change `F_CALCUL_REVIS` et les
   rapports `RPT7342_*` ; tester d'abord sur la base de test.
+- **Parc automobile** : un véhicule est un `ARBO` de genre **`GVEH`**
+  (`ARB_REF`=immatriculation, `ARB_SERIE`=n° de série, `ARB_SCAT`=sous-catégorie,
+  `ARB_SSERV`=service, `ARB_DAT1`=mise en service, `ARB_REFORME`). La vue
+  **`V_PARC_COMSMA`** (filtre `CATEGORIE='GVEH'`) agrège marque/modèle
+  (`PATRIMARQUE`/`PATRIMODELE` via `ARBO_MATE` — **vides en base**, marque souvent
+  dans `ARB_DES`), compteur (`ARBO_NRJ.ARBN_CPTACT1`), affectation (`ARBO_AFFP`
+  →`DETAIL.PSOC_DES`), et les données d'atelier/états/certificat issues du
+  formulaire `PATRI_FORM` (`FRM_FRMID=2`, rubriques `FRM_CTRID` : 0=propriétaire,
+  3/31=états, 5=carrosserie, 7=PV, 8=CR accident, 9=intérieur, 11=général,
+  13=pneus, 34=réparations).
+  Conducteurs/permis : **`PERMIS`** (18 catégories) + **`PERMISCONDUCTEUR`**
+  (`SPERM_CON`=matricule `DEMANDEUR.SDEM_COD`, catégorie, `DATCAT`/`DATVAL`) ;
+  `DEMANDEUR.SDEM_PERMIS` et `DGA_PRETVEH`/`LOCVEH` (autorisations).
+  **`VEH_CERTIF`** (`VCI_ARBOID`/`VCI_RUBID`/`VCI_VAL`) = rubriques véhicule.
+  Sinistres : **`SINISTRE`** (+`SINISTRECOUT`/`TIERS`/`TYPE`, **toutes vides**).
+  Réservations/prêts : `ARBO_MATE.ARBMA_DISPO`/`INDISPO*`, `DEMANDEURGRPAUTH`
+  (prêt véhicule) ; `TOURNEES`/`PLANNINGAGENT` existent mais **vides**.
+  Contrôle technique : pas de table dédiée (rubriques dans `PATRI_FORM`).
+  Endpoints : `/api/parc` (+`stats`, `/permis`, `/vehicule/:id`) ; UI route `#/parc`.
 - **Docker Linux** : `Dockerfile` (base Oracle Linux 8 + `oracle-instantclient-basic`
-  + Node 20) et `docker-compose.yml` ; voir README pour les variables d'env.
+  + Node 20) et `docker-compose.yml` ; voir README/DEPLOIEMENT pour les variables d'env.
 - Recherche via `UPPER(...) LIKE :q` (bind), `FETCH FIRST n ROWS ONLY`,
   `rownum <= :lim`. Les colonnes Oracle reviennent en MAJUSCULES → **normaliser
   les clés en minuscules** côté serveur avant de les renvoyer au front.

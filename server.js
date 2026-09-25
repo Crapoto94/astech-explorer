@@ -884,6 +884,88 @@ async function refCounts() {
   return r;
 }
 
+// ─── Parc automobile ─────────────────────────────────────────────────────────
+// Les véhicules sont des ARBO de genre GVEH (immatriculation = ARB_REF,
+// n° de série = ARB_SERIE). Données d'atelier, états, certificat, CT et
+// propriétaire proviennent de la vue V_PARC_COMSMA (pivot sur ARBO_MATE,
+// ARBO_NRJ (compteurs), ARBO_AFFP (affectation), PATRI_FORM (formulaire parc)).
+const PARC_SELECT = `SELECT * FROM V_PARC_COMSMA WHERE CATEGORIE='GVEH'`;
+
+async function listParc(f = {}) {
+  const binds = {};
+  const w = ["CATEGORIE='GVEH'"];
+  if (f.q) { binds.q = '%' + f.q.toUpperCase() + '%'; w.push(`UPPER(NVL(DES_BIEN,' ')||' '||NVL(IMMAT,' ')||' '||NVL(NO_SERIE,' ')||' '||NVL(MARQUE,' ')||' '||NVL(MODELE,' ')||' '||NVL(SERVICE,' ')) LIKE :q`); }
+  if (f.service) { w.push('SERVICE = :service'); binds.service = f.service; }
+  if (f.etat) { w.push('ETAT_GENERAL = :etat'); binds.etat = f.etat; }
+  const pageSize = int(f.pageSize, 50, 200);
+  const page = int(f.page, 1, 100000);
+  const offset = (page - 1) * pageSize;
+  const where = 'WHERE ' + w.join(' AND ');
+  const rows = await exec(`SELECT ID_BIEN AS id, DES_BIEN AS des, IMMAT AS immat, MARQUE AS marque, MODELE AS modele,
+      ANNEE AS annee, SERVICE AS service, COMPTEUR AS compteur, NO_SERIE AS no_serie, NO_INVENTAIRE AS no_inventaire,
+      ETAT_GENERAL AS etat_general, VALEUR_COMPTABLE AS valeur_comptable, VALEUR_ESTIMEE AS valeur_estimee
+    FROM ${PARC_SELECT} ${where} ORDER BY DES_BIEN OFFSET ${offset} ROWS FETCH NEXT ${pageSize} ROWS ONLY`, binds, pageSize);
+  const [tot] = await exec(`SELECT COUNT(*) AS total FROM ${PARC_SELECT} ${where}`, binds, 1);
+  return { rows, total: Number(tot.total), page, pageSize };
+}
+
+async function getParcVehicule(id) {
+  const [v] = await exec(`SELECT * FROM ${PARC_SELECT} WHERE ID_BIEN = :id`, { id: Number(id) }, 1);
+  if (!v) return null;
+  const [arbo] = await exec(`SELECT A.ARB_ID AS id, A.ARB_CODE AS code, A.ARB_DES AS des, A.ARB_REF AS immat,
+      A.ARB_SERIE AS no_serie, A.ARB_SCAT AS sous_cat, SS.SSCAT_DES AS sous_cat_des, A.ARB_SSERV AS sserv,
+      A.ARB_DAT1 AS date1, A.ARB_REFORME AS reforme
+    FROM ARBO A LEFT JOIN SOUSCATEGORIE SS ON SS.SSCAT_COD = A.ARB_SCAT
+    WHERE A.ARB_ID = :id`, { id: Number(id) }, 1);
+  const mate = await exec(`SELECT M.ARBMA_DATGAR AS date_garantie, M.ARBMA_DISPO AS dispo, M.ARBMA_INDISPODEB AS indispo_deb,
+      M.ARBMA_INDISPOFIN AS indispo_fin, M.ARBMA_ALERTE AS alerte, M.ARBMA_DATALERTE AS date_alerte,
+      M.ARBMA_SSERV AS sserv_affect, M.ARBMA_FOURN AS fournisseur
+    FROM ARBO_MATE M WHERE M.ARBMA_ARBID = :id`, { id: Number(id) }, 1);
+  const [nrj] = await exec(`SELECT ARBN_CPTTYP1 AS type1, ARBN_CPTCARB1 AS carburant1, ARBN_CPTACT1 AS compteur1,
+      ARBN_CPTDAT1 AS date_releve1, ARBN_CONSO1 AS conso1, ARBN_CPTTYP2 AS type2, ARBN_CPTACT2 AS compteur2,
+      ARBN_CPTDAT2 AS date_releve2, ARBN_CONSO2 AS conso2
+    FROM ARBO_NRJ WHERE ARBN_ID = :id`, { id: Number(id) }, 1);
+  const affectation = await exec(`SELECT AF.ARBFP_SOCCOD AS soc, D.PSOC_DES AS structure, AF.ARBFP_PARC AS parc,
+      TO_CHAR(AF.ARBFP_DATDEB,'DD/MM/YYYY') AS depuis
+    FROM ARBO_AFFP AF LEFT JOIN DETAIL D ON D.PSOC_COD = AF.ARBFP_SOCCOD WHERE AF.ARBFP_ID = :id`, { id: Number(id) });
+  const certifs = await exec(`SELECT VCI_RUBID AS rubrique, VCI_VAL AS valeur FROM VEH_CERTIF WHERE VCI_ARBOID = :id AND VCI_VAL IS NOT NULL AND VCI_VAL <> '0' ORDER BY VCI_RUBID`, { id: Number(id) });
+  const interventions = await exec(`SELECT X.num, TO_CHAR(X.dat,'DD/MM/YYYY') AS dat, X.typ, X.ndt, X.etat
+    FROM (${INTERV_SELECT}) X WHERE X.arbo = :id ORDER BY X.dat_ts DESC NULLS LAST FETCH FIRST 25 ROWS ONLY`, { id: Number(id) });
+  return { vehicule: v, arbo: arbo || null, materiel: mate[0] || null, compteurs: nrj || null, affectation, certificats: certifs, interventions };
+}
+
+async function parcStats() {
+  const [r] = await exec(`SELECT COUNT(*) AS total,
+      COUNT(COMPTEUR) AS avec_compteur, COUNT(MARQUE) AS avec_marque, COUNT(SERVICE) AS avec_service
+    FROM ${PARC_SELECT}`, {}, 1);
+  const par_service = await exec(`SELECT NVL(SERVICE,'(non affecté)') AS service, COUNT(*) AS n FROM ${PARC_SELECT}
+    GROUP BY SERVICE ORDER BY n DESC FETCH FIRST 20 ROWS ONLY`, {}, 50);
+  const par_marque = await exec(`SELECT NVL(MARQUE,'(non renseigné)') AS marque, COUNT(*) AS n FROM ${PARC_SELECT}
+    GROUP BY MARQUE ORDER BY n DESC FETCH FIRST 20 ROWS ONLY`, {}, 50);
+  const par_annee = await exec(`SELECT ANNEE AS annee, COUNT(*) AS n FROM ${PARC_SELECT}
+    WHERE ANNEE IS NOT NULL GROUP BY ANNEE ORDER BY ANNEE DESC FETCH FIRST 30 ROWS ONLY`, {}, 50);
+  const par_etat = await exec(`SELECT NVL(ETAT_GENERAL,'(non évalué)') AS etat, COUNT(*) AS n FROM ${PARC_SELECT}
+    GROUP BY ETAT_GENERAL ORDER BY n DESC FETCH FIRST 20 ROWS ONLY`, {}, 50);
+  const services = await exec(`SELECT DISTINCT SERVICE FROM ${PARC_SELECT} WHERE SERVICE IS NOT NULL ORDER BY SERVICE`, {}, 200);
+  return {
+    total: Number(r.total), avec_compteur: Number(r.avec_compteur || 0),
+    avec_marque: Number(r.avec_marque || 0), avec_service: Number(r.avec_service || 0),
+    par_service, par_marque, par_annee, par_etat,
+    services: services.map((x) => x.service),
+  };
+}
+
+async function listPermis() {
+  const droits = await exec(`SELECT PC.SPERM_CON AS conducteur, D.SDEM_DES AS nom, PC.SPERM_CAT AS categorie,
+      P.SPERM_DES AS libelle, TO_CHAR(PC.SPERM_DATCAT,'DD/MM/YYYY') AS date_cat,
+      TO_CHAR(PC.SPERM_DATVAL,'DD/MM/YYYY') AS date_validite
+    FROM PERMISCONDUCTEUR PC LEFT JOIN DEMANDEUR D ON D.SDEM_COD = PC.SPERM_CON
+    LEFT JOIN PERMIS P ON P.SPERM_CAT = PC.SPERM_CAT
+    ORDER BY D.SDEM_DES NULLS LAST, PC.SPERM_CON, PC.SPERM_CAT FETCH FIRST 2000 ROWS ONLY`, {}, 2000);
+  const conducteurs = await exec(`SELECT COUNT(DISTINCT SPERM_CON) AS n FROM PERMISCONDUCTEUR`, {}, 1);
+  return { rows: droits, nb_conducteurs: Number((conducteurs[0] || {}).n || 0) };
+}
+
 // ─── Magasins & stock ────────────────────────────────────────────────────────
 // Un « magasin » est une structure (V_SOCIETES) ; les articles sont dans STOCK
 // via STOCK.SREF_SOC = V_SOCIETES.COD.
@@ -1430,6 +1512,13 @@ async function handleRequest(req, res, p, sp) {
       const row = await refById(m[1], decodeURIComponent(m[2]));
       return row ? sendJson(res, 200, { type: m[1], row }) : sendJson(res, 404, { error: 'Entrée introuvable' });
     }
+
+    // Parc automobile
+    if (p === '/api/parc') return sendJson(res, 200, await listParc({ q: term, service: sp.get('service') || '', etat: sp.get('etat') || '', page: sp.get('page'), pageSize: sp.get('pageSize') }));
+    if (p === '/api/parc/stats') return sendJson(res, 200, await parcStats());
+    if (p === '/api/parc/permis') return sendJson(res, 200, await listPermis());
+    m = p.match(/^\/api\/parc\/vehicule\/(\d+)$/);
+    if (m) { const d = await getParcVehicule(m[1]); return d ? sendJson(res, 200, d) : sendJson(res, 404, { error: 'Véhicule introuvable' }); }
 
     // Demandes d'intervention
     if (p === '/api/demandes/options') return sendJson(res, 200, await demandesOptions());
