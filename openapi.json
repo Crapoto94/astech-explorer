@@ -1,0 +1,655 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "ASTECH Explorer — API",
+    "version": "3.0.0",
+    "description": "Proxy HTTP/JSON en façade de la base Oracle ASTECH (schéma ASTECHIVR).\n\nDeux surfaces :\n- **API publique versionnée** `/api/v1` : référentiels en lecture seule, protégée par clé (`X-API-Key` ou `Authorization: Bearer`).\n- **API de service** (UI locale) : consultation, synchronisation RH et indices, accessible sans clé sur le réseau local.\n\nLes réponses sont en JSON (`application/json`). Les erreurs suivent `{ \"error\": \"…\" }`."
+  },
+  "servers": [
+    { "url": "http://localhost:8099", "description": "Serveur local" }
+  ],
+  "tags": [
+    { "name": "API publique (lecture · clé)", "description": "Endpoints versionnés `/api/v1`, protégés par clé d'API en lecture seule." },
+    { "name": "Clés API", "description": "Gestion des clés d'accès (création, liste, révocation)." },
+    { "name": "Consultation (UI interne)", "description": "Données de consultation utilisées par l'interface locale." },
+    { "name": "Synchronisation RH", "description": "Réconciliation Studio-RH ↔ ASTECH (aperçu, exécution, écritures contrôlées)." },
+    { "name": "Indices", "description": "Indices INSEE (consultation et mise à jour contrôlée)." }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": { "type": "apiKey", "in": "header", "name": "X-API-Key", "description": "Clé d'API (préfixe `ast_`)." },
+      "BearerAuth": { "type": "http", "scheme": "bearer", "description": "Clé d'API passée en `Authorization: Bearer <clé>`." }
+    },
+    "parameters": {
+      "q": { "name": "q", "in": "query", "schema": { "type": "string" }, "description": "Recherche plein-texte (insensible à la casse)." },
+      "limit": { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 1000, "default": 100 }, "description": "Nombre maximum de lignes." },
+      "offset": { "name": "offset", "in": "query", "schema": { "type": "integer", "minimum": 0, "default": 0 }, "description": "Décalage de pagination." },
+      "total": { "name": "total", "in": "query", "schema": { "type": "integer", "enum": [0, 1], "default": 0 }, "description": "`1` pour inclure le nombre total de résultats." },
+      "genre": { "name": "genre", "in": "query", "schema": { "type": "string" }, "description": "Filtre sur le genre (biens)." },
+      "categorie": { "name": "categorie", "in": "query", "schema": { "type": "string" }, "description": "Filtre sur la catégorie (véhicules)." },
+      "env": { "name": "env", "in": "query", "schema": { "type": "string", "enum": ["prod", "test"] }, "description": "Profil de base de données (défaut : prod)." }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": { "error": { "type": "string" } },
+        "required": ["error"]
+      },
+      "ReferentielItem": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "example": "biens" },
+          "label": { "type": "string", "example": "Biens & Patrimoine (ARBO)" },
+          "count": { "type": "integer", "example": 3919 }
+        }
+      },
+      "ReferentielRow": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Ligne d'un référentiel. Les champs varient selon le type (id, code, des/nom, service…).",
+        "example": { "id": 1090, "code": "S124B02", "des": "ABRI ESPACE VERT MONMOUSSEAU", "genre": "LOCAL", "service": null }
+      },
+      "ReferentielList": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string" },
+          "label": { "type": "string" },
+          "q": { "type": "string" },
+          "limit": { "type": "integer" },
+          "offset": { "type": "integer" },
+          "count": { "type": "integer" },
+          "hasMore": { "type": "boolean" },
+          "total": { "type": "integer", "description": "Présent uniquement si `total=1`." },
+          "rows": { "type": "array", "items": { "$ref": "#/components/schemas/ReferentielRow" } }
+        }
+      },
+      "Genre": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string", "nullable": true },
+          "genre": { "type": "string" },
+          "n": { "type": "integer" }
+        }
+      },
+      "ApiKey": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "c8de81e4c7ef" },
+          "name": { "type": "string", "example": "Partenaire-referentiels" },
+          "prefix": { "type": "string", "example": "ast_S-FW…" },
+          "scopes": { "type": "array", "items": { "type": "string" }, "example": ["referentiels"] },
+          "readOnly": { "type": "boolean" },
+          "source": { "type": "string", "enum": ["env", "file"] },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "createdBy": { "type": "string", "nullable": true },
+          "lastUsedAt": { "type": "string", "format": "date-time", "nullable": true },
+          "revokedAt": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "ApiKeyCreated": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ApiKey" },
+          {
+            "type": "object",
+            "properties": {
+              "key": { "type": "string", "description": "Clé en clair — affichée une seule fois.", "example": "ast_XXXXXXXXXXXXXXXXXXXXXXXX" },
+              "warning": { "type": "string" }
+            }
+          }
+        ]
+      },
+      "ApiKeyCreateRequest": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "example": "Studio-RH" },
+          "scopes": { "type": "array", "items": { "type": "string" }, "example": ["referentiels"], "description": "Droits de la clé. Défaut : `referentiels`. `*` = tous." }
+        }
+      },
+      "WriteRequest": {
+        "type": "object",
+        "properties": {
+          "dryRun": { "type": "boolean", "default": true, "description": "`true` (défaut) : simulation, aucune écriture." },
+          "confirm": { "type": "string", "description": "`PROD` obligatoire pour écrire réellement en production." }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/v1": {
+      "get": {
+        "tags": ["API publique (lecture · clé)"],
+        "summary": "Découverte de l'API publique",
+        "description": "Métadonnées, authentification et liste des référentiels. Accessible sans clé.",
+        "responses": {
+          "200": {
+            "description": "Description de l'API",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        }
+      }
+    },
+    "/api/v1/referentiels": {
+      "get": {
+        "tags": ["API publique (lecture · clé)"],
+        "summary": "Lister les référentiels disponibles",
+        "security": [{ "ApiKeyAuth": [] }, { "BearerAuth": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/env" }],
+        "responses": {
+          "200": {
+            "description": "Référentiels et compteurs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": { "type": "integer" },
+                    "items": { "type": "array", "items": { "$ref": "#/components/schemas/ReferentielItem" } }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Clé manquante ou invalide", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "403": { "description": "Clé sans le droit « referentiels »", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/v1/referentiels/biens/genres": {
+      "get": {
+        "tags": ["API publique (lecture · clé)"],
+        "summary": "Genres de biens",
+        "security": [{ "ApiKeyAuth": [] }, { "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Liste des genres",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "rows": { "type": "array", "items": { "$ref": "#/components/schemas/Genre" } } } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/referentiels/{type}": {
+      "get": {
+        "tags": ["API publique (lecture · clé)"],
+        "summary": "Lister un référentiel (paginé)",
+        "security": [{ "ApiKeyAuth": [] }, { "BearerAuth": [] }],
+        "parameters": [
+          { "name": "type", "in": "path", "required": true, "schema": { "type": "string", "enum": ["biens", "vehicules", "materiel", "tiers", "services", "groupes"] } },
+          { "$ref": "#/components/parameters/q" },
+          { "$ref": "#/components/parameters/limit" },
+          { "$ref": "#/components/parameters/offset" },
+          { "$ref": "#/components/parameters/genre" },
+          { "$ref": "#/components/parameters/categorie" },
+          { "$ref": "#/components/parameters/total" },
+          { "$ref": "#/components/parameters/env" }
+        ],
+        "responses": {
+          "200": { "description": "Liste paginée", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ReferentielList" } } } },
+          "404": { "description": "Référentiel inconnu", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/v1/referentiels/{type}/{id}": {
+      "get": {
+        "tags": ["API publique (lecture · clé)"],
+        "summary": "Fiche d'un référentiel",
+        "security": [{ "ApiKeyAuth": [] }, { "BearerAuth": [] }],
+        "parameters": [
+          { "name": "type", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Identifiant ou code de l'entrée." },
+          { "$ref": "#/components/parameters/env" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fiche",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "type": { "type": "string" }, "row": { "$ref": "#/components/schemas/ReferentielRow" } } }
+              }
+            }
+          },
+          "404": { "description": "Entrée introuvable", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/admin/keys": {
+      "get": {
+        "tags": ["Clés API"],
+        "summary": "Lister les clés d'API",
+        "responses": {
+          "200": {
+            "description": "Clés existantes",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "count": { "type": "integer" }, "keys": { "type": "array", "items": { "$ref": "#/components/schemas/ApiKey" } } } }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Clés API"],
+        "summary": "Créer une clé d'API",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiKeyCreateRequest" } } }
+        },
+        "responses": {
+          "201": { "description": "Clé créée (valeur en clair affichée une seule fois)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiKeyCreated" } } } },
+          "400": { "description": "Requête invalide", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/admin/keys/{id}": {
+      "post": {
+        "tags": ["Clés API"],
+        "summary": "Révoquer une clé d'API",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "200": {
+            "description": "Clé révoquée",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "revoked": { "type": "boolean" }, "key": { "$ref": "#/components/schemas/ApiKey" } } }
+              }
+            }
+          },
+          "404": { "description": "Clé introuvable", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "409": { "description": "Clé fournie par variable d'environnement", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "delete": {
+        "tags": ["Clés API"],
+        "summary": "Révoquer une clé d'API",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "200": {
+            "description": "Clé révoquée",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "revoked": { "type": "boolean" }, "key": { "$ref": "#/components/schemas/ApiKey" } } }
+              }
+            }
+          },
+          "404": { "description": "Clé introuvable", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/config": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Configuration courante du proxy",
+        "responses": { "200": { "description": "Configuration", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/env": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Profils de base de données disponibles",
+        "responses": { "200": { "description": "Environnements", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/dashboard": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Indicateurs et derniers mouvements",
+        "responses": { "200": { "description": "KPIs, prochaines échéances, derniers contrats", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/referentiels-compteurs": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Compteurs par référentiel",
+        "responses": { "200": { "description": "Compteurs", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/biens": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Liste des biens",
+        "parameters": [{ "$ref": "#/components/parameters/q" }],
+        "responses": { "200": { "description": "Biens", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/bien/{id}": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Fiche d'un bien",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "200": { "description": "Bien, contrats, échéances", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/locataires": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Liste des locataires",
+        "parameters": [{ "$ref": "#/components/parameters/q" }],
+        "responses": { "200": { "description": "Locataires", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/locataire": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Fiche d'un locataire",
+        "parameters": [{ "name": "name", "in": "query", "schema": { "type": "string" }, "description": "Nom du locataire." }],
+        "responses": { "200": { "description": "Locataire, contrats, échéances", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/contrats": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Liste des contrats",
+        "parameters": [{ "$ref": "#/components/parameters/q" }],
+        "responses": { "200": { "description": "Contrats", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/contrat/{id}": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Fiche d'un contrat",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "200": { "description": "Contrat et échéances", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/contrat/{id}/revisions": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Révisions d'un contrat",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "200": { "description": "Révisions", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/quittances": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Échéances et quittances (à venir / passées)",
+        "parameters": [{ "$ref": "#/components/parameters/q" }],
+        "responses": { "200": { "description": "Échéances", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/revisions": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Liste des révisions de loyers",
+        "parameters": [{ "$ref": "#/components/parameters/q" }],
+        "responses": { "200": { "description": "Révisions", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/agents": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Liste des agents / comptes",
+        "parameters": [
+          { "$ref": "#/components/parameters/q" },
+          { "name": "type", "in": "query", "schema": { "type": "string", "enum": ["utilisateur", "simple", "all"] } },
+          { "name": "actif", "in": "query", "schema": { "type": "string", "enum": ["actif", "inactif"] } },
+          { "name": "service", "in": "query", "schema": { "type": "string" } },
+          { "name": "role", "in": "query", "schema": { "type": "string" } },
+          { "name": "admin", "in": "query", "schema": { "type": "integer", "enum": [0, 1] } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 25, "maximum": 100 } }
+        ],
+        "responses": { "200": { "description": "Agents paginés", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/agents/stats": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Statistiques des agents",
+        "responses": { "200": { "description": "Totaux, répartitions par service/rôle", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/services": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Liste des services",
+        "parameters": [{ "$ref": "#/components/parameters/q" }],
+        "responses": { "200": { "description": "Services", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/groupes": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Liste des groupes applicatifs",
+        "parameters": [{ "$ref": "#/components/parameters/q" }],
+        "responses": { "200": { "description": "Groupes", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/roles": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Répartition par rôle applicatif",
+        "responses": { "200": { "description": "Rôles", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/agent/{matricule}": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Fiche d'un agent",
+        "parameters": [{ "name": "matricule", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Compte, demandeur, droits, groupes, autorisations", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/referentiels/{type}": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Lister un référentiel",
+        "parameters": [
+          { "name": "type", "in": "path", "required": true, "schema": { "type": "string", "enum": ["biens", "vehicules", "materiel", "tiers", "services", "groupes"] } },
+          { "$ref": "#/components/parameters/q" },
+          { "$ref": "#/components/parameters/genre" },
+          { "$ref": "#/components/parameters/categorie" }
+        ],
+        "responses": { "200": { "description": "Lignes", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ReferentielList" } } } } }
+      }
+    },
+    "/api/referentiels/biens/genres": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Genres de biens",
+        "responses": {
+          "200": {
+            "description": "Genres",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "rows": { "type": "array", "items": { "$ref": "#/components/schemas/Genre" } } } } } }
+          }
+        }
+      }
+    },
+    "/api/referentiels/{type}/{id}": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Fiche d'un référentiel",
+        "parameters": [
+          { "name": "type", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Fiche", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/interventions": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Liste des interventions",
+        "parameters": [
+          { "$ref": "#/components/parameters/q" },
+          { "name": "type", "in": "query", "schema": { "type": "string" } },
+          { "name": "etat", "in": "query", "schema": { "type": "string", "enum": ["encours", "cloturee"] } },
+          { "name": "du", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "au", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "tout", "in": "query", "schema": { "type": "integer", "enum": [0, 1] } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 50, "maximum": 200 } }
+        ],
+        "responses": { "200": { "description": "Interventions paginées", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/interventions/stats": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Statistiques des interventions",
+        "responses": { "200": { "description": "Compteurs et répartition par type", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/intervention/{num}": {
+      "get": {
+        "tags": ["Consultation (UI interne)"],
+        "summary": "Fiche d'une intervention",
+        "parameters": [{ "name": "num", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Intervention et demandes rattachées", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/sync/rh/preview": {
+      "get": {
+        "tags": ["Synchronisation RH"],
+        "summary": "Aperçu de la réconciliation RH",
+        "responses": { "200": { "description": "Concordants et orphelins", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/sync/rh/run": {
+      "get": {
+        "tags": ["Synchronisation RH"],
+        "summary": "Exécuter la réconciliation RH",
+        "parameters": [
+          { "name": "scope", "in": "query", "schema": { "type": "string", "enum": ["droits", "actifs"], "default": "droits" } },
+          { "name": "force", "in": "query", "schema": { "type": "integer", "enum": [0, 1] } }
+        ],
+        "responses": { "200": { "description": "Résultat de la réconciliation", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/sync/rh/stream": {
+      "get": {
+        "tags": ["Synchronisation RH"],
+        "summary": "Réconciliation RH en flux (SSE)",
+        "parameters": [{ "name": "scope", "in": "query", "schema": { "type": "string", "enum": ["droits", "actifs"], "default": "droits" } }],
+        "responses": { "200": { "description": "Flux `text/event-stream` (start, progress, done, error)", "content": { "text/event-stream": { "schema": { "type": "string" } } } } }
+      }
+    },
+    "/api/sync/rh/desactiver": {
+      "post": {
+        "tags": ["Synchronisation RH"],
+        "summary": "Désactiver des comptes ASTECH (écriture contrôlée)",
+        "description": "Renseigne `USR_DATINVALID` sur `SBCG_USERS` et `SDEM_SIGN='N'` sur `DEMANDEUR`. Simulation par défaut ; confirmation `PROD` requise en production ; journalisée.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  { "$ref": "#/components/schemas/WriteRequest" },
+                  { "type": "object", "required": ["matricules"], "properties": { "matricules": { "type": "array", "items": { "type": "string" }, "maxItems": 2000 } } }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Plan (dry-run) ou résultat d'application", "content": { "application/json": { "schema": { "type": "object" } } } },
+          "400": { "description": "Aucun matricule", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "403": { "description": "Écriture désactivée (`ASTECH_ALLOW_WRITES=1` requis)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "428": { "description": "Confirmation PROD requise", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/sync/rh/creer": {
+      "post": {
+        "tags": ["Synchronisation RH"],
+        "summary": "Créer des comptes ASTECH (écriture contrôlée)",
+        "description": "Crée les comptes manquants dans `SBCG_USERS` et `DEMANDEUR`. Simulation par défaut ; confirmation `PROD` requise en production ; journalisée.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  { "$ref": "#/components/schemas/WriteRequest" },
+                  {
+                    "type": "object",
+                    "required": ["agents"],
+                    "properties": {
+                      "agents": {
+                        "type": "array",
+                        "maxItems": 2000,
+                        "items": {
+                          "type": "object",
+                          "required": ["matricule"],
+                          "properties": {
+                            "matricule": { "type": "string" },
+                            "nom": { "type": "string" },
+                            "service": { "type": "string" },
+                            "email": { "type": "string" },
+                            "fonction": { "type": "string" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Plan (dry-run) ou résultat d'application", "content": { "application/json": { "schema": { "type": "object" } } } },
+          "400": { "description": "Aucun agent", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "403": { "description": "Écriture désactivée", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "428": { "description": "Confirmation PROD requise", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/sync/rh/journal": {
+      "get": {
+        "tags": ["Synchronisation RH"],
+        "summary": "Journal d'audit des écritures RH",
+        "parameters": [{ "name": "limit", "in": "query", "schema": { "type": "integer", "default": 100 } }],
+        "responses": { "200": { "description": "Entrées de journal", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/indices": {
+      "get": {
+        "tags": ["Indices"],
+        "summary": "Lister les indices INSEE",
+        "parameters": [
+          { "name": "type", "in": "query", "schema": { "type": "integer", "enum": [1, 2, 5, 6], "description": "1=IRL, 2=ICC, 5=ILC, 6=ILAT" } },
+          { "name": "annee", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "Indices et résumé", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/indices/verifier": {
+      "get": {
+        "tags": ["Indices"],
+        "summary": "Comparer les indices ASTECH avec la source INSEE",
+        "parameters": [{ "name": "force", "in": "query", "schema": { "type": "integer", "enum": [0, 1] } }],
+        "responses": { "200": { "description": "Comparaison (écarts, manquants)", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/indices/pousser": {
+      "post": {
+        "tags": ["Indices"],
+        "summary": "Mettre à jour les indices (écriture contrôlée)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  { "$ref": "#/components/schemas/WriteRequest" },
+                  { "type": "object", "properties": { "scope": { "type": "string", "enum": ["manquants", "ecarts", "les_deux"], "default": "manquants" } } }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Plan (dry-run) ou application", "content": { "application/json": { "schema": { "type": "object" } } } },
+          "403": { "description": "Écriture désactivée", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "428": { "description": "Confirmation PROD requise", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    }
+  }
+}

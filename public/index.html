@@ -147,10 +147,6 @@ async function api(path, opts) {
   if (!r.ok) throw new Error(d.error || ('Erreur ' + r.status));
   return d;
 }
-function adminHeaders() {
-  const t = state.apikeys && state.apikeys.adminToken;
-  return t ? { 'X-Admin-Token': t } : {};
-}
 async function initEnvSwitch() {
   try {
     const info = await fetch('/api/env').then(r => r.json());
@@ -254,6 +250,21 @@ function dataTable(cols, rows, opts = {}) {
   }).join('');
   return `<div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead><tr class="bg-surface-container text-secondary font-label-mono-sm text-label-mono-sm uppercase tracking-wider">${thead}</tr></thead><tbody class="font-body-sm text-body-sm text-on-surface">${body}</tbody></table></div>${footer}`;
 }
+function bilanRows(rows, labelKey, opts = {}) {
+  if (!rows || !rows.length) return `<div class="p-space-lg text-center text-on-surface-variant font-body-sm">${esc(opts.empty || 'Aucune donnée.')}</div>`;
+  const max = Math.max(1, ...rows.map((r) => Number(r[opts.valueKey || 'n']) || 0));
+  const bar = ({ primary: 'bg-primary-container', tertiary: 'bg-tertiary', emerald: 'bg-emerald-500', error: 'bg-error', amber: 'bg-amber-500' }[opts.tone] || 'bg-primary-container');
+  return rows.map((r) => {
+    const n = Number(r[opts.valueKey || 'n']) || 0;
+    const pct = Math.max(2, Math.round((n / max) * 100));
+    const label = r[labelKey] || '—';
+    return `<div class="px-space-lg py-2 flex items-center gap-3 border-b border-surface-container-low last:border-0">
+      <div class="w-40 shrink-0 font-body-sm text-on-surface truncate" title="${esc(label)}">${esc(label)}</div>
+      <div class="flex-1 h-2 rounded-full bg-surface-container"><div class="h-2 rounded-full ${bar}" style="width:${pct}%"></div></div>
+      <div class="w-12 text-right font-label-mono-sm font-semibold tabular">${num(n)}</div>
+    </div>`;
+  }).join('');
+}
 function breadcrumb(items) {
   return `<div class="flex items-center gap-space-xs text-secondary font-label-mono-sm text-label-mono-sm mb-space-xs">${items.map((it, i) => {
     const sep = i ? '<span class="material-symbols-outlined text-[14px] text-outline">chevron_right</span>' : '';
@@ -268,11 +279,12 @@ const state = {
   q: '',
   agents: { tab: 'all', service: '', role: '', page: 1, pageSize: 25 },
   synchro: { scope: 'droits', tab: 'desactiver', result: null, running: false, error: null, selected: null, selCreate: null, desact: { plan: null, result: null, busy: false, error: null }, creer: { plan: null, result: null, busy: false, error: null } },
-  apikeys: { adminToken: (typeof localStorage !== 'undefined' && localStorage.getItem('astechAdminToken')) || '', keys: null, loading: false, error: null, created: null, form: { name: '', scopes: ['referentiels'] } },
+  apikeys: { keys: null, loading: false, error: null, created: null, copied: false },
   locatif: { tab: 'echeances', mode: 'futures', num: '' },
   refs: { type: 'biens', genre: '' },
   inter: { etat: '', type: '', period: '12m', page: 1 },
   indices: { type: '', annee: '', verif: null, loading: false, error: null, pushScope: 'manquants', plan: null, pushResult: null, pushing: false },
+  demande: { open: false, options: null, error: null, submitted: false, bienRows: [], form: {} },
   pages: {}
 };
 
@@ -314,6 +326,7 @@ async function render() {
 async function viewDashboard() {
   const d = await api('/api/dashboard');
   const k = d.kpi;
+  const ik = d.interventions || { totals: {}, by_type: [], by_site: [], by_service: [], by_demandeur: [] };
   const kpis = `
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-lg mb-space-xl">
       ${kpi('Agents & Comptes', num(k.total_agents), `<span class="text-on-surface font-semibold">${num(k.agents_actifs)} actifs</span> · ${num(k.agents_simples)} simples · <span class="text-tertiary font-semibold">${num(k.admins)} admins</span>`, 'badge', 'plain')}
@@ -368,14 +381,33 @@ async function viewDashboard() {
       </div>
       <div class="lg:col-span-4 flex flex-col gap-space-lg">
         ${card('Indices INSEE', `<div class="p-space-lg pt-0 space-y-space-sm">${indicesHtml}<a data-link="#/indices" class="block text-center text-primary font-title-sm text-title-sm pt-2 hover:underline">Gérer les indices →</a></div>`)}
-        ${card('GMAO & Interventions', `<div class="px-space-lg pb-space-lg grid grid-cols-2 gap-space-sm">
-            <div class="p-space-sm rounded bg-surface-container-low flex flex-col"><span class="font-headline-md text-headline-md text-on-surface font-bold tabular">${num(k.interventions)}</span><span class="font-body-sm text-[12px] text-secondary">Interventions en cours</span></div>
-            <div class="p-space-sm rounded bg-surface-container-low flex flex-col"><span class="font-headline-md text-headline-md text-tertiary font-bold tabular">${num(k.demandes)}</span><span class="font-body-sm text-[12px] text-secondary">Demandes (DI)</span></div>
+        ${card('GMAO & Interventions', `<div class="px-space-lg pb-space-lg grid grid-cols-3 gap-space-sm">
+            <div class="p-space-sm rounded bg-surface-container-low flex flex-col"><span class="font-headline-md text-headline-md text-on-surface font-bold tabular">${num(k.interventions)}</span><span class="font-body-sm text-[12px] text-secondary">En cours</span></div>
+            <div class="p-space-sm rounded bg-surface-container-low flex flex-col"><span class="font-headline-md text-headline-md text-tertiary font-bold tabular">${num(ik.totals.cloturees)}</span><span class="font-body-sm text-[12px] text-secondary">Clôturées</span></div>
+            <div class="p-space-sm rounded bg-surface-container-low flex flex-col"><span class="font-headline-md text-headline-md text-primary font-bold tabular">${num(k.demandes)}</span><span class="font-body-sm text-[12px] text-secondary">Demandes</span></div>
           </div><div class="px-space-lg pb-space-lg"><a data-link="#/interventions" class="text-primary font-title-sm text-title-sm hover:underline">Ouvrir la GMAO →</a></div>`)}
         ${card('Alerte Synchro RH', `<div class="px-space-lg pb-space-lg"><div class="p-space-sm rounded bg-surface-container-low flex flex-col gap-1">
             <div class="flex items-center justify-between"><span class="font-title-sm text-title-sm">Source Studio-RH</span><span id="dashRhBadge">${badge('Non connectée', 'red')}</span></div>
             <p class="font-body-sm text-[12px] text-on-surface-variant" id="dashRhText">La confrontation des matricules (API Studio-RH) n\'est pas encore branchée. Seuls les comptes ASTECH sont exploitables en lecture.</p>
           </div><a data-link="#/synchro" class="block text-center text-primary font-title-sm text-title-sm pt-3 hover:underline">Ouvrir la réconciliation RH →</a></div>`)}
+      </div>
+    </div>
+    <div class="mt-space-xl">
+      <div class="flex items-center justify-between gap-space-md mb-space-md">
+        <h2 class="font-headline-md text-on-surface">Indicateurs des interventions (GMAO)</h2>
+        <a data-link="#/interventions" class="text-primary font-title-sm hover:underline">Ouvrir la GMAO →</a>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-lg mb-space-lg">
+        ${kpi('Interventions en cours', num(ik.totals.en_cours), 'toutes périodes', 'pending_actions', 'primary')}
+        ${kpi('Interventions clôturées', num(ik.totals.cloturees), 'historique', 'task_alt', 'tertiary')}
+        ${kpi('Demandes (DI)', num(k.demandes), 'demandes rattachées', 'description', 'plain')}
+        ${kpi('Types d\u2019intervention', num((ik.by_type || []).length), 'répartition ci-dessous', 'category', 'primary')}
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
+        ${card('Par type', `<div class="pb-space-sm">${bilanRows(ik.by_type, 'typ', { tone: 'primary', empty: 'Aucune intervention.' })}</div>`)}
+        ${card('Par site (bien)', `<div class="pb-space-sm">${bilanRows(ik.by_site, 'site', { tone: 'tertiary', empty: 'Aucune intervention.' })}</div>`)}
+        ${card('Par service', `<div class="pb-space-sm">${bilanRows(ik.by_service, 'service', { tone: 'amber', empty: 'Aucune intervention.' })}</div>`)}
+        ${card('Par demandeur', `<div class="pb-space-sm">${bilanRows(ik.by_demandeur, 'demandeur', { tone: 'emerald', empty: 'Aucune intervention.' })}</div>`)}
       </div>
     </div>`;
   api('/api/config').then(c => {
@@ -1077,6 +1109,7 @@ async function viewInterventions() {
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-space-lg">
       <div><span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-high text-primary font-label-mono-sm"><span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>Tables : INTERVENTIONS • INTERVENTIONSTERMINEES • DEMANDES</span>
         <h1 class="font-headline-lg text-on-surface tracking-tight mt-1">Gestion des Interventions &amp; GMAO</h1></div>
+      <button data-act="demandeOpen" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title-md shadow-md transition-all"><span class="material-symbols-outlined text-[20px]">add_task</span>Demande d'intervention</button>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md mb-space-lg">
       ${kpi('Interventions en cours', num(stats.en_cours), 'Table INTERVENTIONS', 'engineering', 'primary')}
@@ -1291,6 +1324,152 @@ async function runPush(confirmProd) {
   finally { s.pushing = false; await viewIndices(); }
 }
 
+/* ═══════════════════════════ DEMANDE D'INTERVENTION ═══════════════════════════ */
+// Champs de DEMANDES (lecture seule) + formulaire de saisie. Les listes
+// déroulantes proviennent de /api/demandes/options (tables de référence ASTECH).
+const DEMANDE_NATURES = { 1: 'IRL', 2: 'ICC', 5: 'ILC', 6: 'ILAT' };
+function dRows(list, sel, ph) {
+  return `<option value="">${esc(ph || '—')}</option>` + (list || []).map(o =>
+    `<option value="${esc(o.code)}" ${String(sel) === String(o.code) ? 'selected' : ''}>${esc(o.des || o.nom)}</option>`).join('');
+}
+function dField(label, inner, req) {
+  return `<label class="flex flex-col gap-1"><span class="font-label-mono-sm text-secondary uppercase">${esc(label)}${req ? ' <span class="text-error">*</span>' : ''}</span>${inner}</label>`;
+}
+const dInput = (name, val, opts) => `<input data-dem="${name}" value="${esc(val || '')}" ${opts || ''} class="h-9 px-3 rounded-lg bg-surface-container-low border border-surface-container-high focus:outline-none focus:border-primary font-body-sm"/>`;
+const dSelect = (name, inner) => `<select data-dem="${name}" class="h-9 px-3 rounded-lg bg-surface-container-low border border-surface-container-high focus:outline-none focus:border-primary font-body-sm">${inner}</select>`;
+async function openDemande() {
+  const s = state.demande; s.open = true; s.error = null;
+  if (!s.options) {
+    try { s.options = await api('/api/demandes/options'); }
+    catch (e) { s.error = e.message; }
+  }
+  renderDemande();
+}
+function closeDemande() { state.demande.open = false; const m = document.getElementById('demandeModal'); if (m) m.remove(); }
+function renderDemande() {
+  const s = state.demande;
+  let modal = document.getElementById('demandeModal');
+  if (!s.open) { if (modal) modal.remove(); return; }
+  if (!modal) { modal = document.createElement('div'); modal.id = 'demandeModal'; modal.className = 'fixed inset-0 z-[70]'; modal.onclick = (e) => { if (e.target === modal) closeDemande(); }; document.body.appendChild(modal); }
+  const o = s.options || {};
+  const f = s.form;
+  const rows = s.bienRows || [];
+  modal.innerHTML = `
+    <div class="absolute inset-0 bg-[#0f172a]/60 backdrop-blur-sm"></div>
+    <div class="absolute inset-0 flex items-start justify-center p-4 overflow-y-auto">
+      <div class="bg-surface-container-lowest w-full max-w-4xl rounded-2xl shadow-2xl my-6">
+        <div class="flex items-center justify-between px-space-lg py-space-md border-b border-surface-container sticky top-0 bg-surface-container-lowest rounded-t-2xl z-10">
+          <div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[24px]">add_task</span>
+            <h2 class="font-headline-md text-on-surface">Nouvelle demande d'intervention</h2></div>
+          <button data-act="demandeClose" class="p-1 rounded hover:bg-surface-container"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <div class="p-space-lg space-y-space-lg">
+          ${s.error ? `<div class="bg-error-container/40 border border-error/30 text-on-error-container p-space-sm rounded font-body-sm">${esc(s.error)}</div>` : ''}
+          ${s.submitted ? `<div class="p-space-sm rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 font-body-sm flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">check_circle</span>Demande renseignée pour <b>${esc(s.form.ndt || '')}</b>. L'enregistrement en base sera activé une fois les écritures validées (test d'abord).</div>` : ''}
+          <div class="p-space-sm rounded-lg bg-surface-container-low flex items-center gap-2 font-label-mono-sm text-secondary"><span class="material-symbols-outlined text-[16px]">info</span>Aperçu en lecture seule. La création effective nécessite l'activation des écritures (ASTECH_ALLOW_WRITES) et sera confirmée avant tout enregistrement.</div>
+
+          <fieldset class="space-y-space-md">
+            <legend class="font-title-md text-primary font-bold">Objet de la demande</legend>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+              ${dField('Nature', dSelect('nature', dRows(o.natures, f.nature, 'Sélectionner la nature')), true)}
+              ${dField('Type de demande', dSelect('tydem', dRows(o.types_demande, f.tydem, 'Standard')))}
+              ${dField('Degré / priorité', dSelect('degre', dRows(o.degres, f.degre, 'Non déterminé')))}
+              ${dField('Urgent', dSelect('urgent', `<option value="N" ${f.urgent === 'N' ? 'selected' : ''}>Non</option><option value="O" ${f.urgent === 'O' ? 'selected' : ''}>Oui (urgent)</option>`))}
+              ${dField('Date de la demande', dInput('dat', f.dat, 'type="date"'), true)}
+              ${dField('Date souhaitée', dInput('datdesir', f.datdesir, 'type="date"'))}
+            </div>
+            ${dField('Objet / désignation', dInput('ndt', f.ndt, 'maxlength="100" placeholder="Résumé de la demande"'), true)}
+            ${dField('Description détaillée', `<textarea data-dem="libelle" rows="3" class="px-3 py-2 rounded-lg bg-surface-container-low border border-surface-container-high focus:outline-none focus:border-primary font-body-sm">${esc(f.libelle || '')}</textarea>`)}
+          </fieldset>
+
+          <fieldset class="space-y-space-md">
+            <legend class="font-title-md text-primary font-bold">Localisation & rattachement</legend>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+              ${dField('Bien concerné (ARBO)', `<div class="relative">
+                <input id="demandeBien" data-dem="bien" value="${esc(f.bien || '')}" placeholder="Rechercher un bien (code, désignation, adresse)…" class="w-full h-9 px-3 rounded-lg bg-surface-container-low border border-surface-container-high focus:outline-none focus:border-primary font-body-sm"/>
+                <input type="hidden" data-dem="arbo" value="${esc(f.arbo || '')}"/>
+                ${rows.length ? `<div class="absolute z-20 mt-1 w-full bg-surface-container-lowest border border-surface-container-high rounded-lg shadow-lg max-h-56 overflow-y-auto">${rows.map(r => `<button type="button" data-act="demandeBienPick:${esc(String(r.id))}" class="w-full text-left px-3 py-2 hover:bg-surface-container font-body-sm border-b border-surface-container last:border-0"><div class="font-title-sm">${esc(r.des || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.code || '')} — ${esc(r.adresse || '')}</div></button>`).join('')}</div>` : ''}
+              </div>`)}
+              ${dField('Service demandeur (SOUSSERVICE)', dSelect('sserv', dRows((o.services || []).filter(x => x.actif !== 'N'), f.sserv, 'Sélectionner le service')))}
+              ${dField('Catégorie', dSelect('cat', dRows(o.categories, f.cat, 'Sélectionner la catégorie')))}
+              ${dField('Sous-catégorie', dSelect('scat', dRows(o.sous_categories, f.scat, 'Sélectionner la sous-catégorie')))}
+            </div>
+          </fieldset>
+
+          <fieldset class="space-y-space-md">
+            <legend class="font-title-md text-primary font-bold">Demandeur / complément</legend>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+              ${dField('Matricule demandeur', dInput('dem', f.dem, 'placeholder="Code DEMANDEUR (ex. 0000117)"'))}
+              ${dField('Nom du complément', dInput('cplnom', f.cplnom))}
+              ${dField('Email', dInput('cplemail', f.cplemail, 'type="email"'))}
+              ${dField('Téléphone 1', dInput('cpltel1', f.cpltel1))}
+              ${dField('Téléphone 2', dInput('cpltel2', f.cpltel2))}
+              ${dField('Courrier', dSelect('courrier', `<option value="N" ${f.courrier === 'N' ? 'selected' : ''}>Non</option><option value="O" ${f.courrier === 'O' ? 'selected' : ''}>Oui</option>`))}
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+              ${dField('Adresse (complément)', dInput('cpladr1', f.cpladr1))}
+              ${dField('Adresse 2', dInput('cpladr2', f.cpladr2))}
+              ${dField('Adresse 3', dInput('cpladr3', f.cpladr3))}
+            </div>
+          </fieldset>
+
+          <fieldset class="space-y-space-md">
+            <legend class="font-title-md text-primary font-bold">Suivi / montants (optionnel)</legend>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+              ${dField('Date d\'enlèvement souhaitée', dInput('datenlev', f.datenlev, 'type="date"'))}
+              ${dField('Budget estimé HT', dInput('mtht', f.mtht, 'type="number" step="0.01"'))}
+              ${dField('Budget estimé TTC', dInput('mttc', f.mttc, 'type="number" step="0.01"'))}
+              ${dField('Observation', dInput('obs', f.obs))}
+              ${dField('Reprise mail', dSelect('repmail', `<option value="N" ${f.repmail === 'N' ? 'selected' : ''}>Non</option><option value="O" ${f.repmail === 'O' ? 'selected' : ''}>Oui</option>`))}
+              ${dField('Moment', dSelect('moment', dRows(o.moments, f.moment, 'Indifférent')))}
+            </div>
+          </fieldset>
+        </div>
+        <div class="flex items-center justify-between gap-space-sm px-space-lg py-space-md border-t border-surface-container sticky bottom-0 bg-surface-container-lowest rounded-b-2xl">
+          <span class="font-label-mono-sm text-secondary">Champs marqués <span class="text-error">*</span> obligatoires (NOT NULL en base)</span>
+          <div class="flex items-center gap-space-sm">
+            <button data-act="demandeReset" class="px-3 py-2 rounded-lg bg-surface-container font-title-sm hover:bg-surface-container-high">Réinitialiser</button>
+            <button data-act="demandeSubmit" ${APP.writeEnabled ? '' : 'disabled'} title="${APP.writeEnabled ? '' : 'Écriture désactivée (ASTECH_ALLOW_WRITES=1 requis)'}" class="px-4 py-2 rounded-lg ${APP.writeEnabled ? 'bg-primary text-on-primary hover:bg-primary/90 shadow-md' : 'bg-surface-dim text-on-surface-variant cursor-not-allowed'} font-title-md"><span class="material-symbols-outlined text-[18px] align-middle mr-1">save</span>Créer la demande</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+function demandeField(el) {
+  const name = el.getAttribute('data-dem'); if (!name) return;
+  state.demande.form[name] = el.value;
+}
+let demandeBienTimer = null;
+function demandeBienInput(el) {
+  state.demande.form.bien = el.value;
+  clearTimeout(demandeBienTimer);
+  const v = el.value.trim();
+  if (v.length < 2) { state.demande.bienRows = []; return; }
+  demandeBienTimer = setTimeout(async () => {
+    try { const d = await api('/api/referentiels/biens?q=' + encodeURIComponent(v)); state.demande.bienRows = (d.rows || []).slice(0, 12); renderDemande(); }
+    catch (e) { /* ignore */ }
+  }, 300);
+}
+function demandeBienPick(id) {
+  const r = (state.demande.bienRows || []).find(x => String(x.id) === id);
+  if (r) { state.demande.form.arbo = r.id; state.demande.form.bien = (r.code ? r.code + ' — ' : '') + (r.des || ''); }
+  state.demande.bienRows = [];
+  renderDemande();
+}
+function demandeSubmit() {
+  const f = state.demande.form;
+  const manques = [];
+  if (!f.nature) manques.push('Nature');
+  if (!f.ndt) manques.push('Objet / désignation');
+  if (!f.dat) manques.push('Date de la demande');
+  if (manques.length) { state.demande.error = 'Champs obligatoires manquants : ' + manques.join(', ') + '.'; renderDemande(); return; }
+  state.demande.error = null;
+  // L'enregistrement effectif (INSERT DEMANDES + trigger INS_DEMANDES_ID) sera
+  // branché via POST /api/demandes lorsque les écritures seront validées.
+  state.demande.submitted = true;
+  renderDemande();
+}
+
 /* ═══════════════════════════ CLÉS API ═══════════════════════════ */
 const API_SCOPES = [
   { id: 'referentiels', label: 'Référentiels — API v1 (lecture)' },
@@ -1305,33 +1484,10 @@ const API_GETTING_STARTED = (origin) => [
 ];
 async function viewApiKeys() {
   const s = state.apikeys;
-  const cfg = await api('/api/config');
-
-  if (!s.adminToken) {
-    view.innerHTML = `
-      ${breadcrumb([{ label: 'Accueil' }, { label: 'Clés API' }])}
-      <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight mt-1 mb-1">Clés API</h1>
-      <p class="font-body-md text-body-md text-secondary mb-6">Créez et révoquez les clés d'accès en lecture à l'API (<span class="font-mono">/api/v1</span>).</p>
-      ${!cfg.apiKeysEnabled
-        ? `<div class="p-space-lg rounded-xl bg-error-container/40 border border-error/30 text-on-error-container font-body-sm">Gestion des clés désactivée : définissez <span class="font-mono">ASTECH_ADMIN_TOKEN</span> côté serveur (fichier .env), puis redémarrez.</div>`
-        : `<div class="max-w-lg bg-surface-container-lowest rounded-xl shadow-sm p-space-lg flex flex-col gap-space-md">
-            <div class="p-space-md rounded-lg bg-surface-container-low flex items-start gap-2">
-              <span class="material-symbols-outlined text-[20px] text-primary">key</span>
-              <div class="font-body-sm text-on-surface-variant">Saisissez le <span class="font-semibold text-on-surface">jeton administrateur</span> (<span class="font-mono">ASTECH_ADMIN_TOKEN</span>) pour gérer les clés. Il est conservé localement dans ce navigateur.</div>
-            </div>
-            <div>
-              <label class="font-label-mono-sm text-secondary uppercase">Jeton administrateur</label>
-              <input id="apikeysTokenInput" type="password" autocomplete="off" class="mt-1 w-full h-10 px-3 rounded-lg bg-surface-container-low focus:outline-none" placeholder="••••••••" />
-            </div>
-            <button data-act="apikeysToken" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary font-title-md hover:bg-primary shadow-md"><span class="material-symbols-outlined text-[18px]">lock_open</span>Déverrouiller</button>
-          </div>`}
-      ${s.error ? `<div class="mt-space-lg p-space-md rounded-xl bg-error-container/40 border border-error/30 text-on-error-container font-body-sm">${esc(s.error)}</div>` : ''}`;
-    return;
-  }
 
   if (s.keys === null && !s.loading) {
     s.loading = true; s.error = null;
-    try { const r = await api('/api/admin/keys', { headers: adminHeaders() }); s.keys = r.keys || []; }
+    try { const r = await api('/api/admin/keys'); s.keys = r.keys || []; }
     catch (e) { s.error = e.message; s.keys = []; }
     finally { s.loading = false; }
   }
@@ -1389,7 +1545,6 @@ async function viewApiKeys() {
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <button data-act="apikeysRefresh" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-container-lowest shadow-sm font-title-md hover:bg-surface-container"><span class="material-symbols-outlined text-[18px]">refresh</span>Rafraîchir</button>
-        <button data-act="apikeysForget" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-container-lowest shadow-sm font-title-md hover:bg-surface-container"><span class="material-symbols-outlined text-[18px]">lock</span>Verrouiller</button>
       </div>
     </div>
     ${createdBox}
@@ -1409,7 +1564,7 @@ async function runCreateKey() {
   if (!scopes.length) { s.error = 'Sélectionnez au moins un droit.'; return viewApiKeys(); }
   s.error = null; s.created = null; s.copied = false;
   try {
-    const r = await api('/api/admin/keys', { method: 'POST', headers: adminHeaders(), body: { name, scopes } });
+    const r = await api('/api/admin/keys', { method: 'POST', body: { name, scopes } });
     s.created = r; s.keys = null;
   } catch (e) { s.error = e.message; }
   await viewApiKeys();
@@ -1419,109 +1574,9 @@ async function runRevokeKey(id) {
   if (!window.confirm('Révoquer définitivement la clé « ' + id + ' » ?\n\nLes clients qui l\'utilisent perdront l\'accès.')) return;
   const s = state.apikeys;
   s.error = null;
-  try { await api('/api/admin/keys/' + encodeURIComponent(id), { method: 'DELETE', headers: adminHeaders() }); s.keys = null; }
+  try { await api('/api/admin/keys/' + encodeURIComponent(id), { method: 'DELETE' }); s.keys = null; }
   catch (e) { s.error = e.message; }
   await viewApiKeys();
-}
-
-/* ═══════════════════════════ CLÉS API ═══════════════════════════ */
-function apikeyScopeBadges(scopes) {
-  return (scopes || []).map(s => badge(s === '*' ? 'tous' : s, 'slate')).join(' ') || dash;
-}
-async function viewApiKeys() {
-  const ap = state.apikeys;
-  if (!ap.adminToken) {
-    view.innerHTML = `
-      ${breadcrumb([{ label: 'Accueil' }, { label: 'Clés API' }])}
-      <div class="max-w-xl mx-auto bg-surface-container-lowest rounded-xl shadow-sm p-space-lg mt-space-lg">
-        <div class="flex items-center gap-2 mb-space-sm"><span class="material-symbols-outlined text-primary text-[24px]">key</span><h1 class="font-headline-md text-on-surface">Administration des clés d'API</h1></div>
-        <p class="font-body-sm text-on-surface-variant mb-space-md">Saisissez le jeton administrateur (variable <span class="font-mono">ASTECH_ADMIN_TOKEN</span> côté serveur). Il est conservé uniquement dans votre navigateur.</p>
-        <div class="flex items-center gap-space-sm">
-          <input id="apikeysTokenInput" type="password" autocomplete="off" placeholder="Jeton administrateur" class="flex-1 h-10 px-3 rounded-lg bg-surface-container-low border border-surface-container-high focus:outline-none focus:border-primary"/>
-          <button data-act="apikeysToken" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title-md shadow-md transition-all"><span class="material-symbols-outlined text-[18px]">login</span>Se connecter</button>
-        </div>
-      </div>`;
-    return;
-  }
-  if (ap.error) {
-    view.innerHTML = `${breadcrumb([{ label: 'Accueil' }, { label: 'Clés API' }])}
-      <div class="bg-error-container/40 border border-error/30 text-on-error-container p-space-lg rounded-xl font-body-sm mb-space-lg">${esc(ap.error)}</div>
-      <button data-act="apikeysForget" class="text-primary font-title-sm hover:underline">Changer de jeton administrateur</button>`;
-    return;
-  }
-  if (!ap.keys) {
-    view.innerHTML = `<div class="p-space-xl text-center text-on-surface-variant font-body-sm"><span class="material-symbols-outlined align-middle animate-spin mr-2">progress_activity</span>Chargement des clés…</div>`;
-    try { ap.keys = await api('/api/admin/keys', { headers: adminHeaders() }); }
-    catch (e) { ap.error = e.message; return viewApiKeys(); }
-  }
-  const keys = ap.keys.keys || [];
-  const created = ap.created;
-  const createdBox = created ? `
-    <div class="bg-emerald-50 border border-emerald-200 text-emerald-900 p-space-md rounded-xl mb-space-lg">
-      <div class="flex items-center justify-between gap-space-sm mb-1"><b class="font-title-md">Clé créée — à copier maintenant</b>
-        <button data-act="apikeysDismiss" class="text-emerald-800 hover:underline font-title-sm">Masquer</button></div>
-      <p class="font-body-sm mb-2">Elle ne sera plus jamais affichée. Reportez-la dans <span class="font-mono">ASTECH_API_KEYS</span> (fichier .env) pour la rendre durable.</p>
-      <div class="flex items-center gap-space-sm">
-        <code class="flex-1 font-label-mono-md bg-white/70 px-2 py-1.5 rounded border border-emerald-200 break-all">${esc(created.key)}</code>
-        <button data-act="apikeysCopy" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 font-title-sm"><span class="material-symbols-outlined text-[18px]">${ap.copied ? 'check' : 'content_copy'}</span>${ap.copied ? 'Copié' : 'Copier'}</button>
-      </div>
-    </div>` : '';
-  const rowsHtml = keys.length ? keys.map(k => `<tr class="border-t border-surface-container">
-      <td class="p-2 font-title-sm text-on-surface">${esc(k.name)}</td>
-      <td class="p-2 font-label-mono-sm text-secondary">${esc(k.prefix)}</td>
-      <td class="p-2">${apikeyScopeBadges(k.scopes)}</td>
-      <td class="p-2">${badge(k.source === 'env' ? 'Env' : 'Fichier', 'slate')}</td>
-      <td class="p-2 font-label-mono-sm text-secondary">${esc(k.lastUsedAt ? new Date(k.lastUsedAt).toLocaleString('fr-FR') : '—')}</td>
-      <td class="p-2 text-right">${k.revokedAt ? badge('Révoquée', 'red') : `<button data-act="apikeysRevoke:${esc(k.id)}" class="text-error font-title-sm hover:underline">Révoquer</button>`}</td>
-    </tr>`).join('') : '';
-  view.innerHTML = `
-    ${breadcrumb([{ label: 'Accueil' }, { label: 'Clés API' }, { label: 'Lecture seule' }])}
-    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md bg-surface-container-lowest p-space-lg rounded-xl shadow-sm mb-space-lg">
-      <div class="space-y-1">
-        <div class="flex items-center gap-space-sm"><span class="px-2 py-0.5 rounded bg-surface-container font-label-mono-sm text-primary font-semibold">API /api/v1/referentiels</span>
-          <span class="inline-flex items-center gap-1 font-label-mono-sm text-secondary"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Accès lecture seule par clé</span></div>
-        <h1 class="font-headline-lg text-on-surface tracking-tight">Clés d'API</h1>
-        <p class="font-body-md text-on-surface-variant max-w-3xl">Générez des clés pour l'API référentiels. Les clés sont stockées hachées (SHA-256) ; la valeur en clair n'est affichée qu'à la création.</p>
-      </div>
-      <div class="flex items-center gap-space-sm">
-        <button data-act="apikeysRefresh" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high font-title-sm"><span class="material-symbols-outlined text-[18px]">refresh</span>Rafraîchir</button>
-        <button data-act="apikeysForget" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-secondary hover:text-on-surface font-title-sm"><span class="material-symbols-outlined text-[18px]">logout</span>Oublier le jeton</button>
-      </div>
-    </div>
-    ${createdBox}
-    <div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg mb-space-lg">
-      <h2 class="font-title-md text-on-surface mb-space-sm">Nouvelle clé</h2>
-      <div class="flex flex-col sm:flex-row items-stretch sm:items-end gap-space-sm">
-        <label class="flex-1"><span class="font-label-mono-sm text-secondary">Nom</span>
-          <input data-act="apikeysFormName" value="${esc(ap.form.name)}" placeholder="Studio-RH, Reporting..." class="w-full h-10 px-3 mt-1 rounded-lg bg-surface-container-low border border-surface-container-high focus:outline-none focus:border-primary"/></label>
-        <button data-act="apikeysCreate" class="h-10 inline-flex items-center gap-2 px-4 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title-md shadow-md transition-all"><span class="material-symbols-outlined text-[18px]">add</span>Générer</button>
-      </div>
-    </div>
-    <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
-      <div class="p-space-lg flex items-center justify-between bg-surface-container-low/50"><h2 class="font-headline-sm text-on-surface">Clés existantes</h2><span class="font-label-mono-sm text-secondary bg-surface-container px-2 py-0.5 rounded">${num(keys.length)}</span></div>
-      ${keys.length ? `<div class="overflow-x-auto"><table class="w-full text-left text-body-sm border-collapse"><thead><tr class="bg-surface-container font-label-mono-sm uppercase tracking-wider text-secondary"><th class="p-2">Nom</th><th class="p-2">Préfixe</th><th class="p-2">Droits</th><th class="p-2">Source</th><th class="p-2">Dernier usage</th><th class="p-2 text-right">Action</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>`
-        : `<div class="p-space-lg font-body-sm text-on-surface-variant">Aucune clé. Générez-en une ci-dessus.</div>`}
-    </div>`;
-}
-async function runCreateKey() {
-  const ap = state.apikeys;
-  const name = (ap.form.name || '').trim();
-  if (!name) { ap.error = 'Le nom de la clé est obligatoire.'; return viewApiKeys(); }
-  ap.error = null;
-  try {
-    const r = await api('/api/admin/keys', { method: 'POST', headers: adminHeaders(), body: { name, scopes: ['referentiels'] } });
-    ap.created = r; ap.copied = false; ap.keys = null; ap.form.name = '';
-  } catch (e) { ap.error = e.message; }
-  viewApiKeys();
-}
-async function runRevokeKey(id) {
-  const ap = state.apikeys;
-  const k = (ap.keys && ap.keys.keys || []).find(x => x.id === id);
-  if (!window.confirm('Révoquer la clé « ' + ((k && k.name) || id) + ' » ? Cette action est immédiate et définitive.')) return;
-  ap.error = null;
-  try { await api('/api/admin/keys/' + encodeURIComponent(id), { method: 'DELETE', headers: adminHeaders() }); ap.keys = null; }
-  catch (e) { ap.error = e.message; }
-  viewApiKeys();
 }
 
 /* ═══════════════════════════ Drawer & events ═══════════════════════════ */
@@ -1539,9 +1594,12 @@ document.addEventListener('click', (e) => {
 });
 document.addEventListener('change', (e) => {
   const act = e.target.closest('[data-act]');
-  if (!act) return;
-  const [action, value] = act.getAttribute('data-act').split(':');
-  handleAction(action, value, e.target);
+  if (act) { const [action, value] = act.getAttribute('data-act').split(':'); handleAction(action, value, e.target); return; }
+  if (e.target.closest('[data-dem]')) demandeField(e.target);
+});
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'demandeBien') return demandeBienInput(e.target);
+  if (e.target.closest('[data-dem]')) demandeField(e.target);
 });
 function handleAction(action, value, el) {
   const a = state.agents, l = state.locatif, it = state.inter, ind = state.indices;
@@ -1605,20 +1663,12 @@ function handleAction(action, value, el) {
     case 'pushScope': ind.pushScope = el.value; ind.plan = null; ind.pushResult = null; viewIndices(); break;
     case 'pushDryRun': runPush(false); break;
     case 'pushConfirm': runPush(true); break;
-    case 'apikeysToken': {
-      const ap = state.apikeys;
-      const input = document.getElementById('apikeysTokenInput');
-      ap.adminToken = input ? input.value.trim() : '';
-      try { localStorage.setItem('astechAdminToken', ap.adminToken); } catch (e) { /* ignore */ }
-      ap.keys = null; ap.error = null;
-      viewApiKeys(); break;
-    }
-    case 'apikeysForget':
-      state.apikeys.adminToken = '';
-      try { localStorage.removeItem('astechAdminToken'); } catch (e) { /* ignore */ }
-      state.apikeys.keys = null; state.apikeys.error = null; viewApiKeys(); break;
+    case 'demandeOpen': openDemande(); break;
+    case 'demandeClose': closeDemande(); break;
+    case 'demandeReset': state.demande.form = {}; state.demande.bienRows = []; state.demande.error = null; state.demande.submitted = false; renderDemande(); break;
+    case 'demandeSubmit': demandeSubmit(); break;
+    case 'demandeBienPick': demandeBienPick(value); break;
     case 'apikeysRefresh': state.apikeys.keys = null; viewApiKeys(); break;
-    case 'apikeysFormName': state.apikeys.form.name = el.value; break;
     case 'apikeysCreate': runCreateKey(); break;
     case 'apikeysRevoke': runRevokeKey(value); break;
     case 'apikeysDismiss': state.apikeys.created = null; viewApiKeys(); break;

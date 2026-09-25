@@ -32,9 +32,8 @@ services:
       STUDIO_RH_API_KEY: "${STUDIO_RH_API_KEY:-}"
       # API référentiels en lecture seule — clés au format "nom:cle,nom2:cle2"
       # (durables : reprises à chaque redémarrage même après reconstruction).
+      # La gestion des clés (/api/admin/keys) est ouverte à l'UI locale, sans jeton.
       ASTECH_API_KEYS: "${ASTECH_API_KEYS:-}"
-      # Jeton pour l'administration des clés (/api/admin/keys).
-      ASTECH_ADMIN_TOKEN: "${ASTECH_ADMIN_TOKEN:-}"
       # Fichier des clés générées dynamiquement (persisté via le volume).
       ASTECH_KEYS_FILE: "/app/data/api-keys.json"
     volumes:

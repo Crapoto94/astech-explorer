@@ -9,7 +9,6 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
 const { AsyncLocalStorage } = require('async_hooks');
 const apikeys = require('./apikeys');
 
@@ -255,11 +254,12 @@ async function getDashboard() {
   const derniersContrats = await exec(`${CONTRAT_SELECT} WHERE (C.CONT_DATFIN IS NULL OR C.CONT_DATFIN >= ${CUTOFF})
     ORDER BY C.CONT_DATDEB DESC NULLS LAST FETCH FIRST 8 ROWS ONLY`);
   const indices = await indicesResume();
+  const interventions = await intervKpis();
   return {
     kpi: { ...kpi, admins: admins ? admins.n : 0, total_agents: agents ? Number(agents.total) : 0,
       agents_actifs: agents ? Number(agents.actifs) : 0, agents_inactifs: agents ? Number(agents.inactifs) : 0,
       agents_utilisateurs: agents ? Number(agents.utilisateurs) : 0, agents_simples: agents ? Number(agents.simples) : 0 },
-    prochainesEcheances, dernieresQuittances, derniersContrats, indices,
+    prochainesEcheances, dernieresQuittances, derniersContrats, indices, interventions,
   };
 }
 
@@ -884,6 +884,29 @@ async function refCounts() {
   return r;
 }
 
+// ─── Demandes d'intervention : listes de référence ───────────────────────────
+// Options des listes déroulantes du formulaire de demande (lecture seule).
+async function demandesOptions() {
+  const [natures, degres, catloc, sscatloc, services] = await Promise.all([
+    exec(`SELECT STYP_COD AS code, STYP_DES AS des FROM TYPE ORDER BY STYP_DES`, {}, 500),
+    exec(`SELECT PDEG_COD AS code, PDEG_DES AS des FROM DEGRE ORDER BY PDEG_COD`, {}, 100),
+    exec(`SELECT SCATL_COD AS code, SCATL_DES AS des FROM CATEGORIE_LOC ORDER BY SCATL_DES`, {}, 200),
+    exec(`SELECT SSCATL_COD AS code, SSCATL_DES AS des, SSCATL_ID AS id FROM SOUSCATEGORIE_LOC ORDER BY SSCATL_DES`, {}, 500),
+    exec(`SELECT SSSER_COD AS code, SSSER_NOM AS nom, SSSER_NOMLONG AS nom_long, SSSER_ACTIF AS actif
+      FROM SOUSSERVICE ORDER BY SSSER_NOM`, {}, 2000),
+  ]);
+  return {
+    natures, degres, categories: catloc, sous_categories: sscatloc,
+    services: services.map((s) => ({ code: s.code, nom: s.nom, nom_long: s.nom_long, actif: s.actif })),
+    types_demande: [
+      { code: 0, des: 'Standard' }, { code: 1, des: 'Devis' }, { code: 2, des: 'Intervention' },
+      { code: 3, des: 'Enlèvement' }, { code: 4, des: 'Prêt' },
+    ],
+    urgences: [{ code: 'O', des: 'Urgent' }, { code: 'N', des: 'Non urgent' }],
+    moments: [{ code: 'M', des: 'Matin' }, { code: 'A', des: 'Après-midi' }, { code: 'J', des: 'Journée' }],
+  };
+}
+
 // ─── Interventions ───────────────────────────────────────────────────────────
 const INTERV_UNION = `
   SELECT 'En cours' AS etat, E.SSIG_NUM AS num, E.SSIG_TYP AS typ, E.SSIG_DAT AS dat_ts,
@@ -946,6 +969,37 @@ async function intervStats() {
     (SELECT COUNT(*) FROM INTERVENTIONSTERMINEES) AS cloturees FROM DUAL`);
   const par_type = await exec(`SELECT SSIG_TYP AS typ, COUNT(*) AS n FROM INTERVENTIONS GROUP BY SSIG_TYP ORDER BY n DESC FETCH FIRST 12 ROWS ONLY`);
   return { en_cours: Number(r.en_cours), demandes: Number(r.demandes), cloturees: Number(r.cloturees), par_type };
+}
+
+// Indicateurs d'intervention agrégés pour le tableau de bord (toutes
+// interventions : en cours + clôturées), par type, site (bien), service et demandeur.
+async function intervKpis() {
+  const [tot] = await exec(`SELECT
+    (SELECT COUNT(*) FROM INTERVENTIONS) AS en_cours,
+    (SELECT COUNT(*) FROM INTERVENTIONSTERMINEES) AS cloturees FROM DUAL`);
+  const by_type = await exec(`
+    SELECT NVL(X.typ,'(non défini)') AS typ, COUNT(*) AS n,
+           SUM(CASE WHEN X.etat='En cours' THEN 1 ELSE 0 END) AS en_cours
+    FROM (${INTERV_UNION}) X
+    GROUP BY NVL(X.typ,'(non défini)') ORDER BY n DESC FETCH FIRST 15 ROWS ONLY`);
+  const by_site = await exec(`
+    SELECT NVL(bien, NVL(code_bien,'(non localisé)')) AS site, COUNT(*) AS n
+    FROM (${INTERV_SELECT})
+    GROUP BY NVL(bien, NVL(code_bien,'(non localisé)')) ORDER BY n DESC FETCH FIRST 12 ROWS ONLY`);
+  const by_service = await exec(`
+    SELECT NVL(service,'(non affecté)') AS service, COUNT(*) AS n
+    FROM (${INTERV_SELECT})
+    GROUP BY NVL(service,'(non affecté)') ORDER BY n DESC FETCH FIRST 12 ROWS ONLY`);
+  const by_demandeur = await exec(`
+    SELECT NVL(X.coddem,'(non renseigné)') AS coddem,
+           NVL(MAX(D.SDEM_DES), NVL(X.coddem,'(non renseigné)')) AS demandeur, COUNT(*) AS n
+    FROM (${INTERV_UNION}) X
+    LEFT JOIN DEMANDEUR D ON D.SDEM_COD = X.coddem
+    GROUP BY NVL(X.coddem,'(non renseigné)') ORDER BY n DESC FETCH FIRST 12 ROWS ONLY`);
+  return {
+    totals: { en_cours: Number(tot.en_cours || 0), cloturees: Number(tot.cloturees || 0) },
+    by_type, by_site, by_service, by_demandeur,
+  };
 }
 
 // ─── Indices ─────────────────────────────────────────────────────────────────
@@ -1337,6 +1391,9 @@ async function handleRequest(req, res, p, sp) {
       const row = await refById(m[1], decodeURIComponent(m[2]));
       return row ? sendJson(res, 200, { type: m[1], row }) : sendJson(res, 404, { error: 'Entrée introuvable' });
     }
+
+    // Demandes d'intervention
+    if (p === '/api/demandes/options') return sendJson(res, 200, await demandesOptions());
 
     // Interventions
     if (p === '/api/interventions') return sendJson(res, 200, await listInterventions({ q: term, type: sp.get('type') || '', etat: sp.get('etat') || '', du: sp.get('du') || '', au: sp.get('au') || '', tout: sp.get('tout') === '1', page: sp.get('page'), pageSize: sp.get('pageSize') }));
