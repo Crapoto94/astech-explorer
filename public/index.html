@@ -85,6 +85,7 @@ tailwind.config = {
           <span class="material-symbols-outlined text-[15px]">lock</span>Lecture seule
         </span>
         <span id="envSwitch" class="hidden items-center gap-0.5 px-0.5 py-0.5 rounded bg-[#1e293b] border border-[#334155] font-label-mono-sm text-label-mono-sm"></span>
+        <span id="authPill" class="hidden items-center gap-1 px-2 py-1 rounded bg-[#1e293b] text-[#cbd5e1] font-label-mono-sm text-label-mono-sm border border-[#334155]"></span>
         <span id="studioPill" class="hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded bg-[#1e293b] text-[#94a3b8] font-label-mono-sm text-label-mono-sm border border-[#334155]" title="Source Studio-RH">
           <span class="material-symbols-outlined text-[15px]">sync_problem</span>Studio-RH
         </span>
@@ -136,20 +137,98 @@ const dash = '<span class="text-outline">—</span>';
 const cell = (v) => (v === null || v === undefined || v === '') ? dash : esc(v);
 const cellMono = (v, cls) => (v === null || v === undefined || v === '') ? dash : `<span class="font-label-mono-sm text-label-mono-sm ${cls || 'text-on-surface'}">${esc(v)}</span>`;
 
-const APP = { writeEnabled: false, active: '', envs: [] };
+const APP = { writeEnabled: false, active: '', envs: [], authEnabled: false, adConfigured: false, adUrl: null };
 let DB_ENV_SEL = (typeof localStorage !== 'undefined' && localStorage.getItem('astechEnv')) || '';
+let SESSION = { token: (typeof localStorage !== 'undefined' && localStorage.getItem('astechToken')) || '', user: null, dn: null };
 function withEnv(path) { if (!DB_ENV_SEL) return path; return path + (path.includes('?') ? '&' : '?') + 'env=' + encodeURIComponent(DB_ENV_SEL); }
 async function api(path, opts) {
   const o = opts || {};
   const init = {};
   if (o.method) init.method = o.method;
   const headers = Object.assign({}, o.headers || {});
+  if (SESSION.token) headers['X-ASTECH-Token'] = SESSION.token;
   if (o.body !== undefined) { headers['Content-Type'] = 'application/json'; init.body = JSON.stringify(o.body); }
   if (Object.keys(headers).length) init.headers = headers;
   const r = await fetch(withEnv(path), Object.keys(init).length ? init : undefined);
   let d; try { d = await r.json(); } catch { d = { error: 'Réponse invalide' }; }
+  if (r.status === 401 && APP.authEnabled && !o.noAuthRedirect) { SESSION.token = ''; try { localStorage.removeItem('astechToken'); } catch (e) { /* ignore */ } showLogin('Session expirée, veuillez vous reconnecter.'); throw new Error('Authentification requise'); }
   if (!r.ok) throw new Error(d.error || ('Erreur ' + r.status));
   return d;
+}
+function showLogin(msg) {
+  let el = document.getElementById('loginOverlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'loginOverlay';
+    el.className = 'fixed inset-0 z-[100] flex items-center justify-center bg-[#0f172a]/95 backdrop-blur-sm';
+    document.body.appendChild(el);
+  }
+  el.innerHTML = `
+    <div class="bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-sm p-space-lg m-4">
+      <div class="flex items-center gap-2 mb-1"><svg viewBox="0 0 40 40" class="h-8 w-8"><rect width="40" height="40" rx="8" fill="#1e293b"/><path d="M12 28L20 12L28 28" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M15 23H25" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <span class="font-headline-md font-bold text-on-surface">ASTECH Explorer</span></div>
+      <p class="font-body-sm text-on-surface-variant mb-4">Connexion avec votre compte Active Directory (Ville d'Ivry).</p>
+      ${msg ? `<div class="bg-error-container/40 border border-error/30 text-on-error-container p-space-sm rounded font-body-sm mb-3">${esc(msg)}</div>` : ''}
+      <form id="loginForm" class="space-y-3">
+        <label class="block"><span class="font-label-mono-sm text-secondary">Identifiant AD</span>
+          <input id="loginUser" autocomplete="username" class="w-full h-10 px-3 mt-1 rounded-lg bg-surface-container-low border border-surface-container-high focus:outline-none focus:border-primary" /></label>
+        <label class="block"><span class="font-label-mono-sm text-secondary">Mot de passe</span>
+          <input id="loginPass" type="password" autocomplete="current-password" class="w-full h-10 px-3 mt-1 rounded-lg bg-surface-container-low border border-surface-container-high focus:outline-none focus:border-primary" /></label>
+        <div id="loginErr" class="hidden text-error font-body-sm"></div>
+        <button id="loginBtn" type="submit" class="w-full h-10 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title-md shadow-md transition-all inline-flex items-center justify-center gap-2"><span class="material-symbols-outlined text-[18px]">login</span>Se connecter</button>
+      </form>
+    </div>`;
+  const form = document.getElementById('loginForm');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const err = document.getElementById('loginErr'); const btn = document.getElementById('loginBtn');
+    const username = document.getElementById('loginUser').value.trim();
+    const password = document.getElementById('loginPass').value;
+    if (!username || !password) { err.textContent = 'Identifiant et mot de passe requis.'; err.classList.remove('hidden'); return; }
+    btn.disabled = true; btn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>Vérification…';
+    try {
+      const r = await api('/api/auth/login', { method: 'POST', body: { username, password }, noAuthRedirect: true });
+      SESSION.token = r.token; SESSION.user = r.username; SESSION.dn = r.dn || null;
+      try { localStorage.setItem('astechToken', r.token); } catch (e) { /* ignore */ }
+      const overlay = document.getElementById('loginOverlay'); if (overlay) overlay.remove();
+      initAuthPill(); render();
+    } catch (ex) {
+      err.textContent = ex.message || 'Échec de la connexion.'; err.classList.remove('hidden');
+      btn.disabled = false; btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">login</span>Se connecter';
+    }
+  });
+  const u = document.getElementById('loginUser'); if (u) u.focus();
+}
+function initAuthPill() {
+  const pill = document.getElementById('authPill');
+  if (!pill) return;
+  if (!APP.authEnabled) { pill.classList.add('hidden'); return; }
+  pill.classList.remove('hidden'); pill.classList.add('inline-flex');
+  if (SESSION.user) {
+    pill.innerHTML = `<span class="material-symbols-outlined text-[15px] text-emerald-400">verified_user</span>${esc(SESSION.user)} <button data-act="logout" class="ml-1 text-[#94a3b8] hover:text-white"><span class="material-symbols-outlined text-[14px]">logout</span></button>`;
+    pill.title = SESSION.dn || 'Session AD';
+  } else { pill.innerHTML = `<span class="material-symbols-outlined text-[15px]">login</span>Connexion`; pill.onclick = () => showLogin(); }
+}
+async function doLogout() {
+  try { await api('/api/auth/logout', { method: 'POST', noAuthRedirect: true }); } catch (e) { /* ignore */ }
+  SESSION = { token: '', user: null, dn: null };
+  try { localStorage.removeItem('astechToken'); } catch (e) { /* ignore */ }
+  showLogin('Vous êtes déconnecté.');
+}
+async function initAuth() {
+  try {
+    const cfg = await fetch('/api/config').then((r) => r.json());
+    APP.authEnabled = !!cfg.authEnabled; APP.adConfigured = !!cfg.adConfigured; APP.adUrl = cfg.adUrl || null;
+  } catch (e) { return; }
+  if (!APP.authEnabled) { initAuthPill(); return; }
+  if (!SESSION.token) { showLogin(); initAuthPill(); return; }
+  try {
+    const w = await api('/api/auth/whoami', { noAuthRedirect: true });
+    if (w && w.authenticated) { SESSION.user = w.username; SESSION.dn = w.dn; initAuthPill(); return; }
+  } catch (e) { /* ignore */ }
+  SESSION.token = '';
+  showLogin('Session invalide ou expirée.');
+  initAuthPill();
 }
 async function initEnvSwitch() {
   try {
@@ -295,7 +374,7 @@ const state = {
   magasins: { code: '', enStock: true, list: null },
   parc: { tab: 'vehicules', service: '', etat: '', page: 1 },
   procs: { type: '', group: '', status: '' },
-  docs: { tab: 'modules', module: '', cheminsView: 'tree' },
+  docs: { tab: 'modules', module: '', cheminsView: 'tree', excludePoste: false },
   locatif: { tab: 'echeances', mode: 'futures', num: '' },
   refs: { type: 'biens', genre: '' },
   inter: { etat: '', type: '', period: '12m', page: 1 },
@@ -463,9 +542,18 @@ async function viewAgents() {
   const tabs = [['all', 'Tous', stats.total], ['utilisateur', 'Utilisateurs avec droits', stats.utilisateurs], ['simple', 'Agents simples', stats.agents_simples], ['admin', 'Administrateurs', stats.admins], ['inactif', 'Inactifs', stats.inactifs]];
   const tabsHtml = tabs.map(([k, label, n]) => `<button data-act="agentTab:${k}" class="px-space-md py-1.5 rounded-md font-title-sm text-title-sm transition-all ${a.tab === k ? 'bg-surface-container-lowest text-primary-container shadow-sm font-semibold' : 'text-on-surface-variant hover:text-on-surface font-medium'}">${label} <span class="ml-1 opacity-70 font-label-mono-sm text-label-mono-sm">${num(n)}</span></button>`).join('');
 
+  const agentEtat = (r) => {
+    const actif = r.sign === 'O';
+    const invalide = !!r.datinvalid;
+    if (actif && !invalide) return badge('Actif', 'green');
+    if (!actif && invalide) return badge('Inactif', 'red');
+    if (!actif) return badge('Inactif', 'red');
+    return badge('Actif (invalidé ' + esc(r.datinvalid) + ')', 'amber');
+  };
   const cols = [
     { label: 'Matricule', get: r => `<span class="font-label-mono-md text-label-mono-md font-bold ${Number(r.nb) > 0 ? 'text-primary' : 'text-secondary'}">${esc(r.matricule)}</span>` },
     { label: 'Nom & Prénom', get: r => `<div class="font-title-md text-title-md text-on-surface">${esc(r.nom || r.des || '')}</div><div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">${esc(r.email || '')}</div>` },
+    { label: 'État', center: true, get: r => agentEtat(r) },
     { label: 'Service', get: r => `<div class="text-on-surface">${esc(r.service || '')}</div><div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">${esc(r.sserv || '')}</div>` },
     { label: 'Type', get: r => typeBadge(r.nb) },
     { label: 'Droits', get: r => Number(r.nb) > 0 ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container-highest text-primary font-label-mono-sm text-label-mono-sm font-medium">${num(r.nb)} menus</span>` : `<span class="font-label-mono-sm text-label-mono-sm text-outline italic">Aucun droit</span>` },
@@ -556,7 +644,10 @@ async function viewAgentFiche(matricule) {
   const d = await api('/api/agent/' + encodeURIComponent(matricule));
   const c = d.compte, dem = d.demandeur || {};
   const admin = dem.gest === 'O' && dem.ordon === 'O' && dem.compta === 'O';
+  const actif = dem.sign === 'O';
+  const etatBadge = actif ? badge('Actif', 'green', 'check_circle') : badge('Inactif', 'red', 'cancel');
   const info = [['Schéma', 'ASTECHIVR.SBCG_USERS'], ['Matricule', c.matricule], ['USR_ID', c.usr_id], ['Nom', c.nom],
+    ['État du compte', actif ? 'Actif (SDEM_SIGN=O)' : 'Inactif (SDEM_SIGN=N)'],
     ['Service', dem.sserv], ['Courriel', dem.email], ['Login AD (AUTHSYS)', dem.authsys], ['Date invalidation', c.datinvalid || '—'],
     ['Inscrit au répertoire (USR_DEM)', c.dem], ['Dernière MAJ', c.maj], ['MAJ mot de passe', c.majpwd]];
   const droitsRows = (d.droits || []).map(x => `<tr class="border-b border-surface-container-low"><td class="py-2 px-3 font-label-mono-sm">${esc(x.mnu_id)}</td><td class="py-2 px-3">${esc(x.libelle || ('Module ' + (x.module ?? '')))}</td><td class="py-2 px-3 font-label-mono-sm text-secondary">${esc(x.module ?? '')}/${esc(x.onglet ?? '')}</td><td class="py-2 px-3 text-right">${badge('Niv ' + x.auth, x.auth >= 15 ? 'green' : x.auth >= 7 ? 'blue' : 'amber')}</td></tr>`).join('');
@@ -566,10 +657,10 @@ async function viewAgentFiche(matricule) {
   const drawerHtml = `
     <div class="sticky top-0 bg-surface-container-lowest p-space-lg border-b border-surface-container flex items-start justify-between z-10">
       <div class="flex items-center gap-space-md">
-        <div class="relative"><div class="w-12 h-12 rounded-lg bg-primary-container text-on-primary flex items-center justify-center font-bold text-[18px]">${esc((c.nom || '?').slice(0, 2))}</div>
-          <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 ${Number(d.droits.length) > 0 ? 'bg-emerald-500' : 'bg-outline'} rounded-full ring-2 ring-surface-container-lowest"></span></div>
+        <div class="relative"><div class="w-12 h-12 rounded-lg ${actif ? 'bg-primary-container text-on-primary' : 'bg-surface-dim text-on-surface-variant'} flex items-center justify-center font-bold text-[18px]">${esc((c.nom || '?').slice(0, 2))}</div>
+          <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 ${actif ? 'bg-emerald-500' : 'bg-error'} rounded-full ring-2 ring-surface-container-lowest" title="${actif ? 'Compte actif' : 'Compte inactif'}"></span></div>
         <div><h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">${esc(c.nom || '')}</h2>
-          <div class="flex items-center gap-2"><span class="px-1.5 py-0.2 rounded bg-secondary-container text-on-secondary-fixed font-label-mono-sm font-semibold">${esc(c.matricule)}</span>${admin ? badge('ADMIN', 'purple') : ''}</div></div>
+          <div class="flex items-center gap-2"><span class="px-1.5 py-0.2 rounded bg-secondary-container text-on-secondary-fixed font-label-mono-sm font-semibold">${esc(c.matricule)}</span>${etatBadge}${admin ? badge('ADMIN', 'purple') : ''}</div></div>
       </div>
       <button onclick="closeDrawer()" class="p-1 rounded text-on-surface-variant hover:bg-surface-container"><span class="material-symbols-outlined">close</span></button>
     </div>
@@ -1498,13 +1589,160 @@ async function viewProcedure(arg) {
 }
 
 /* ═══════════════════════════ DOCUMENTS ASSOCIÉS (GED) ═══════════════════════════ */
+// Découpe un chemin de stockage (Windows / UNC) en segments hiérarchiques.
+// « \\tsclient\C\Documents and Settings\x » -> ['\\\\tsclient','C','Documents and Settings','x'].
+function docSplitPath(p) {
+  const clean = String(p || '').replace(/[\\/]+$/, '');
+  if (!clean) return [];
+  if (clean.startsWith('\\\\')) {
+    const rest = clean.slice(2).split(/[\\/]+/).filter(Boolean);
+    return rest.length ? ['\\\\' + rest[0], ...rest.slice(1)] : [];
+  }
+  return clean.split(/[\\/]+/).filter(Boolean);
+}
+// Construit l'arbre d'ossature des dossiers. `total` = nb de docs du sous-arbre
+// (cumul à chaque niveau), `direct` = nb de docs rangés directement à ce niveau.
+function docBuildTree(chemins) {
+  const root = { name: '', children: new Map(), direct: 0, total: 0 };
+  for (const c of chemins) {
+    const segs = docSplitPath(c.chemin);
+    if (!segs.length) continue;
+    let node = root;
+    for (const seg of segs) {
+      if (!node.children.has(seg)) node.children.set(seg, { name: seg, children: new Map(), direct: 0, total: 0 });
+      node = node.children.get(seg);
+    }
+    node.direct += Number(c.n) || 0;
+    node.records = (node.records || 0) + (Number(c.records) || 0);
+    node.folder = c.chemin;
+  }
+  const finalize = (node) => {
+    let total = node.direct;
+    for (const ch of node.children.values()) total += finalize(ch);
+    node.total = total;
+    return total;
+  };
+  finalize(root);
+  return root;
+}
+function docRenderTree(root, expandAll) {
+  const renderNode = (node, depth) => {
+    const kids = [...node.children.values()].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name, 'fr'));
+    const hasKids = kids.length > 0;
+    const openAttr = (depth === 0 || expandAll) ? ' open' : '';
+    const directNote = (node.direct > 0 && node.direct !== node.total) ? `<span class="font-label-mono-sm text-outline text-[11px]">· ${num(node.direct)} ici</span>` : '';
+    const summary = `<summary class="cursor-pointer py-1 pr-2 rounded hover:bg-surface-container-low flex items-center gap-2">
+        <span class="material-symbols-outlined text-[16px] ${depth === 0 ? 'text-primary' : 'text-secondary'}">${hasKids ? 'folder' : 'folder_open'}</span>
+        <span class="font-label-mono-sm text-on-surface truncate flex-1 min-w-0">${esc(node.name)}</span>
+        <span class="px-1.5 py-0.2 rounded-full bg-surface-container text-secondary font-label-mono-sm text-[11px]">${num(node.total)}</span>
+        ${directNote}
+      </summary>`;
+    const filesBlock = (node.direct > 0 && node.folder)
+      ? `<details class="doc-files ml-6 pl-3 border-l border-dashed border-surface-container" data-docfolder="${esc(node.folder)}">
+          <summary class="cursor-pointer py-0.5 font-label-mono-sm text-secondary hover:text-primary"><span class="material-symbols-outlined text-[14px] align-middle">draft</span> ${num(node.direct)} fichier(s) unique(s)${node.records > node.direct ? ` · ${num(node.records)} enreg.` : ''}</summary>
+          <div class="doc-files-body p-1"></div>
+        </details>`
+      : '';
+    const inner = hasKids ? `<div class="ml-3 pl-3 border-l border-surface-container">${kids.map((k) => renderNode(k, depth + 1)).join('')}</div>` : '';
+    return `<details${openAttr} class="select-none">${summary}${filesBlock}${inner}</details>`;
+  };
+  const roots = [...root.children.values()].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name, 'fr'));
+  return roots.map((r) => renderNode(r, 0)).join('');
+}
+function docMonthName(an, mois) {
+  const n = new Date(an, mois - 1, 1).toLocaleDateString('fr-FR', { month: 'long' });
+  return n.charAt(0).toUpperCase() + n.slice(1);
+}
+// Arborescence des dépôts : année -> mois -> jour (chaque jour se déplie en liste de docs).
+function docRenderDateTree(dates, expandAll) {
+  const years = new Map();
+  for (const r of dates) {
+    const an = Number(r.an), mois = Number(r.mois);
+    const nb = Number(r.files != null ? r.files : r.n) || 0;
+    if (!years.has(an)) years.set(an, { an, total: 0, months: new Map() });
+    const y = years.get(an); y.total += nb;
+    if (!y.months.has(mois)) y.months.set(mois, { mois, total: 0, days: [] });
+    const m = y.months.get(mois); m.total += nb;
+    m.days.push({ d: r.d, jour: r.jour, n: nb, records: Number(r.records) || 0 });
+  }
+  const orderedYears = [...years.values()].sort((a, b) => b.an - a.an);
+  const firstYear = orderedYears.length ? orderedYears[0].an : null;
+  const badge = (n) => `<span class="px-1.5 py-0.2 rounded-full bg-surface-container text-secondary font-label-mono-sm text-[11px]">${num(n)}</span>`;
+  const renderDay = (day) => `<details class="doc-files ml-6 pl-3 border-l border-dashed border-surface-container" data-docdate="${esc(day.d)}">
+      <summary class="cursor-pointer py-0.5 font-label-mono-sm text-secondary hover:text-primary"><span class="material-symbols-outlined text-[14px] align-middle">event</span> ${esc(day.jour)} · ${num(day.n)} fichier(s)${day.records > day.n ? ` · ${num(day.records)} enreg.` : ''}</summary>
+      <div class="doc-files-body p-1"></div>
+    </details>`;
+  return orderedYears.map((y) => {
+    const mHtml = [...y.months.values()].sort((a, b) => b.mois - a.mois).map((m) => {
+      const days = m.days.sort((a, b) => (a.d < b.d ? 1 : -1));
+      return `<details${expandAll ? ' open' : ''} class="ml-3 pl-3 border-l border-surface-container">
+          <summary class="cursor-pointer py-1 rounded hover:bg-surface-container-low flex items-center gap-2">
+            <span class="material-symbols-outlined text-[16px] text-secondary">calendar_month</span>
+            <span class="font-label-mono-sm text-on-surface flex-1 min-w-0">${esc(docMonthName(y.an, m.mois))}</span>${badge(m.total)}
+          </summary>${days.map(renderDay).join('')}</details>`;
+    }).join('');
+    return `<details${(expandAll || y.an === firstYear) ? ' open' : ''} class="select-none">
+        <summary class="cursor-pointer py-1 rounded hover:bg-surface-container-low flex items-center gap-2">
+          <span class="material-symbols-outlined text-[16px] text-primary">event_note</span>
+          <span class="font-label-mono-sm text-on-surface flex-1 min-w-0">${esc(String(y.an))}</span>${badge(y.total)}
+        </summary>
+        <div class="ml-3 pl-3 border-l border-surface-container">${mHtml}</div>
+      </details>`;
+  }).join('');
+}
+function docFileIcon(name) {
+  const e = String(name || '').toLowerCase().split('.').pop();
+  if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tif', 'tiff'].includes(e)) return 'image';
+  if (e === 'pdf') return 'picture_as_pdf';
+  if (['doc', 'docx', 'odt', 'rtf'].includes(e)) return 'description';
+  if (['xls', 'xlsx', 'ods', 'csv'].includes(e)) return 'table_chart';
+  if (['dwg', 'dxf', 'pln'].includes(e)) return 'architecture';
+  if (['zip', 'rar', '7z'].includes(e)) return 'folder_zip';
+  return 'draft';
+}
+function docFilesHtml(rows, total, records) {
+  if (!rows || !rows.length) return '<div class="text-secondary font-body-sm py-1">Aucun fichier.</div>';
+  const list = rows.map((f) => `<div class="flex items-center gap-2 py-0.5">
+      <span class="material-symbols-outlined text-[15px] text-outline">${docFileIcon(f.fichier)}</span>
+      <span class="truncate flex-1 min-w-0" title="${esc(f.dossier || '')}${f.dossier && f.fichier ? '\\' : ''}${esc(f.fichier)}${f.titre ? ' — ' + esc(f.titre) : ''}">
+        <span class="font-label-mono-sm text-on-surface">${esc(f.fichier)}</span>
+        ${f.dossier ? `<span class="font-label-mono-sm text-outline text-[11px] block truncate">${esc(f.dossier)}</span>` : ''}
+      </span>
+      ${Number(f.versions) > 1 ? `<span class="px-1 rounded bg-amber-100 text-amber-800 text-[10px] font-semibold whitespace-nowrap" title="${esc(f.versions)} version(s) — dernière révision r${esc(f.revis)}">${esc(f.versions)} vers.</span>` : ''}
+      ${Number(f.records) > 1 ? `<span class="px-1 rounded bg-surface-container text-secondary text-[10px] font-semibold whitespace-nowrap" title="${esc(f.records)} enregistrement(s)">×${esc(f.records)}</span>` : ''}
+      ${f.theme ? `<span class="px-1.5 py-0.2 rounded-full bg-surface-container text-secondary text-[10px] font-semibold whitespace-nowrap">${esc(f.theme)}</span>` : ''}
+      <span class="font-label-mono-sm text-outline text-[11px] whitespace-nowrap tabular">${f.taille ? num(Math.round(Number(f.taille) / 1024)) + ' Ko' : ''}</span>
+      <span class="font-label-mono-sm text-outline text-[11px] whitespace-nowrap">${esc(f.date_depot || f.date_doc || '')}</span>
+    </div>`).join('');
+  const head = (records && records > (total || 0)) ? `<div class="text-secondary font-label-mono-sm py-0.5">${num(total)} fichier(s) unique(s) · ${num(records)} enregistrement(s)</div>` : '';
+  const more = Number(total) > rows.length ? `<div class="text-secondary font-body-sm py-1">… ${num(Number(total) - rows.length)} autre(s) fichier(s) non affiché(s).</div>` : '';
+  return head + list + more;
+}
+async function loadDocDetails(el) {
+  if (el.dataset.loaded) return;
+  el.dataset.loaded = '1';
+  const body = el.querySelector('.doc-files-body');
+  if (!body) return;
+  body.innerHTML = '<div class="text-secondary font-label-mono-sm py-1">Chargement…</div>';
+  try {
+    const r = el.hasAttribute('data-docdate')
+      ? await api('/api/documents/jour?date=' + encodeURIComponent(el.getAttribute('data-docdate')) + (state.docs.excludePoste ? '&excludePoste=1' : ''))
+      : await api('/api/documents/fichiers?limit=500&folder=' + encodeURIComponent(el.getAttribute('data-docfolder')));
+    body.innerHTML = docFilesHtml(r.rows, r.total, r.records);
+  } catch (e) {
+    body.innerHTML = `<div class="text-error font-body-sm py-1">${esc(e.message)}</div>`;
+  }
+}
+
 async function viewDocuments() {
   const s = state.docs;
-  const d = await api('/api/documents');
+  const exQ = s.excludePoste ? '?excludePoste=1' : '';
+  const d = await api('/api/documents' + exQ);
   const mods = d.modules || [];
   const modById = Object.fromEntries(mods.map((m) => [m.key, m]));
   const themeById = Object.fromEntries((d.themes || []).map((t) => [t.id, t]));
-  const tabs = [['modules', 'Modules & thèmes', 'category'], ['tables', 'Tables & champs', 'table_view'], ['chemins', 'Chemins de stockage', 'folder'], ['transversal', 'Transversal', 'hub']];
+  const datesData = (s.tab === 'dates') ? await api('/api/documents/dates' + exQ) : { dates: [] };
+  const tabs = [['modules', 'Modules & thèmes', 'category'], ['tables', 'Tables & champs', 'table_view'], ['chemins', 'Chemins de stockage', 'folder'], ['dates', 'Par date de dépôt', 'event_note'], ['transversal', 'Transversal', 'hub']];
   const tabBar = `<nav class="flex items-center gap-space-xs overflow-x-auto p-1 bg-surface-container-low rounded-xl mb-space-md shadow-sm">
     ${tabs.map(([k, label, icon]) => `<button data-act="docTab:${k}" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg font-title-md whitespace-nowrap transition-all ${s.tab === k ? 'bg-surface-container-lowest text-primary shadow-sm' : 'text-secondary hover:text-on-surface hover:bg-surface-container'}"><span class="material-symbols-outlined text-[18px]">${icon}</span>${label}</button>`).join('')}
   </nav>`;
@@ -1519,7 +1757,62 @@ async function viewDocuments() {
       <div class="p-2 rounded-lg bg-surface-container text-primary"><span class="material-symbols-outlined">${m.icon}</span></div>
       <div><div class="font-title-sm text-on-surface">${esc(m.label)}</div>
       <div class="font-label-mono-sm text-secondary mt-0.5">${num(m.nb_tables)} table(s) · ${num(m.nb_champs)} champ(s)${m.nb_chemins ? ` · ${num(m.nb_chemins)} chemin(s)` : ''}</div></div></button>`).join('');
-    body = `${card('Classification GED — thèmes documentaires (DOC_THEME)', `<div class="p-space-lg grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-space-sm">${themeCards || '<div class="text-secondary font-body-sm">Aucun document.</div>'}</div>`, null, `${num(d.resume.themes)} thèmes porteurs · ${num(d.resume.docs)} documents`)}
+    const mo = d.modele || { central: {}, dedies: [] };
+    const dedieRows = (mo.dedies || []).map((x) => ({ ...x, colsText: x.cols.join(', ') }));
+    const chip = (s) => `<span class="px-2 py-0.5 rounded bg-surface-container font-label-mono-sm text-secondary">${esc(s)}</span>`;
+    const modelCard = card('Modèle documentaire hybride', `<div class="p-space-lg space-y-space-md">
+        <p class="font-body-md text-on-surface-variant">Les documents ne suivent pas un schéma unique : l’application combine <strong>une GED centrale</strong> (source principale) et <strong>quelques références directes</strong> dans certaines tables. C’est cette coexistence qu’on appelle le modèle hybride.</p>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-space-md">
+          <div class="p-space-md rounded-xl bg-surface-container-low">
+            <div class="flex items-center gap-2 mb-1"><span class="material-symbols-outlined text-primary">database</span><span class="font-title-md">1. Référentiel central (GED)</span></div>
+            <p class="font-body-sm text-on-surface-variant">Une ligne = un document dans <span class="font-label-mono-sm">DOC</span> : chemin <span class="font-label-mono-sm">DOC_FOLDER</span> + fichier <span class="font-label-mono-sm">DOC_FILE</span> (+ thème/type/stockage).</p>
+            <div class="mt-2 flex flex-wrap gap-1.5">${(mo.central.satellites || []).map(chip).join('')}</div>
+          </div>
+          <div class="p-space-md rounded-xl bg-surface-container-low">
+            <div class="flex items-center gap-2 mb-1"><span class="material-symbols-outlined text-tertiary">link</span><span class="font-title-md">2. Rattachement polymorphe</span></div>
+            <p class="font-body-sm text-on-surface-variant"><span class="font-label-mono-sm">DOC_AFFECT</span> relie un document à <em>n’importe quel</em> objet via <span class="font-label-mono-sm">DAFF_FRM</span> (formulaire/module) + <span class="font-label-mono-sm">DAFF_ENTID</span> (identifiant) — <strong>sans clé étrangère</strong>.</p>
+            <div class="mt-2 flex flex-wrap gap-1.5">${(mo.central.liens || []).map(chip).join('')}</div>
+          </div>
+          <div class="p-space-md rounded-xl bg-surface-container-low">
+            <div class="flex items-center gap-2 mb-1"><span class="material-symbols-outlined text-secondary">attachment</span><span class="font-title-md">3. Champs document dédiés</span></div>
+            <p class="font-body-sm text-on-surface-variant"><strong>${num(dedieRows.length)}</strong> champs portent une référence documentaire directement dans leur table (hybridation) — souvent <em>vides ou résiduels</em> dans cette base : la GED centrale reste la source de référence.</p>
+          </div>
+        </div>
+        <ul class="font-body-sm text-on-surface-variant list-disc pl-5 space-y-0.5">${(mo.central.principes || []).map((p) => `<li>${esc(p)}</li>`).join('')}</ul>
+        <div class="rounded-xl overflow-hidden border border-surface-container">
+          ${dataTable([
+            { label: 'Module', get: (r) => badge(r.moduleLabel || r.module, 'slate') },
+            { label: 'Table', get: (r) => `<span class="font-label-mono-sm font-semibold text-primary">${esc(r.table)}</span>` },
+            { label: 'Champ(s) dédié(s)', get: (r) => `<span class="font-label-mono-sm">${esc(r.colsText)}</span>` },
+            { label: 'Rôle', nowrap: false, get: (r) => `<span class="font-body-sm">${esc(r.role)}</span>` },
+            { label: 'Lignes', right: true, get: (r) => r.nb != null ? cellMono(num(r.nb), 'text-secondary') : dash },
+          ], dedieRows, { empty: 'Aucun champ dédié.' })}
+        </div>
+      </div>`, null, 'Tables concernées par l’hybridation : GED centrale (DOC + satellites) d’un côté, colonnes document directes de l’autre.');
+    const v = d.versioning || {};
+    const metaCard = card('Métadonnées GED &amp; versionning', `<div class="p-space-lg space-y-space-md">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-md">
+          ${(d.meta || []).map((g) => `<div class="p-space-md rounded-xl bg-surface-container-low">
+            <div class="font-title-md text-on-surface mb-1">${esc(g.titre)}</div>
+            <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 font-label-mono-sm">
+              ${g.champs.map(([c, lib]) => `<dt class="text-primary">${esc(c)}</dt><dd class="text-on-surface-variant">${esc(lib)}</dd>`).join('')}
+            </dl></div>`).join('')}
+        </div>
+        <div class="p-space-md rounded-xl border border-tertiary/30 bg-tertiary-container/20">
+          <div class="flex items-center gap-2 mb-1"><span class="material-symbols-outlined text-tertiary">history</span><span class="font-title-md">Versionning : oui — révision par document + archive</span></div>
+          <p class="font-body-sm text-on-surface-variant">${esc(v.principe || '')}</p>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-space-sm mt-2">
+            <div class="p-space-sm rounded-lg bg-surface-container-lowest text-center"><div class="font-headline-sm font-bold tabular">${num(v.docs_revises)}</div><div class="font-label-mono-sm text-secondary">docs révisés</div></div>
+            <div class="p-space-sm rounded-lg bg-surface-container-lowest text-center"><div class="font-headline-sm font-bold tabular">${num(v.versions_archivees)}</div><div class="font-label-mono-sm text-secondary">versions archivées</div></div>
+            <div class="p-space-sm rounded-lg bg-surface-container-lowest text-center"><div class="font-headline-sm font-bold tabular">${num(v.docs_avec_versions)}</div><div class="font-label-mono-sm text-secondary">docs avec historique</div></div>
+            <div class="p-space-sm rounded-lg bg-surface-container-lowest text-center"><div class="font-headline-sm font-bold tabular">${num(v.max_revision)}</div><div class="font-label-mono-sm text-secondary">révision max</div></div>
+          </div>
+          <p class="font-label-mono-sm text-outline mt-2">${esc(v.limite || '')} Table d’historique : <span class="text-primary">${esc(v.table || 'DOC_HISTO')}</span>.</p>
+        </div>
+      </div>`, null, 'Champs portés par un document (DOC + satellites) et gestion des révisions.');
+    body = `${modelCard}
+      <div class="mt-space-lg">${metaCard}</div>
+      ${card('Classification GED — thèmes documentaires (DOC_THEME)', `<div class="p-space-lg grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-space-sm">${themeCards || '<div class="text-secondary font-body-sm">Aucun document.</div>'}</div>`, null, `${num(d.resume.themes)} thèmes porteurs · ${num(d.resume.docs)} documents`)}
       <div class="mt-space-lg">${card('Modules porteurs de documents', `<div class="p-space-lg grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-space-sm">${modCards}</div>`, null, 'Un même document peut être porté par la GED centrale (DOC) et/ou un champ dédié du module.')}</div>
       <div class="mt-space-lg">${card('Derniers documents (GED)', dataTable([
         { label: 'Réf.', get: (r) => `<span class="font-label-mono-sm text-primary font-semibold">${esc(r.ref)}</span>` },
@@ -1547,18 +1840,37 @@ async function viewDocuments() {
   } else if (s.tab === 'chemins') {
     const q = (state.q || '').toLowerCase();
     const rows = q ? d.chemins.filter((c) => c.chemin.toLowerCase().includes(q)) : d.chemins;
+    const totalDocs = rows.reduce((a, c) => a + (Number(c.n) || 0), 0);
+    const totalRecs = rows.reduce((a, c) => a + (Number(c.records) || 0), 0);
+    const viewMode = s.cheminsView || 'tree';
     const cols = [
       { label: 'Chemin de stockage', nowrap: false, get: (r) => `<span class="font-label-mono-sm break-all">${esc(r.chemin)}</span>` },
-      { label: 'Docs', right: true, get: (r) => cellMono(num(r.n), 'font-semibold') },
+      { label: 'Fichiers', right: true, get: (r) => cellMono(num(r.n), 'font-semibold') },
+      { label: 'Enreg.', right: true, get: (r) => r.records ? cellMono(num(r.records), 'text-secondary') : dash },
       { label: 'Thèmes', get: (r) => r.themes.length ? r.themes.map((t) => badge(t, 'slate')).join(' ') : dash },
       { label: 'Type', center: true, get: (r) => r.type ? badge(r.type, 'blue') : dash },
       { label: 'Stockage', center: true, get: (r) => r.stockage ? badge(r.stockage, 'purple') : dash },
     ];
-    body = `${card('Chemins de stockage des documents (' + num(d.chemins.length) + ')', `<div class="p-space-md border-b border-surface-container flex flex-wrap items-center gap-space-sm">
+    const treeHtml = rows.length
+      ? `<div class="p-space-lg">${docRenderTree(docBuildTree(rows), !!q)}</div>`
+      : `<div class="p-space-xl text-center text-on-surface-variant font-body-sm">Aucun chemin.</div>`;
+    const controls = `<div class="p-space-md border-b border-surface-container flex flex-wrap items-center gap-space-sm">
         <div class="relative flex-1 min-w-[240px]"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-[18px]">search</span>
           <input id="docQ" value="${esc(state.q)}" class="w-full h-9 pl-9 pr-4 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" placeholder="Filtrer un dossier, par ex. « PARC AUTO », « AMIANTE »…" /></div>
-        <span class="font-label-mono-sm text-secondary"><span class="font-semibold text-on-surface">${num(rows.length)}</span> chemin(s)</span>
-      </div>${dataTable(cols, rows, { empty: 'Aucun chemin.', key: 'doc_chemins', pageSize: 50 })}`, null, 'Dossiers distincts (DOC.DOC_FOLDER) où sont physiquement rangés les fichiers, avec la volumétrie et le thème dominant.')}`;
+        <div class="inline-flex rounded-lg overflow-hidden border border-surface-container">
+          <button data-act="docCheminView:tree" title="Arborescence dépliable" class="inline-flex items-center gap-1.5 px-3 py-1.5 font-label-mono-sm ${viewMode === 'tree' ? 'bg-primary text-on-primary' : 'bg-surface-container-lowest text-secondary hover:bg-surface-container'}"><span class="material-symbols-outlined text-[16px]">account_tree</span>Arborescence</button>
+          <button data-act="docCheminView:list" title="Liste plate" class="inline-flex items-center gap-1.5 px-3 py-1.5 font-label-mono-sm ${viewMode === 'list' ? 'bg-primary text-on-primary' : 'bg-surface-container-lowest text-secondary hover:bg-surface-container'}"><span class="material-symbols-outlined text-[16px]">list</span>Liste</button>
+        </div>
+        <span class="font-label-mono-sm text-secondary"><span class="font-semibold text-on-surface">${num(rows.length)}</span> dossier(s) · <span class="font-semibold text-on-surface">${num(totalDocs)}</span> fichiers uniques · ${num(totalRecs)} enreg.</span>
+      </div>`;
+    body = `${card('Arborescence des chemins de stockage (' + num(d.chemins.length) + ' dossiers)', controls + (viewMode === 'tree' ? treeHtml : dataTable(cols, rows, { empty: 'Aucun chemin.', key: 'doc_chemins', pageSize: 50 })), null, 'Chaque nœud affiche le nombre de FICHIERS UNIQUES de tout son sous-arbre (\\tsclient → C → Documents and Settings → …) ; le compteur « ici » précise les fichiers rangés directement à ce niveau quand il diffère du cumul. Les enregistrements en doublon d’un même fichier ne sont pas répétés.')}`;
+  } else if (s.tab === 'dates') {
+    const dates = datesData.dates || [];
+    const nbJours = dates.length;
+    const treeHtml = nbJours
+      ? `<div class="p-space-lg">${docRenderDateTree(dates, !!state.q)}</div>`
+      : `<div class="p-space-xl text-center text-on-surface-variant font-body-sm">Aucun document daté.</div>`;
+    body = `${card('Dépôts par date (' + num(nbJours) + ' jours · ' + num(datesData.total) + ' fichiers uniques · ' + num(datesData.records) + ' enreg.)', treeHtml, null, 'Arborescence année → mois → jour (DOC.DOC_CDATE, date de dépôt). Déplier un jour liste les fichiers uniques déposés ce jour-là (avec nb de versions/entrées) ; une révision n’apparaît pas comme un doublon.')}`;
   } else {
     const cards = (d.transversal || []).map((g) => `<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
       <div class="flex items-start justify-between gap-2"><div class="p-2 rounded-lg bg-surface-container text-primary"><span class="material-symbols-outlined">${g.icon}</span></div>${g.n != null ? `<span class="font-headline-sm font-bold tabular text-on-surface">${num(g.n)}</span>` : ''}</div>
@@ -1576,12 +1888,17 @@ async function viewDocuments() {
         <h1 class="font-headline-lg text-on-surface tracking-tight mt-1">Documents associés</h1>
         <p class="font-body-md text-on-surface-variant">Tables et champs qui stockent un document, classés par module, avec les chemins de stockage et un regroupement transversal par entité.</p>
       </div>
+      <button data-act="docExcludePoste" title="Exclure les documents hébergés sur \\POSTE004 (\\POSTE004\C$\TEMP) et recalculer tout le reste" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg font-title-md transition-colors ${s.excludePoste ? 'bg-primary text-on-primary shadow-md' : 'bg-surface-container-lowest shadow-sm text-on-surface hover:bg-surface-container'}">
+        <span class="material-symbols-outlined text-[18px]">${s.excludePoste ? 'visibility_off' : 'hide_source'}</span>${s.excludePoste ? 'POSTE004 masqué — tout le reste' : 'Masquer les PJ de POSTE004'}
+      </button>
     </div>
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-space-md mb-space-lg">
-      ${kpi('Documents (GED)', '<span>' + num(d.resume.docs) + '</span>', 'table DOC + satellites', 'description', 'primary')}
+    ${s.excludePoste ? '<div class="mb-space-md p-space-sm rounded-lg bg-tertiary-container/20 border border-tertiary/30 font-body-sm text-on-surface-variant"><span class="material-symbols-outlined text-[16px] align-middle text-tertiary">filter_alt</span> Filtre actif : les pièces jointes de <span class="font-label-mono-sm">\\\\POSTE004</span> sont exclues de tous les compteurs, thèmes, chemins et dates.</div>' : ''}
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-space-md mb-space-lg">
+      ${kpi('Fichiers uniques (GED)', '<span>' + num(d.resume.docs_uniques) + '</span>', num(d.resume.docs) + ' enregistrements (table DOC)', 'description', 'primary')}
       ${kpi('Chemins de stockage', '<span>' + num(d.resume.chemins) + '</span>', 'dossiers distincts (DOC_FOLDER)', 'folder', 'tertiary')}
       ${kpi('Tables porteuses', '<span>' + num(d.resume.tables) + '</span>', 'champs document identifiés', 'table_view', 'plain')}
       ${kpi('Champs document', '<span>' + num(d.resume.champs) + '</span>', 'chemin / fichier / pièce jointe', 'attachment', 'plain')}
+      ${kpi('Documents révisés', '<span>' + num(d.resume.docs_revises) + '</span>', num(d.resume.versions_archivees) + ' versions archivées (DOC_HISTO)', 'history', 'tertiary')}
     </div>
     ${tabBar}
     ${body}`;
@@ -1986,7 +2303,9 @@ document.addEventListener('click', (e) => {
   if (link) { if (e.target.closest('a[href]') && !link.hasAttribute('data-link')) return; e.preventDefault(); go(link.getAttribute('data-link')); return; }
   const act = e.target.closest('[data-act]');
   if (!act) return;
-  if (act.matches('input[type=checkbox]')) return; // géré par l'événement change
+  // Les <select> et cases à cocher sont gérés par l'événement « change » :
+  // sur « click » ils feraient rendre la vue et disparaître la liste déroulante.
+  if (act.matches('select, input[type=checkbox], input[type=radio]')) return;
   const [action, value] = act.getAttribute('data-act').split(':');
   handleAction(action, value, act);
 });
@@ -1995,6 +2314,12 @@ document.addEventListener('change', (e) => {
   if (act) { const [action, value] = act.getAttribute('data-act').split(':'); handleAction(action, value, e.target); return; }
   if (e.target.closest('[data-dem]')) demandeField(e.target);
 });
+// Chargement à la demande des fichiers/documents au dépliage d'un dossier ou d'un jour.
+document.addEventListener('toggle', (e) => {
+  const el = e.target;
+  if (el && el.tagName === 'DETAILS' && el.open && !el.dataset.loaded
+    && (el.hasAttribute('data-docfolder') || el.hasAttribute('data-docdate'))) loadDocDetails(el);
+}, true);
 document.addEventListener('input', (e) => {
   if (e.target.id === 'demandeBien') return demandeBienInput(e.target);
   if (e.target.closest('[data-dem]')) demandeField(e.target);
@@ -2053,8 +2378,11 @@ function handleAction(action, value, el) {
     case 'procGroup': state.procs.group = value || ''; viewProcedures(); break;
     case 'procType': state.procs.type = el.value; viewProcedures(); break;
     case 'procStatus': state.procs.status = value || ''; viewProcedures(); break;
+    case 'logout': doLogout(); break;
     case 'docTab': state.docs.tab = value; state.pages = {}; state.q = ''; viewDocuments(); break;
     case 'docModule': state.docs.module = value || ''; state.docs.tab = 'tables'; state.pages = {}; viewDocuments(); break;
+    case 'docCheminView': state.docs.cheminsView = value === 'list' ? 'list' : 'tree'; viewDocuments(); break;
+    case 'docExcludePoste': state.docs.excludePoste = !state.docs.excludePoste; state.pages = {}; viewDocuments(); break;
     case 'magasinEnStock': state.magasins.enStock = el.checked; viewMagasins(); break;
     case 'interPeriod': it.period = el.value; it.page = 1; viewInterventions(); break;
     case 'interEtat': it.etat = el.value; it.page = 1; viewInterventions(); break;
@@ -2109,8 +2437,7 @@ function wireGlobalSearch() {
 
 window.addEventListener('hashchange', render);
 wireGlobalSearch();
-initEnvSwitch();
-render();
+initAuth().then(() => { initEnvSwitch(); render(); });
 </script>
 </body>
 </html>

@@ -9,6 +9,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { AsyncLocalStorage } = require('async_hooks');
 const apikeys = require('./apikeys');
 
@@ -56,6 +57,26 @@ function loadStudioRh() {
   STUDIO_RH.url = url; STUDIO_RH.key = key; STUDIO_RH.configured = !!(url && key);
   // Certificat interne (CA auto-signée) : toléré par défaut, désactivable via STUDIO_RH_INSECURE_TLS=0.
   STUDIO_RH.insecure = process.env.STUDIO_RH_INSECURE_TLS !== '0';
+}
+
+// ─── APM / Active Directory (API centrale de la Ville) ───────────────────────
+// Authentification des agents via POST {APM}/api/v1/ad/authenticate (header X-API-KEY).
+// Voir GUIDE_NOUVELLE_APP_VILLE.md §3.2 (permission requise : ad_auth).
+const APM = { url: '', key: '', configured: false, insecure: true };
+function loadApm() {
+  let url = process.env.APM_API_URL || '';
+  let key = process.env.APM_API_KEY || '';
+  const cfgPath = path.join(__dirname, 'config.json');
+  if ((!url || !key) && fs.existsSync(cfgPath)) {
+    try {
+      const c = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+      if (c.apm) { url = url || c.apm.url || ''; key = key || c.apm.api_key || ''; }
+    } catch { /* ignore */ }
+  }
+  APM.url = (url || 'https://api.ivry.local').replace(/\/+$/, '');
+  APM.key = key;
+  APM.configured = !!key;
+  APM.insecure = process.env.APM_INSECURE_TLS !== '0';
 }
 
 // ─── Base : profils prod / test ───────────────────────────────────────────────
@@ -466,12 +487,16 @@ async function syncPreview() {
   };
 }
 
-// ─── Synchro RH : appel API Studio-RH ────────────────────────────────────────
-function httpGetJson(targetUrl, headers, { insecure, timeoutMs = 8000 } = {}) {
+// ─── Appels HTTP sortants (GET/POST) ─────────────────────────────────────────
+function httpJson(targetUrl, { method = 'GET', headers = {}, body, insecure, timeoutMs = 8000 } = {}) {
   return new Promise((resolve, reject) => {
     const u = new URL(targetUrl);
     const lib = u.protocol === 'https:' ? require('https') : require('http');
-    const opts = { method: 'GET', headers, timeout: timeoutMs };
+    const payload = body === undefined ? null : (typeof body === 'string' ? body : JSON.stringify(body));
+    const h = Object.assign({}, headers);
+    if (payload !== null && !h['Content-Type'] && !h['content-type']) h['Content-Type'] = 'application/json';
+    if (payload !== null) h['Content-Length'] = Buffer.byteLength(payload);
+    const opts = { method, headers: h, timeout: timeoutMs };
     if (u.protocol === 'https:' && insecure) opts.agent = new lib.Agent({ rejectUnauthorized: false });
     const req = lib.request(targetUrl, opts, (res) => {
       let data = '';
@@ -481,9 +506,11 @@ function httpGetJson(targetUrl, headers, { insecure, timeoutMs = 8000 } = {}) {
     });
     req.on('timeout', () => req.destroy(new Error('timeout')));
     req.on('error', reject);
+    if (payload !== null) req.write(payload);
     req.end();
   });
 }
+function httpGetJson(targetUrl, headers, opts = {}) { return httpJson(targetUrl, { method: 'GET', headers, ...opts }); }
 async function mapLimit(items, limit, fn) {
   const out = new Array(items.length);
   let i = 0;
@@ -1190,23 +1217,115 @@ const DOC_TRANSVERSAL = [
   { key: 'amiante', label: 'Contrôle amiante', icon: 'warning', themes: ['CTAMIANT'], note: 'Dossiers techniques amiante (DTA).' },
   { key: 'articles', label: 'Articles / stock', icon: 'inventory_2', themes: ['PHART'], note: 'Photos d’articles.' },
 ];
+// Modèle documentaire hybride : part centrale (DOC) + rattachement polymorphe
+// + références directes dans quelques tables (colonnes dédiées).
+const DOC_HYBRIDE = {
+  central: {
+    table: 'DOC',
+    satellites: ['DOC', 'DOC_ANNEX', 'DOC_DEMAT', 'DOC_HISTO'],
+    liens: ['DOC_AFFECT', 'DOC_KEYW', 'DOC_CARACT', 'TOPIC_DOC', 'DOCJ'],
+    principes: [
+      'Une ligne = un document : chemin DOC_FOLDER + fichier DOC_FILE (et métadonnées thème/type/stockage).',
+      'DOC_AFFECT relie un document à n’importe quel objet via DAFF_FRM (formulaire/module) + DAFF_ENTID (identifiant) — lien polymorphe, sans clé étrangère.',
+      'Certaines tables conservent en propre une référence documentaire (champ dédié) : c’est l’hybridation.',
+    ],
+  },
+  dedies: [
+    { table: 'CONTRAT_LOCATIF', module: 'locatif', cols: ['CONTL_PJ1…PJ15'], role: 'Pièces jointes du bail' },
+    { table: 'DEMANDEUR', module: 'agents', cols: ['SDEM_REPDOC'], role: 'Dossier de documents de l’agent' },
+    { table: 'BIMMAQ_IE', module: 'patrimoine', cols: ['MIE_FILE'], role: 'Fichier image / fiche' },
+    { table: 'PATRIGENE', module: 'patrimoine', cols: ['SGEN_PHOTO'], role: 'Référence photo du genre' },
+    { table: 'CATEGORIE', module: 'patrimoine', cols: ['SCAT_PHOTO'], role: 'Référence photo de catégorie' },
+    { table: 'SOUSCATEGORIE', module: 'patrimoine', cols: ['SSCAT_PHOTO'], role: 'Référence photo de sous-catégorie' },
+    { table: 'CONTRAT_ECHLIGNE', module: 'interventions', cols: ['CONTEL_ENGRATTACH'], role: 'Pièce jointe d’engagement' },
+    { table: 'CONTRAT_RUB', module: 'interventions', cols: ['CONTRU_ENGRATTACH'], role: 'Pièce jointe de rubrique' },
+    { table: 'OP_RET_FACT_GF', module: 'comptabilite', cols: ['FICHIER_FACT', 'URL'], role: 'Fichier / lien de facture' },
+    { table: 'OP_GEN_AVIS_GF', module: 'comptabilite', cols: ['GEN_FICHIER'], role: 'Fichier d’avis' },
+    { table: 'OP_COMPTA', module: 'comptabilite', cols: ['CPTA_ENTENGRATTACH'], role: 'Pièce jointe d’engagement' },
+    { table: 'OP_JOB', module: 'comptabilite', cols: ['JOB_PATH'], role: 'Chemin de traitement' },
+    { table: 'OP_LOG', module: 'comptabilite', cols: ['LOG_LIEN'], role: 'Lien de journal' },
+    { table: 'GFI_INT_LIQR', module: 'comptabilite', cols: ['CLE_LIQ_PJ', 'NUM_PJDO'], role: 'Clé / n° de pièce jointe' },
+    { table: 'LOCATION_MATERIEL', module: 'comptabilite', cols: ['SLM_PJ'], role: 'Pièce jointe de location' },
+    { table: 'EXPMACRO', module: 'comptabilite', cols: ['EXPMAC_DOC'], role: 'Document d’export' },
+    { table: 'MACRO', module: 'comptabilite', cols: ['XLSFILE', 'IMAGEFOND'], role: 'Fichier / image d’export' },
+    { table: 'API_ENDPOINT', module: 'systeme', cols: ['AE_URL'], role: 'URL d’endpoint API' },
+    { table: 'API_PARAM', module: 'systeme', cols: ['AP_ENDPOINT_PATH'], role: 'Chemin d’endpoint API' },
+    { table: 'DF_FORM_ENDPOINT', module: 'systeme', cols: ['FE_PATH', 'FE_PATH_VALID'], role: 'Chemin de formulaire dynamique' },
+    { table: 'SIG', module: 'systeme', cols: ['SIG_URL'], role: 'URL de couche SIG' },
+    { table: 'SIG_LAYER', module: 'systeme', cols: ['SIGL_URL'], role: 'URL de couche SIG' },
+    { table: 'TYPECOURRIER', module: 'systeme', cols: ['STYPCOUR_DOC'], role: 'Document de type courrier' },
+    { table: 'TABLES', module: 'systeme', cols: ['TAB_FICHIER'], role: 'Fichier de table système' },
+  ],
+};
+// Métadonnées portées par un document (colonnes de DOC + satellites).
+const DOC_META = {
+  groupes: [
+    { titre: 'Identité', champs: [
+      ['DOC_ID', 'clé technique'], ['DOC_REF', 'référence unique (AAAAMMJJ-<module>-<n>)'],
+      ['DOC_TITRE', 'titre'], ['DOC_OBS', 'observations'], ['DOC_KEYW', 'mots-clés (DOC_KEYW)']] },
+    { titre: 'Classement', champs: [
+      ['DOC_THEME', 'thème / module GED (DOC_THEME)'], ['DOC_TYPE', 'nature du fichier (V_DOCTYPE)'],
+      ['DOC_FRM', 'formulaire / module d’origine'], ['DOC_MACRO', 'macro associée']] },
+    { titre: 'Fichier', champs: [
+      ['DOC_FILE', 'nom du fichier'], ['DOC_FOLDER', 'chemin de stockage'],
+      ['DOC_EXT', 'extension (DOCEXTFLD)'], ['DOC_SIZE', 'taille (octets)'],
+      ['DOC_FDATE', 'date du fichier'], ['DOC_STOCKG', 'mode de stockage (V_DOCSTOCKG)']] },
+    { titre: 'Cycle de vie', champs: [
+      ['DOC_CDATE', 'date de dépôt / création'], ['DOC_CUSER', 'déposé par'],
+      ['DOC_MDATE', 'dernière modification'], ['DOC_MUSER', 'modifié par'],
+      ['DOC_DATE', 'date du document'], ['DOC_VDATE', 'date de validation'], ['DOC_VUSER', 'validé par'],
+      ['DOC_PUBLIE', 'publié (O/N)'], ['DOC_REVIS', 'n° de révision (version)'],
+      ['DOC_EPUR', 'épuré (O/N)'], ['DOC_EPURD', 'date d’épuration']] },
+    { titre: 'Rattachement', champs: [
+      ['DOC_AFFECT', 'objet(s) liés — polymorphe (FRM + ENTID)'], ['DOC_RESID', 'identifiant de ressource liée'],
+      ['DOC_CONTTDID', 'contrat lié'], ['DOC_SITE', 'site']] },
+    { titre: 'Transfert / export', champs: [
+      ['DOC_TRF_IDEXT', 'identifiant externe'], ['DOC_TRF_DATE', 'date de transfert'],
+      ['DOC_TRF_STATUT', 'statut de transfert'], ['DOC_FUSION', 'fusion']] },
+  ],
+  versionning: {
+    table: 'DOC_HISTO',
+    principe: 'Chaque document porte un numéro de révision (DOC.DOC_REVIS). À chaque révision, la version précédente est archivée dans DOC_HISTO (fichier, dossier, taille, extension, auteur et date par révision). DOC ne conserve donc que la version courante, DOC_HISTO l’historique des références de fichiers.',
+    limite: 'Historique de versions de fichiers, pas de gestion de branches ni de comparaison de contenu ; les documents déposés une seule fois n’ont pas de ligne DOC_HISTO.',
+  },
+};
 
-async function listDocuments() {
-  const [themes, types, stockages, foldersRaw, countsRow, agentsRow, derniers] = await Promise.all([
+// Prédicat d'exclusion des pièces jointes hébergées sur POSTE004 (part de DOC
+// très majoritaire : \\POSTE004\C$\TEMP). `col` = colonne chemin à tester.
+function notPoste(col, excludePoste) {
+  return excludePoste ? `UPPER(NVL(${col},' ')) NOT LIKE '\\\\POSTE004\\%'` : '1=1';
+}
+async function listDocuments(opts = {}) {
+  const ex = !!opts.excludePoste;
+  const pc = notPoste('DOC_FOLDER', ex);      // requêtes sur DOC (sans alias)
+  const pcD = notPoste('d.DOC_FOLDER', ex);   // DOC aliasé « d »
+  const pcDh = notPoste('dh.DOC_FOLDER', ex); // jointure DOC_HISTO -> DOC
+  const pcV = notPoste('FOLDER', ex);         // vue V_DOC
+  const histoCount = ex ? `(SELECT COUNT(*) FROM DOC_HISTO h JOIN DOC dh ON dh.DOC_ID=h.DOCH_DOCID WHERE ${pcDh})` : '(SELECT COUNT(*) FROM DOC_HISTO)';
+  const histoDocs = ex ? `(SELECT COUNT(DISTINCT h.DOCH_DOCID) FROM DOC_HISTO h JOIN DOC dh ON dh.DOC_ID=h.DOCH_DOCID WHERE ${pcDh})` : '(SELECT COUNT(DISTINCT DOCH_DOCID) FROM DOC_HISTO)';
+  const histoMax = ex ? `(SELECT MAX(h.DOCH_REVIS) FROM DOC_HISTO h JOIN DOC dh ON dh.DOC_ID=h.DOCH_DOCID WHERE ${pcDh})` : '(SELECT MAX(DOCH_REVIS) FROM DOC_HISTO)';
+  const [themes, types, stockages, foldersRaw, folderStats, countsRow, agentsRow, derniers] = await Promise.all([
     exec(`SELECT T.THM_ID AS id, T.THM_COD AS cod, T.THM_NOM AS nom, NVL(T.THM_ACTIF,'N') AS actif,
         COUNT(d.DOC_ID) AS n
-      FROM DOC_THEME T LEFT JOIN DOC d ON d.DOC_THEME = T.THM_ID
+      FROM DOC_THEME T LEFT JOIN DOC d ON d.DOC_THEME = T.THM_ID AND ${pcD}
       GROUP BY T.THM_ID, T.THM_COD, T.THM_NOM, T.THM_ACTIF ORDER BY n DESC, T.THM_NOM`, {}, 100),
     exec(`SELECT ID AS id, MNEMO AS mnemo, ACTIF AS actif FROM V_DOCTYPE ORDER BY ID`, {}, 20),
     exec(`SELECT ID AS id, MNEMO AS mnemo, ACTIF AS actif FROM V_DOCSTOCKG ORDER BY ID`, {}, 20),
     exec(`SELECT DOC_FOLDER AS folder, DOC_THEME AS theme, DOC_TYPE AS type, DOC_STOCKG AS stockg, COUNT(*) AS n
-      FROM DOC WHERE DOC_FOLDER IS NOT NULL
+      FROM DOC WHERE DOC_FOLDER IS NOT NULL AND ${pc}
       GROUP BY DOC_FOLDER, DOC_THEME, DOC_TYPE, DOC_STOCKG`, {}, 5000),
+    exec(`SELECT DOC_FOLDER AS folder, COUNT(*) AS records, COUNT(DISTINCT DOC_FILE) AS files,
+        SUM(CASE WHEN NVL(DOC_REVIS,1) > 1 THEN 1 ELSE 0 END) AS revises
+      FROM DOC WHERE DOC_FOLDER IS NOT NULL AND ${pc} GROUP BY DOC_FOLDER`, {}, 5000),
     one(`SELECT
-        (SELECT COUNT(*) FROM DOC) AS doc,
+        (SELECT COUNT(*) FROM DOC WHERE ${pc}) AS doc,
+        (SELECT COUNT(*) FROM (SELECT DISTINCT DOC_FOLDER, DOC_FILE FROM DOC WHERE ${pc})) AS docs_uniques,
         (SELECT COUNT(*) FROM DOC_ANNEX) AS doc_annex,
         (SELECT COUNT(*) FROM DOC_DEMAT) AS doc_demat,
-        (SELECT COUNT(*) FROM DOC_HISTO) AS doc_histo,
+        ${histoCount} AS doc_histo,
+        ${histoDocs} AS docs_histo,
+        ${histoMax} AS max_revis,
+        (SELECT COUNT(*) FROM DOC WHERE NVL(DOC_REVIS,1) > 1 AND ${pc}) AS docs_revises,
         (SELECT COUNT(*) FROM CONTRAT_LOCATIF
           WHERE CONTL_PJ1 IS NOT NULL OR CONTL_PJ2 IS NOT NULL OR CONTL_PJ3 IS NOT NULL
              OR CONTL_PJ4 IS NOT NULL OR CONTL_PJ5 IS NOT NULL OR CONTL_PJ6 IS NOT NULL
@@ -1217,20 +1336,23 @@ async function listDocuments() {
     one(`SELECT COUNT(*) AS n FROM DEMANDEUR WHERE SDEM_REPDOC IS NOT NULL`),
     exec(`SELECT ID AS id, REF AS ref, TITRE AS titre, THMID AS theme, TYP AS typ, FICHIER AS fichier,
         FOLDER AS folder, TO_CHAR(DOC_DATE,'DD/MM/YYYY') AS date_doc, TAILLE AS taille, STOCKG AS stockg
-      FROM V_DOC ORDER BY ID DESC FETCH FIRST 20 ROWS ONLY`, {}, 20),
+      FROM V_DOC WHERE ${pcV} ORDER BY ID DESC FETCH FIRST 20 ROWS ONLY`, {}, 20),
   ]);
 
   const themeById = {}; for (const t of themes) themeById[t.id] = t;
   const typeById = {}; for (const t of types) typeById[t.id] = t;
   const stockById = {}; for (const t of stockages) stockById[t.id] = t;
 
-  // Agrégation des dossiers de stockage (DOC_FOLDER) : volumétrie, thèmes, type.
+  // Volumétrie unique par dossier (nb de fichiers distincts + enregistrements).
+  const statsByFolder = new Map();
+  for (const r of folderStats) statsByFolder.set(r.folder, r);
+
+  // Agrégation des dossiers de stockage (DOC_FOLDER) : thème/type dominant + volumes.
   const byFolder = new Map();
   for (const r of foldersRaw) {
     let e = byFolder.get(r.folder);
-    if (!e) { e = { folder: r.folder, n: 0, themes: [], types: {}, stockg: {} }; byFolder.set(r.folder, e); }
+    if (!e) { e = { folder: r.folder, themes: [], types: {}, stockg: {} }; byFolder.set(r.folder, e); }
     const n = Number(r.n) || 0;
-    e.n += n;
     if (r.theme != null && e.themes.indexOf(r.theme) < 0) e.themes.push(r.theme);
     const tc = (typeById[r.type] && typeById[r.type].mnemo) || ('TYPE ' + r.type);
     e.types[tc] = (e.types[tc] || 0) + n;
@@ -1240,8 +1362,12 @@ async function listDocuments() {
   const chemins = [...byFolder.values()].map((e) => {
     const dominantType = Object.entries(e.types).sort((a, b) => b[1] - a[1])[0];
     const dominantStock = Object.entries(e.stockg).sort((a, b) => b[1] - a[1])[0];
+    const st = statsByFolder.get(e.folder) || {};
     return {
-      chemin: e.folder, n: e.n,
+      chemin: e.folder,
+      n: Number(st.files) || 0,
+      records: Number(st.records) || 0,
+      revises: Number(st.revises) || 0,
       themes: e.themes.map((id) => (themeById[id] || {}).cod).filter(Boolean),
       type: dominantType ? dominantType[0] : '',
       stockage: dominantStock ? dominantStock[0] : '',
@@ -1274,16 +1400,115 @@ async function listDocuments() {
     return { key: g.key, label: g.label, icon: g.icon, table: g.table || null, col: g.col || null, themes: g.themes || [], note: g.note, n };
   });
 
+  const modele = {
+    central: DOC_HYBRIDE.central,
+    dedies: DOC_HYBRIDE.dedies.map((x) => ({
+      ...x,
+      nb: countByTable[x.table] != null ? Number(countByTable[x.table]) : null,
+      moduleLabel: (DOC_MODULES.find((m) => m.key === x.module) || {}).label || x.module,
+    })),
+  };
+  const versioning = {
+    ...DOC_META.versionning,
+    docs_revises: countsRow ? Number(countsRow.docs_revises) : 0,
+    versions_archivees: countsRow ? Number(countsRow.doc_histo) : 0,
+    docs_avec_versions: countsRow ? Number(countsRow.docs_histo) : 0,
+    max_revision: countsRow ? Number(countsRow.max_revis) : 0,
+  };
+
   return {
     resume: {
       docs: countsRow ? Number(countsRow.doc) : 0,
+      docs_uniques: countsRow ? Number(countsRow.docs_uniques) : 0,
+      excludePoste: ex,
       chemins: chemins.length,
       tables: tables.length,
       champs: DOC_FIELDS.length,
       themes: themes.filter((t) => Number(t.n) > 0).length,
+      tables_dediees: modele.dedies.length,
+      docs_revises: countsRow ? Number(countsRow.docs_revises) : 0,
+      versions_archivees: countsRow ? Number(countsRow.doc_histo) : 0,
     },
-    modules, fields, tables, themes, types, stockages, chemins, transversal, derniers: derniers || [],
+    modules, fields, tables, themes, types, stockages, chemins, transversal, modele,
+    meta: DOC_META.groupes, versioning, derniers: derniers || [],
   };
+}
+
+// Colonnes projetées d'un document (mêmes champs partout : fichiers, jour, etc.).
+// Jointures communes aux listes de documents.
+const DOC_ROW_FROM = `FROM DOC d
+      LEFT JOIN DOC_THEME t ON t.THM_ID = d.DOC_THEME
+      LEFT JOIN V_DOCTYPE ty ON ty.ID = d.DOC_TYPE
+      LEFT JOIN V_DOCSTOCKG s ON s.ID = d.DOC_STOCKG`;
+// Une ligne = un fichier UNIQUE (regroupement par DOC_FILE) : on n'affiche pas
+// chaque enregistrement mais le fichier, en comptant les versions (révisions /
+// enregistrements). Les colonnes descriptives proviennent du dernier dépôt.
+const DOC_GROUP_LAST = `KEEP (DENSE_RANK LAST ORDER BY NVL(d.DOC_MDATE, d.DOC_CDATE), d.DOC_ID)`;
+const DOC_GROUP_COLS = `d.DOC_FILE AS fichier,
+      COUNT(*) AS records,
+      COUNT(DISTINCT NVL(d.DOC_REVIS,1)) AS versions,
+      MAX(NVL(d.DOC_REVIS,1)) AS revis,
+      MAX(d.DOC_ID) ${DOC_GROUP_LAST} AS id,
+      MAX(d.DOC_REF) ${DOC_GROUP_LAST} AS ref,
+      MAX(d.DOC_TITRE) ${DOC_GROUP_LAST} AS titre,
+      MAX(t.THM_COD) ${DOC_GROUP_LAST} AS theme,
+      MAX(t.THM_NOM) ${DOC_GROUP_LAST} AS theme_nom,
+      MAX(ty.MNEMO) ${DOC_GROUP_LAST} AS type,
+      MAX(ty.ML) ${DOC_GROUP_LAST} AS type_id,
+      MAX(s.MNEMO) ${DOC_GROUP_LAST} AS stockage,
+      MAX(s.ML) ${DOC_GROUP_LAST} AS stockage_id,
+      MAX(TO_CHAR(d.DOC_DATE,'DD/MM/YYYY')) ${DOC_GROUP_LAST} AS date_doc,
+      MAX(TO_CHAR(d.DOC_CDATE,'DD/MM/YYYY HH24:MI')) ${DOC_GROUP_LAST} AS date_depot,
+      MAX(TO_CHAR(d.DOC_MDATE,'DD/MM/YYYY HH24:MI')) AS date_maj,
+      MAX(d.DOC_SIZE) ${DOC_GROUP_LAST} AS taille,
+      MAX(d.DOC_FOLDER) ${DOC_GROUP_LAST} AS dossier,
+      MAX(TO_CHAR(d.DOC_FDATE,'DD/MM/YYYY')) ${DOC_GROUP_LAST} AS date_fichier`;
+
+// Fichiers d'un dossier de stockage (fichiers uniques + nb de versions).
+async function listDocumentFiles(folder, { limit, offset = 0 } = {}) {
+  const f = String(folder || '').trim();
+  if (!f) return { folder: f, total: 0, records: 0, rows: [] };
+  const lim = int(limit, 500, 2000);
+  const off = Math.max(0, Math.floor(Number(offset) || 0));
+  const tot = await one(`SELECT COUNT(*) AS records, COUNT(DISTINCT DOC_FILE) AS files FROM DOC WHERE DOC_FOLDER = :folder`, { folder: f });
+  const rows = await exec(`SELECT ${DOC_GROUP_COLS} ${DOC_ROW_FROM}
+      WHERE d.DOC_FOLDER = :folder GROUP BY d.DOC_FILE ORDER BY d.DOC_FILE
+      OFFSET ${off} ROWS FETCH NEXT ${lim} ROWS ONLY`, { folder: f }, lim);
+  return { folder: f, total: tot ? Number(tot.files) : rows.length, records: tot ? Number(tot.records) : rows.length, rows };
+}
+
+// Arborescence par date de dépôt : agrégat année / mois / jour (DOC_CDATE),
+// en fichiers uniques + enregistrements.
+async function listDocumentDates(opts = {}) {
+  const pcD = notPoste('d.DOC_FOLDER', !!opts.excludePoste);
+  const rows = await exec(`SELECT TO_CHAR(TRUNC(d.DOC_CDATE),'YYYY-MM-DD') AS d,
+      EXTRACT(YEAR FROM d.DOC_CDATE) AS an, EXTRACT(MONTH FROM d.DOC_CDATE) AS mois,
+      TO_CHAR(TRUNC(d.DOC_CDATE),'DD/MM/YYYY') AS jour,
+      COUNT(*) AS records, COUNT(DISTINCT d.DOC_FILE) AS files
+    FROM DOC d WHERE d.DOC_CDATE IS NOT NULL AND ${pcD}
+    GROUP BY TRUNC(d.DOC_CDATE), EXTRACT(YEAR FROM d.DOC_CDATE), EXTRACT(MONTH FROM d.DOC_CDATE),
+             TO_CHAR(TRUNC(d.DOC_CDATE),'DD/MM/YYYY')
+    ORDER BY TRUNC(d.DOC_CDATE) DESC`, {}, 5000);
+  return {
+    dates: rows,
+    excludePoste: !!opts.excludePoste,
+    total: rows.reduce((a, r) => a + Number(r.files || 0), 0),
+    records: rows.reduce((a, r) => a + Number(r.records || 0), 0),
+  };
+}
+
+// Documents déposés un jour donné (fichiers uniques + nb de versions).
+async function listDocumentsByDay(date, opts = {}) {
+  const d = String(date || '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return { date: d, total: 0, records: 0, rows: [] };
+  const pc = notPoste('DOC_FOLDER', !!opts.excludePoste);
+  const pcD = notPoste('d.DOC_FOLDER', !!opts.excludePoste);
+  const tot = await one(`SELECT COUNT(*) AS records, COUNT(DISTINCT DOC_FILE) AS files
+      FROM DOC WHERE TRUNC(DOC_CDATE) = TO_DATE(:d,'YYYY-MM-DD') AND ${pc}`, { d });
+  const rows = await exec(`SELECT ${DOC_GROUP_COLS} ${DOC_ROW_FROM}
+      WHERE TRUNC(d.DOC_CDATE) = TO_DATE(:d,'YYYY-MM-DD') AND ${pcD}
+      GROUP BY d.DOC_FILE ORDER BY MIN(d.DOC_CDATE), d.DOC_FILE`, { d }, 2000);
+  return { date: d, total: tot ? Number(tot.files) : rows.length, records: tot ? Number(tot.records) : rows.length, rows };
 }
 
 // ─── Magasins & stock ────────────────────────────────────────────────────────
@@ -1725,6 +1950,71 @@ function readJsonBody(req, maxBytes = 100000) {
     req.on('error', reject);
   });
 }
+// ─── Authentification AD (via APM) + session applicative ─────────────────────
+// Vérifie les identifiants auprès de l'AD (POST {APM}/api/v1/ad/authenticate) puis
+// délivre un jeton de session signé (HMAC). Aucun mot de passe n'est stocké.
+const AUTH_ENABLED_REQ = process.env.ASTECH_REQUIRE_AUTH === '1'; // forcer l'auth en prod
+const SESSION_TTL_MS = Number(process.env.ASTECH_SESSION_TTL_MS || 8 * 3600 * 1000); // 8 h
+const SESSION_SECRET = process.env.ASTECH_SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+const AGENT_ALLOW = (process.env.ASTECH_AGENT_ALLOW || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+const AGENT_DENY = (process.env.ASTECH_AGENT_DENY || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+function signSession(payload) {
+  const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const sig = crypto.createHmac('sha256', SESSION_SECRET).update(data).digest('base64url');
+  return data + '.' + sig;
+}
+function verifySession(token) {
+  if (!token || token.indexOf('.') < 0) return null;
+  const [data, sig] = token.split('.');
+  const expect = crypto.createHmac('sha256', SESSION_SECRET).update(data).digest('base64url');
+  if (sig.length !== expect.length || !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expect))) return null;
+  let payload; try { payload = JSON.parse(Buffer.from(data, 'base64url').toString('utf8')); } catch { return null; }
+  if (!payload.exp || payload.exp < Date.now()) return null;
+  return payload;
+}
+function readSession(req) {
+  const h = req.headers['authorization'] || '';
+  const m = /^Bearer\s+(.+)$/i.exec(h);
+  return verifySession((req.headers['x-astech-token'] || (m ? m[1] : '') || '').trim());
+}
+function agentAllowed(username) {
+  const u = String(username || '').toLowerCase();
+  if (AGENT_DENY.includes(u)) return { ok: false, reason: 'Accès refusé pour cet agent.' };
+  if (AGENT_ALLOW.length && !AGENT_ALLOW.includes(u)) return { ok: false, reason: "Cet agent n'est pas autorisé à utiliser ASTECH Explorer." };
+  return { ok: true };
+}
+async function adAuthenticate(username, password) {
+  const r = await httpJson(`${APM.url}/api/v1/ad/authenticate`, {
+    method: 'POST', headers: { 'X-API-KEY': APM.key, accept: 'application/json' },
+    body: { username, password }, insecure: APM.insecure, timeoutMs: 15000,
+  });
+  let data; try { data = JSON.parse(r.body); } catch { data = { raw: r.body }; }
+  return { status: r.status, data };
+}
+async function authenticateAgent(req, res) {
+  if (!APM.configured) return sendJson(res, 503, { error: "Authentification AD non configurée (APM_API_KEY manquant)." });
+  let body; try { body = await readJsonBody(req); } catch (e) { return sendJson(res, 400, { error: e.message }); }
+  const username = String(body.username || '').trim();
+  const password = String(body.password || '');
+  if (!username || !password) return sendJson(res, 400, { error: 'Nom d\'utilisateur et mot de passe requis.' });
+  const allow = agentAllowed(username);
+  if (!allow.ok) return sendJson(res, 403, { error: allow.reason });
+  let out;
+  try { out = await adAuthenticate(username, password); }
+  catch (e) { return sendJson(res, 502, { error: 'APM injoignable : ' + e.message }); }
+  const ok = out.status === 200 && out.data && (out.data.success === true || out.data.success === undefined);
+  if (!ok) return sendJson(res, 401, { error: (out.data && out.data.error) || 'Identifiants invalides.' });
+  const exp = Date.now() + SESSION_TTL_MS;
+  const token = signSession({ sub: username, dn: out.data.dn || null, iat: Date.now(), exp });
+  return sendJson(res, 200, { success: true, username, dn: out.data.dn || null, expiresAt: new Date(exp).toISOString(), token });
+}
+function whoami(req, res) {
+  const s = readSession(req);
+  return s ? sendJson(res, 200, { authenticated: true, username: s.sub, dn: s.dn, expiresAt: new Date(s.exp).toISOString() })
+    : sendJson(res, 401, { authenticated: false });
+}
+async function logoutAgent(req, res) { return sendJson(res, 200, { success: true }); }
+
 async function handleAdminKeys(req, res, p) {
   if (p === '/api/admin/keys') {
     if (req.method === 'GET') { const keys = apikeys.list(); return sendJson(res, 200, { count: keys.length, keys }); }
@@ -1772,11 +2062,24 @@ async function handleRequest(req, res, p, sp) {
       return res.end(html);
     }
     if (p === '/api/config') {
-      return sendJson(res, 200, { connectInfo: dbConnectInfo(), readOnly: !WRITE_ENABLED, writeEnabled: WRITE_ENABLED, dbEnv: currentDbEnv(), dbEnvs: dbEnvList(), limit: LIMIT, studioRh: STUDIO_RH.configured, studioRhUrl: STUDIO_RH.url || null, version: '3.0.0', publicApi: '/api/v1', apiKeysEnabled: true });
+      return sendJson(res, 200, { connectInfo: dbConnectInfo(), readOnly: !WRITE_ENABLED, writeEnabled: WRITE_ENABLED, dbEnv: currentDbEnv(), dbEnvs: dbEnvList(), limit: LIMIT, studioRh: STUDIO_RH.configured, studioRhUrl: STUDIO_RH.url || null, version: '3.0.0', publicApi: '/api/v1', apiKeysEnabled: true, authEnabled: AUTH_ENABLED_REQ, adConfigured: APM.configured, adUrl: APM.configured ? APM.url : null });
     }
     if (p === '/api/env') return sendJson(res, 200, { active: currentDbEnv(), writeEnabled: WRITE_ENABLED, available: dbEnvList() });
-    // API publique versionnée (référentiels) + gestion des clés
+    // Authentification AD (APM) — routes publiques
+    if (p === '/api/auth/login') {
+      if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return sendJson(res, 405, { error: 'Méthode POST requise.' }); }
+      return authenticateAgent(req, res);
+    }
+    if (p === '/api/auth/whoami') return whoami(req, res);
+    if (p === '/api/auth/logout') return logoutAgent(req, res);
+    // API publique versionnée (référentiels, protégée par clé API)
     if (p === '/api/v1' || p.startsWith('/api/v1/')) return handleReferentielsApi(req, res, p, sp);
+    // À partir d'ici, routes internes : si l'auth est imposée, exiger une session AD valide.
+    if (AUTH_ENABLED_REQ && p.startsWith('/api/') && !readSession(req)) {
+      // Même origine / même site : les appels navigateur portent le jeton en en-tête.
+      if (req.method !== 'GET' && req.method !== 'HEAD' && p === '/api/') { /* no-op */ }
+      return sendJson(res, 401, { error: 'Authentification requise (session AD).' });
+    }
     if (p === '/api/admin/keys' || p.startsWith('/api/admin/keys/')) return handleAdminKeys(req, res, p);
     if (p === '/api/dashboard') return sendJson(res, 200, await getDashboard());
     if (p === '/api/referentiels-compteurs') return sendJson(res, 200, { counts: await refCounts() });
@@ -1834,7 +2137,10 @@ async function handleRequest(req, res, p, sp) {
     }
 
     // Documents associés (GED)
-    if (p === '/api/documents') return sendJson(res, 200, await listDocuments());
+    if (p === '/api/documents') return sendJson(res, 200, await listDocuments({ excludePoste: sp.get('excludePoste') === '1' }));
+    if (p === '/api/documents/fichiers') return sendJson(res, 200, await listDocumentFiles(sp.get('folder') || '', { limit: sp.get('limit'), offset: sp.get('offset') }));
+    if (p === '/api/documents/dates') return sendJson(res, 200, await listDocumentDates({ excludePoste: sp.get('excludePoste') === '1' }));
+    if (p === '/api/documents/jour') return sendJson(res, 200, await listDocumentsByDay(sp.get('date') || '', { excludePoste: sp.get('excludePoste') === '1' }));
 
     // Procédures stockées
     if (p === '/api/procedures') return sendJson(res, 200, await listProcedures({ q: term, type: sp.get('type') || '', group: sp.get('group') || '' }));
@@ -1878,8 +2184,10 @@ loadDbConfigs()
     ACTIVE_ENV = DB_PROFILES[wanted] ? wanted : (DB_PROFILES.prod ? 'prod' : Object.keys(DB_PROFILES)[0]);
     connectInfo = (DB_PROFILES[ACTIVE_ENV] || {}).connectString || '';
     loadStudioRh();
+    loadApm();
     await getPool(ACTIVE_ENV); // échec rapide si la base active est injoignable
     const envs = Object.keys(DB_PROFILES).map((id) => `${id}=${DB_PROFILES[id].connectString}`).join(' | ');
-    server.listen(PORT, () => console.log(`ASTECH Explorer -> http://localhost:${PORT} [${envs}] (actif: ${ACTIVE_ENV}) [lecture seule${WRITE_ENABLED ? ' + ecriture indices' : ''}] | Studio-RH ${STUDIO_RH.configured ? 'configuré' : 'non configuré'}`));
+    const auth = AUTH_ENABLED_REQ ? (APM.configured ? 'AD requis' : 'AD requis (NON CONFIGURÉ)') : (APM.configured ? 'AD dispo' : 'AD off');
+    server.listen(PORT, () => console.log(`ASTECH Explorer -> http://localhost:${PORT} [${envs}] (actif: ${ACTIVE_ENV}) [lecture seule${WRITE_ENABLED ? ' + ecriture indices' : ''}] | Studio-RH ${STUDIO_RH.configured ? 'configuré' : 'non configuré'} | Auth ${auth}`));
   })
   .catch((e) => { console.error('Erreur démarrage:', e.message); process.exit(1); });

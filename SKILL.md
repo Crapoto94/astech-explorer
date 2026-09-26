@@ -695,6 +695,39 @@ https://github.com/Crapoto94/astech), port **8099** :
   `DOC_TRANSVERSAL` : 9 modules, ~47 champs, 354 chemins) ; UI route
   `#/documents` (onglets Modules & thèmes, Tables & champs, Chemins de stockage,
   Transversal agents/biens/contrats/véhicules/interventions/permis/amiante/articles).
+  ⚠️ `DOC` contient **plusieurs lignes par même fichier** (doublons/versions :
+  `picture.jpg` = 2 112 lignes ; 281 groupes). Toutes les listes regroupent donc
+  par **fichier unique** (`DOC_FOLDER` + `DOC_FILE`, 6 335 fichiers pour 9 413
+  enregistrements) et affichent le **nombre de versions** (`COUNT(DISTINCT
+  DOC_REVIS)`) et d'enregistrements, jamais les doublons.
+  Bouton **« Masquer les PJ de POSTE004 »** : `?excludePoste=1` ajoute
+  `UPPER(NVL(DOC_FOLDER,' ')) NOT LIKE '\\POSTE004\%'` à tous les agrégats
+  (`/api/documents`, `/dates`, `/jour`) — poste `\\POSTE004\C$\TEMP` retiré, le
+  reste recalculé (9 413 → 2 222 enregistrements, 6 335 → 1 611 fichiers uniques).
+  L'onglet Chemins affiche une **arborescence dépliable** (`docSplitPath`/
+  `docBuildTree`/`docRenderTree`) des `DOC_FOLDER` : chaque nœud (ex. `\\tsclient`
+  → `C` → `Documents and Settings` → …) porte le **nombre cumulé de fichiers
+  uniques du sous-arbre** (+ « N ici » pour le niveau direct). Chaque dossier final
+  déplie la **liste de ses fichiers uniques** (`GET /api/documents/fichiers?folder=
+  &limit=`, chargement à la demande, plafond 2 000) avec extension, thème, nb de
+  versions/entrées, taille et date (`KEEP (DENSE_RANK LAST ORDER BY DOC_MDATE)`).
+  L'onglet Modules décrit le **modèle hybride** (`DOC_HYBRIDE` → `modele`) :
+  (1) GED centrale `DOC` + satellites, (2) rattachement polymorphe `DOC_AFFECT`
+  (`DAFF_FRM`/`DAFF_ENTID`), (3) **24 champs document dédiés** dans 24 tables
+  (le plus souvent vides : la GED reste la source). L'onglet **Par date**
+  (`/api/documents/dates`, `/api/documents/jour?date=`) affiche une arborescence
+  **année → mois → jour** sur `DOC.DOC_CDATE` (date de dépôt) ; déplier un jour
+  liste les documents déposés. **Métadonnées** d'un document (`DOC_META`) :
+  identité (`DOC_REF` format `AAAAMMJJ-<module>-<n>`, `DOC_TITRE`, `DOC_OBS`,
+  `DOC_KEYW`), classement (`DOC_THEME`/`DOC_TYPE`/`DOC_FRM`), fichier
+  (`DOC_FILE`/`DOC_FOLDER`/`DOC_EXT`/`DOC_SIZE`/`DOC_FDATE`/`DOC_STOCKG`), cycle
+  de vie (`DOC_CDATE`/`DOC_CUSER`/`DOC_MDATE`/`DOC_MUSER`/`DOC_DATE`/`DOC_VDATE`/
+  `DOC_VUSER`/`DOC_PUBLIE`/`DOC_REVIS`/`DOC_EPUR`), rattachement (`DOC_AFFECT`/
+  `DOC_RESID`), transfert (`DOC_TRF_*`/`DOC_FUSION`). **Versionning : oui** —
+  compteur `DOC.DOC_REVIS` (463 docs > 1 révision, max 7) + archive des versions
+  précédentes dans **`DOC_HISTO`** (2 804 lignes, 2 222 docs : `DOCH_REVIS`,
+  `DOCH_FILE`, `DOCH_FOLDER`, `DOCH_SIZE`, `DOCH_STOCKG`, `DOCH_MUSER/DATE`) ;
+  historique de références de fichiers, sans branches ni diff de contenu.
 - **Docker Linux** : `Dockerfile` (base Oracle Linux 8 + `oracle-instantclient-basic`
   + Node 20) et `docker-compose.yml` ; voir README/DEPLOIEMENT pour les variables d'env.
 - **Pagination** : `dataTable()` (front, client-side) propose un sélecteur de
