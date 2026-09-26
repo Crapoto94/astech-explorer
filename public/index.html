@@ -188,7 +188,7 @@ function showLogin(msg) {
     btn.disabled = true; btn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>Vérification…';
     try {
       const r = await api('/api/auth/login', { method: 'POST', body: { username, password }, noAuthRedirect: true });
-      SESSION.token = r.token; SESSION.user = r.username; SESSION.dn = r.dn || null;
+      SESSION.token = r.token; SESSION.user = r.username; SESSION.dn = r.dn || null; SESSION.role = r.role || null;
       try { localStorage.setItem('astechToken', r.token); } catch (e) { /* ignore */ }
       const overlay = document.getElementById('loginOverlay'); if (overlay) overlay.remove();
       initAuthPill(); render();
@@ -215,7 +215,7 @@ function initAuthPill() {
 }
 async function doLogout() {
   try { await api('/api/auth/logout', { method: 'POST', noAuthRedirect: true }); } catch (e) { /* ignore */ }
-  SESSION = { token: '', user: null, dn: null };
+  SESSION = { token: '', user: null, dn: null, role: null };
   try { localStorage.removeItem('astechToken'); } catch (e) { /* ignore */ }
   showLogin('Vous êtes déconnecté.');
 }
