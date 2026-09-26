@@ -86,9 +86,9 @@ tailwind.config = {
         </span>
         <span id="envSwitch" class="hidden items-center gap-0.5 px-0.5 py-0.5 rounded bg-[#1e293b] border border-[#334155] font-label-mono-sm text-label-mono-sm"></span>
         <span id="authPill" class="hidden items-center gap-1 px-2 py-1 rounded bg-[#1e293b] text-[#cbd5e1] font-label-mono-sm text-label-mono-sm border border-[#334155]"></span>
-        <span id="studioPill" class="hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded bg-[#1e293b] text-[#94a3b8] font-label-mono-sm text-label-mono-sm border border-[#334155]" title="Source Studio-RH">
-          <span class="material-symbols-outlined text-[15px]">sync_problem</span>Studio-RH
-        </span>
+        <a id="adminHeaderBtn" data-link="#/administration" href="#/administration" class="hidden items-center gap-1 px-2 py-1 rounded bg-amber-400 text-[#0f172a] font-label-mono-sm text-label-mono-sm font-semibold hover:bg-amber-300" title="Administration (utilisateurs, clés API)">
+          <span class="material-symbols-outlined text-[15px]">admin_panel_settings</span>Administration
+        </a>
       </div>
     </div>
     <nav id="mainNav" class="flex items-center gap-space-lg overflow-x-auto whitespace-nowrap pt-1">
@@ -104,7 +104,6 @@ tailwind.config = {
       <a data-link="#/architecture" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/architecture">Architecture</a>
       <a data-link="#/interventions" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/interventions">Interventions</a>
       <a data-link="#/indices" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/indices">Indices</a>
-      <a data-link="#/apikeys" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/apikeys">Clés API</a>
     </nav>
   </div>
 </header>
@@ -206,9 +205,13 @@ function initAuthPill() {
   if (!APP.authEnabled) { pill.classList.add('hidden'); return; }
   pill.classList.remove('hidden'); pill.classList.add('inline-flex');
   if (SESSION.user) {
-    pill.innerHTML = `<span class="material-symbols-outlined text-[15px] text-emerald-400">verified_user</span>${esc(SESSION.user)} <button data-act="logout" class="ml-1 text-[#94a3b8] hover:text-white"><span class="material-symbols-outlined text-[14px]">logout</span></button>`;
-    pill.title = SESSION.dn || 'Session AD';
+    const roleTag = SESSION.role === 'admin' ? '<span class="px-1.5 rounded bg-amber-400 text-[#0f172a] font-semibold">ADMIN</span>' : (SESSION.role === 'user' ? '<span class="px-1.5 rounded bg-[#334155] text-[#cbd5e1]">utilisateur</span>' : '');
+    pill.innerHTML = `<span class="material-symbols-outlined text-[15px] text-emerald-400">verified_user</span>${esc(SESSION.user)} ${roleTag}<button data-act="logout" class="ml-1 text-[#94a3b8] hover:text-white" title="Déconnexion"><span class="material-symbols-outlined text-[14px]">logout</span></button>`;
+    pill.title = (SESSION.dn || 'Session AD') + (SESSION.role ? ' — rôle : ' + SESSION.role : '');
   } else { pill.innerHTML = `<span class="material-symbols-outlined text-[15px]">login</span>Connexion`; pill.onclick = () => showLogin(); }
+  // Bouton d'administration visible seulement pour les admins (auth activée).
+  const adminBtn = document.getElementById('adminHeaderBtn');
+  if (adminBtn) { if (APP.authEnabled && SESSION.role === 'admin') { adminBtn.classList.remove('hidden'); adminBtn.classList.add('inline-flex'); } else { adminBtn.classList.add('hidden'); adminBtn.classList.remove('inline-flex'); } }
 }
 async function doLogout() {
   try { await api('/api/auth/logout', { method: 'POST', noAuthRedirect: true }); } catch (e) { /* ignore */ }
@@ -225,7 +228,7 @@ async function initAuth() {
   if (!SESSION.token) { showLogin(); initAuthPill(); return; }
   try {
     const w = await api('/api/auth/whoami', { noAuthRedirect: true });
-    if (w && w.authenticated) { SESSION.user = w.username; SESSION.dn = w.dn; initAuthPill(); return; }
+    if (w && w.authenticated) { SESSION.user = w.username; SESSION.dn = w.dn; SESSION.role = w.role || 'user'; initAuthPill(); return; }
   } catch (e) { /* ignore */ }
   SESSION.token = '';
   showLogin('Session invalide ou expirée.');
@@ -380,6 +383,8 @@ const state = {
   refs: { type: 'biens', genre: '' },
   inter: { tab: 'interventions', etat: '', type: '', period: '12m', page: 1 },
   neocity: { page: 1 },
+  admin: { tab: 'users' },
+  users: { rows: null, loading: false, error: null, notice: null, roles: ['none', 'user', 'admin'] },
   indices: { type: '', annee: '', verif: null, loading: false, error: null, pushScope: 'manquants', plan: null, pushResult: null, pushing: false },
   demande: { open: false, options: null, error: null, submitted: false, bienRows: [], form: {} },
   pages: {}
@@ -411,6 +416,7 @@ async function render() {
     const fns = {
       dashboard: viewDashboard, agents: viewAgents, synchro: viewSynchro, locatif: viewLocatif,
       referentiels: viewReferentiels, interventions: viewInterventions, indices: viewIndices, apikeys: viewApiKeys,
+      administration: viewAdministration, users: viewUsers,
       magasins: () => viewMagasins(arg), magasin: () => viewMagasins(arg),
       parc: () => viewParc(arg), vehicule: () => viewParcVehicule(arg),
       procedures: viewProcedures, procedure: () => viewProcedure(arg), architecture: viewArchitecture,
@@ -1564,10 +1570,96 @@ async function runPush(confirmProd) {
 
 
 /* ═══════════════════════════ DEMANDE D'INTERVENTION ═══════════════════════════ */
+/* ═══════════════════════════ VISIONNEUSE PDF ═══════════════════════════ */
+// Visionneuse pdf.js (librairie servie depuis /vendor/pdfjs/). Affiche un PDF
+// publié dans /docs/architecture-pdf/ et ouvre sur la page demandée.
+let PDFLIB = null;
+async function pdfLib() {
+  if (PDFLIB) return PDFLIB;
+  PDFLIB = await import('/vendor/pdfjs/pdf.min.mjs');
+  PDFLIB.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';
+  return PDFLIB;
+}
+async function openPdf(fichier, page, titre) {
+  const url = '/docs/architecture-pdf/' + encodeURIComponent(fichier) + (page ? '#page=' + page : '');
+  let el = document.getElementById('pdfOverlay');
+  if (!el) { el = document.createElement('div'); el.id = 'pdfOverlay'; el.className = 'fixed inset-0 z-[90] flex flex-col bg-[#0f172a]/95 backdrop-blur-sm'; document.body.appendChild(el); }
+  el.innerHTML = `
+    <div class="flex items-center justify-between gap-space-sm px-space-lg py-space-sm bg-surface-container-lowest border-b border-surface-container">
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="material-symbols-outlined text-primary">picture_as_pdf</span>
+        <div class="min-w-0"><div class="font-title-md text-on-surface truncate">${esc(titre || fichier)}</div>
+          <div class="font-label-mono-sm text-secondary truncate">${esc(fichier)}${page ? ' — page ' + esc(String(page)) : ''}</div></div>
+      </div>
+      <div class="flex items-center gap-space-sm">
+        <div class="flex items-center gap-1">
+          <button id="pdfPrev" class="px-2 py-1 rounded bg-surface-container hover:bg-surface-container-high"><span class="material-symbols-outlined text-[18px] align-middle">chevron_left</span></button>
+          <span id="pdfPageInfo" class="font-label-mono-sm text-secondary px-2">— / —</span>
+          <button id="pdfNext" class="px-2 py-1 rounded bg-surface-container hover:bg-surface-container-high"><span class="material-symbols-outlined text-[18px] align-middle">chevron_right</span></button>
+          <input id="pdfJump" type="number" min="1" class="w-16 h-8 px-2 ml-1 rounded bg-surface-container-low border border-surface-container-high font-label-mono-sm" placeholder="p." />
+        </div>
+        <button id="pdfZoomOut" class="px-2 py-1 rounded bg-surface-container hover:bg-surface-container-high"><span class="material-symbols-outlined text-[18px] align-middle">remove</span></button>
+        <button id="pdfZoomIn" class="px-2 py-1 rounded bg-surface-container hover:bg-surface-container-high"><span class="material-symbols-outlined text-[18px] align-middle">add</span></button>
+        <a href="/docs/architecture-pdf/${encodeURIComponent(fichier)}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded bg-surface-container hover:bg-surface-container-high font-label-mono-sm inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">open_in_new</span>Ouvrir</a>
+        <button id="pdfClose" class="p-1 rounded hover:bg-surface-container"><span class="material-symbols-outlined">close</span></button>
+      </div>
+    </div>
+    <div id="pdfCanvasBox" class="flex-1 overflow-auto flex items-start justify-center p-space-lg bg-[#334155]">
+      <div id="pdfLoading" class="text-white/70 font-body-sm mt-8"><span class="material-symbols-outlined animate-spin align-middle mr-2">progress_activity</span>Chargement du PDF…</div>
+      <canvas id="pdfCanvas" class="shadow-2xl bg-white hidden"></canvas>
+    </div>`;
+  const close = () => { try { if (state.pdf && state.pdf.doc) state.pdf.doc.destroy(); } catch (e) { /* ignore */ } el.remove(); };
+  document.getElementById('pdfClose').onclick = close;
+  el._closePdf = close;
+  state.pdf = { doc: null, page: page || 1, zoom: 1.3, fichier };
+
+  const render = async () => {
+    const st = state.pdf;
+    const p = Math.min(Math.max(1, st.page), st.doc.numPages);
+    st.page = p;
+    const pg = await st.doc.getPage(p);
+    const canvas = document.getElementById('pdfCanvas');
+    const box = document.getElementById('pdfCanvasBox');
+    const viewport = pg.getViewport({ scale: st.zoom * (box.clientWidth > 0 ? Math.min(1.6, (box.clientWidth - 64) / pg.getViewport({ scale: 1 }).width) : 1) });
+    const ctx = canvas.getContext('2d');
+    canvas.width = viewport.width; canvas.height = viewport.height;
+    canvas.classList.remove('hidden');
+    document.getElementById('pdfLoading').classList.add('hidden');
+    await pg.render({ canvasContext: ctx, viewport, canvas }).promise;
+    document.getElementById('pdfPageInfo').textContent = p + ' / ' + st.doc.numPages;
+    document.getElementById('pdfJump').value = p;
+    document.getElementById('pdfPrev').disabled = p <= 1;
+    document.getElementById('pdfNext').disabled = p >= st.doc.numPages;
+  };
+  document.getElementById('pdfPrev').onclick = () => { state.pdf.page--; render(); };
+  document.getElementById('pdfNext').onclick = () => { state.pdf.page++; render(); };
+  document.getElementById('pdfJump').onchange = (e) => { state.pdf.page = Number(e.target.value) || 1; render(); };
+  document.getElementById('pdfZoomIn').onclick = () => { state.pdf.zoom = Math.min(4, state.pdf.zoom + 0.2); render(); };
+  document.getElementById('pdfZoomOut').onclick = () => { state.pdf.zoom = Math.max(0.4, state.pdf.zoom - 0.2); render(); };
+  document.getElementById('pdfCanvasBox')._rerender = render;
+
+  try {
+    const lib = await pdfLib();
+    const task = lib.getDocument({ url: '/docs/architecture-pdf/' + encodeURIComponent(fichier), cMapUrl: '/vendor/pdfjs/cmaps/', cMapPacked: true, standardFontDataUrl: '/vendor/pdfjs/standard_fonts/', wasmUrl: '/vendor/pdfjs/wasm/', iccUrl: '/vendor/pdfjs/iccs/' });
+    state.pdf.doc = await task.promise;
+    await render();
+  } catch (e) {
+    document.getElementById('pdfLoading').innerHTML = '<span class="text-red-300">Erreur de chargement : ' + esc(e.message) + '</span>';
+  }
+}
+
 /* ═══════════════════════════ ARCHITECTURE AS-TECH ═══════════════════════════ */
 async function viewArchitecture() {
   const d = await api('/api/architecture');
-  const cc = (titre, inner, icon) => card(titre, `<div class="p-space-lg">${inner}</div>`, icon ? `<span class="material-symbols-outlined text-primary">${icon}</span>` : null);
+  const docByFile = {}; (d.docs || []).forEach(x => { docByFile[x.fichier] = x; });
+  const srcBtn = (key) => {
+    const s = (d.sources || {})[key];
+    if (!s) return '';
+    const doc = docByFile[s[0]] || {};
+    const page = s[1];
+    return `<button data-act="pdf:${encodeURIComponent(s[0])}|${page || ''}|${encodeURIComponent((doc.titre || s[0]) + (page ? ' (p.' + page + ')' : ''))}" title="Ouvrir le document source${page ? ' à la page ' + page : ''}" class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container text-primary hover:bg-surface-container-high font-label-mono-sm text-[11px] whitespace-nowrap"><span class="material-symbols-outlined text-[14px]">picture_as_pdf</span>Source${page ? ' p.' + page : ''}</button>`;
+  };
+  const cc = (titre, inner, icon, srcKey) => card(titre, `<div class="p-space-lg">${inner}</div>`, `<div class="flex items-center gap-2">${srcKey ? srcBtn(srcKey) : ''}${icon ? `<span class="material-symbols-outlined text-primary">${icon}</span>` : ''}</div>`);
   const tbl = (cols, rows) => dataTable(cols, rows, { empty: '—', key: 'arch_' + cols.map(c => c.label).join('') });
   const badgeLine = (label, val) => `<div class="flex items-start gap-2 py-1"><span class="font-label-mono-sm text-secondary uppercase whitespace-nowrap min-w-[180px]">${esc(label)}</span><span class="font-body-sm text-on-surface">${val}</span></div>`;
 
@@ -1617,42 +1709,42 @@ async function viewArchitecture() {
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg mb-space-lg">
-      ${cc('Produits de la suite AS-Tech', `<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">${produits}</div>`, 'apps')}
+      ${cc('Produits de la suite AS-Tech', `<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">${produits}</div>`, 'apps', 'produits')}
       ${cc("Lanceur applicatif", `<div class="p-space-md rounded-xl bg-tertiary-container/20 border border-tertiary/30">
         <div class="font-title-md font-bold text-on-surface">${esc(d.lanceur.exe)}</div>
         <p class="font-body-sm text-on-surface-variant mt-1">${esc(d.lanceur.role)}</p>
         <p class="font-label-mono-sm text-secondary mt-1">Compatibilité : ${esc(d.lanceur.compat)}</p></div>
         <div class="mt-space-md">${badgeLine('Environnements', d.environnements.map(e => badge(e.nom, e.cle === 'prod' ? 'red' : 'blue')).join(' '))}
-        <p class="font-body-sm text-on-surface-variant mt-2">${esc(d.cloisonnement)}</p></div>`, 'rocket_launch')}
+        <p class="font-body-sm text-on-surface-variant mt-2">${esc(d.cloisonnement)}</p></div>`, 'rocket_launch', 'lanceur')}
     </div>
 
-    ${cc('Serveurs à mettre en place (architecture 4 serveurs — hors base de données)', `<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">${serveurs}</div>`, 'lan')}
+    ${cc('Serveurs à mettre en place (architecture 4 serveurs — hors base de données)', `<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">${serveurs}</div>`, 'lan', 'serveurs')}
 
-    <div class="mt-space-lg">${cc(d.nomenclature.titre, `<ul class="font-body-sm text-on-surface-variant list-disc pl-5 space-y-1">${d.nomenclature.points.map(p => `<li>${esc(p)}</li>`).join('')}</ul>`, 'badge')}</div>
+    <div class="mt-space-lg">${cc(d.nomenclature.titre, `<ul class="font-body-sm text-on-surface-variant list-disc pl-5 space-y-1">${d.nomenclature.points.map(p => `<li>${esc(p)}</li>`).join('')}</ul>`, 'badge', 'symphonie_import')}</div>
 
-    <div class="mt-space-lg">${cc('Composants & services', `<div class="grid grid-cols-1 lg:grid-cols-3 gap-space-md">${composants}</div>`, 'widgets')}</div>
+    <div class="mt-space-lg">${cc('Composants & services', `<div class="grid grid-cols-1 lg:grid-cols-3 gap-space-md">${composants}</div>`, 'widgets', 'composants')}</div>
 
     <div class="mt-space-lg">${cc('Base de données Oracle à Ivry', `${oracleSrv}
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-md mt-space-md">
         <div class="p-space-md rounded-xl bg-surface-container-low"><div class="font-title-md font-bold mb-1">Caractéristiques</div><ul class="font-body-sm text-on-surface-variant list-disc pl-5 space-y-0.5">${oracleDetail}</ul></div>
         <div class="p-space-md rounded-xl bg-surface-container-low"><div class="font-title-md font-bold mb-1">Sauvegardes</div><ul class="font-body-sm text-on-surface-variant list-disc pl-5 space-y-0.5">${oracleSauv}</ul></div>
       </div>
-      <p class="font-label-mono-sm text-secondary mt-space-sm">${esc(d.oracle.bascule)}</p>`, 'database')}</div>
+      <p class="font-label-mono-sm text-secondary mt-space-sm">${esc(d.oracle.bascule)}</p>`, 'database', 'oracle')}</div>
 
-    <div class="mt-space-lg">${cc('Matrice des flux réseau (par environnement)', flux, 'swap_horiz')}</div>
+    <div class="mt-space-lg">${cc('Matrice des flux réseau (par environnement)', flux, 'swap_horiz', 'flux')}</div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg mt-space-lg">
       ${cc('Interfaces & progiciels tiers', tbl([
         { label: 'Exécutable', get: r => cellMono(r.nom, 'text-primary') },
         { label: 'Rôle', get: r => esc(r.role) },
-      ], d.interfaces), 'cable')}
+      ], d.interfaces), 'cable', 'interfaces')}
       ${cc('Exploitation', `<div class="space-y-3">
         <div><div class="font-label-mono-sm text-secondary uppercase mb-1">Ordre de démarrage</div><ol class="font-body-sm text-on-surface list-decimal pl-5 space-y-0.5">${d.exploitation.demarrage.map(s => `<li>${esc(s)}</li>`).join('')}</ol>
           <p class="font-label-mono-sm text-secondary mt-1">Arrêt : ${esc(d.exploitation.arret)}</p></div>
         ${badgeLine('Purge des logs', esc(d.exploitation.purge))}
         ${badgeLine('Stockage documentaire', esc(d.exploitation.sauvegarde_doc))}
         ${badgeLine('Cohérence de version', esc(d.exploitation.coherence))}
-      </div>`, 'settings')}
+      </div>`, 'settings', 'exploitation')}
     </div>
 
     <div class="mt-space-lg">${cc('POSTE004 — est-ce la Symphonie Box ?', `<div class="p-space-md rounded-xl bg-amber-50 border border-amber-200">
@@ -1661,7 +1753,13 @@ async function viewArchitecture() {
       <p class="font-body-sm text-on-surface-variant mt-2">${esc(d.poste004.indice || '')}</p>
       ${d.poste004.autres ? `<p class="font-body-sm text-on-surface-variant mt-1">${esc(d.poste004.autres)}</p>` : ''}</div>`, 'search')}</div>
 
-    <p class="font-label-mono-sm text-outline mt-space-lg">Documents sources analysés (dossier « DOC TECHNIQUE », non versionné) : ${esc(d.docs_source.join(' · '))}</p>`;
+    <div class="mt-space-lg">${cc('Documents sources (visionneuse PDF)', `<div class="grid grid-cols-1 md:grid-cols-2 gap-space-sm">
+      ${(d.docs || []).map(doc => `<button data-act="pdf:${encodeURIComponent(doc.fichier)}||${encodeURIComponent(doc.titre)}" class="text-left p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container flex items-start gap-2">
+        <span class="material-symbols-outlined text-primary mt-0.5">picture_as_pdf</span>
+        <div class="min-w-0"><div class="font-title-sm text-on-surface clamp1">${esc(doc.titre)}</div>
+          <div class="font-label-mono-sm text-secondary">${esc(doc.fichier)}${doc.pages ? ' · ' + doc.pages + ' p.' : ''}</div>
+          <div class="font-body-sm text-on-surface-variant clamp1">${esc(doc.role)}</div></div></button>`).join('')}
+    </div>`, 'folder_open', 'client_lourd')}</div>`;
 }
 
 /* ═══════════════════════════ PROCÉDURES STOCKÉES ═══════════════════════════ */
@@ -2361,6 +2459,118 @@ const API_GETTING_STARTED = (origin) => [
   ['Données d\u2019un référentiel', `GET ${origin}/api/v1/referentiels/biens?q=&limit=100&offset=0&total=1`],
   ['Fiche', `GET ${origin}/api/v1/referentiels/biens/:id`],
 ];
+/* ═══════════════════════════ ADMINISTRATION ═══════════════════════════ */
+const ADMIN_ROLES = {
+  none: { label: 'Aucun accès', tone: 'red', icon: 'block', desc: 'Compte connu mais désactivé : connexion refusée.' },
+  user: { label: 'Utilisateur', tone: 'blue', icon: 'person', desc: 'Accès à l\u2019application (consultation / écritures autorisées).' },
+  admin: { label: 'Administrateur', tone: 'amber', icon: 'admin_panel_settings', desc: 'Accès complet + administration (utilisateurs, clés API).' },
+};
+function roleBadge(role) { const r = ADMIN_ROLES[role] || ADMIN_ROLES.none; return badge(r.label, r.tone, r.icon); }
+async function viewUsers() {
+  const s = state.users;
+  if (s.rows === null && !s.loading) {
+    s.loading = true; s.error = null;
+    try { const r = await api('/api/admin/users'); s.rows = r.rows || []; s.roles = r.roles || ['none', 'user', 'admin']; }
+    catch (e) { s.error = e.message; s.rows = []; }
+    finally { s.loading = false; }
+  }
+  const rows = s.rows || [];
+  const counts = { admin: 0, user: 0, none: 0 };
+  rows.forEach((r) => { counts[r.role] = (counts[r.role] || 0) + 1; });
+  const cols = [
+    { label: 'Identifiant', get: r => `<div class="font-title-sm text-on-surface font-semibold">${esc(r.login)}</div><div class="font-label-mono-sm text-secondary">${esc(r.display || '')}</div>` },
+    { label: 'Rôle', center: true, get: r => roleBadge(r.role) },
+    { label: 'Email', get: r => cell(r.email) },
+    { label: 'Source', center: true, get: r => badge(r.source === 'env' ? 'env' : (r.createdBy === 'local' ? 'local' : 'fichier'), r.source === 'env' ? 'amber' : 'slate') },
+    { label: 'Dernière connexion', get: r => r.lastLoginAt ? cellMono(r.lastLoginAt.slice(0, 16).replace('T', ' '), 'text-secondary') : dash },
+    { label: 'Action', center: true, get: r => {
+      const sel = `<select data-act="userRole:${esc(r.login)}" class="h-8 px-2 rounded bg-surface-container-low font-label-mono-sm" ${r.source === 'env' ? 'disabled' : ''}>${['none', 'user', 'admin'].map(x => `<option value="${x}" ${r.role === x ? 'selected' : ''}>${ADMIN_ROLES[x].label}</option>`).join('')}</select>`;
+      const del = r.source === 'env' ? '' : `<button data-act="userDel:${esc(r.login)}" class="ml-1 px-2 py-1 rounded bg-error-container text-on-error-container font-label-mono-sm hover:bg-error hover:text-on-error">Suppr.</button>`;
+      return `<div class="flex items-center justify-center gap-1">${sel}${del}</div>`;
+    } },
+  ];
+  view.innerHTML = `
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Administration', link: '#/administration' }, { label: 'Utilisateurs' }])}
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md mb-space-lg">
+      <div>
+        <span class="font-label-mono-sm px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-semibold uppercase tracking-wider">Habilitations ASTECH Explorer</span>
+        <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight mt-1">Utilisateurs &amp; rôles</h1>
+        <p class="font-body-md text-body-md text-secondary">Qui peut se connecter à ASTECH Explorer et avec quels droits. Les identifiants sont ceux de l'Annuaire Active Directory (login) ; le rôle est propre à l'application.</p>
+      </div>
+      <button data-act="usersRefresh" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-container-lowest shadow-sm font-title-md hover:bg-surface-container"><span class="material-symbols-outlined text-[18px]">refresh</span>Rafraîchir</button>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-space-md mb-space-lg">
+      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="font-title-sm text-secondary uppercase">Administrateurs</div><div class="font-headline-xl font-bold text-amber-600 tabular">${num(counts.admin)}</div><div class="font-label-mono-sm text-secondary">accès complet + admin</div></div>
+      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="font-title-sm text-secondary uppercase">Utilisateurs</div><div class="font-headline-xl font-bold text-primary tabular">${num(counts.user)}</div><div class="font-label-mono-sm text-secondary">accès application</div></div>
+      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="font-title-sm text-secondary uppercase">Sans accès</div><div class="font-headline-xl font-bold text-error tabular">${num(counts.none)}</div><div class="font-label-mono-sm text-secondary">connexion refusée</div></div>
+    </div>
+    ${s.error ? `<div class="p-space-md rounded-xl bg-error-container/40 border border-error/30 text-on-error-container font-body-sm mb-space-lg">${esc(s.error)}</div>` : ''}
+    ${s.notice ? `<div class="p-space-md rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 font-body-sm mb-space-lg">${esc(s.notice)}</div>` : ''}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-space-lg">
+      <div class="lg:col-span-2">${card('Comptes (' + num(rows.length) + ')', dataTable(cols, rows, { empty: 'Aucun compte enregistré. Ajoutez-en un à droite.' }))}</div>
+      <div>${card('Ajouter / mettre à jour un compte', `
+        <div class="p-space-lg flex flex-col gap-space-md">
+          <label><span class="font-label-mono-sm text-secondary uppercase">Identifiant AD (login)</span>
+            <input id="userLogin" class="mt-1 w-full h-10 px-3 rounded-lg bg-surface-container-low focus:outline-none" placeholder="ex. machevalier, SFortas…" /></label>
+          <label><span class="font-label-mono-sm text-secondary uppercase">Nom affiché (optionnel)</span>
+            <input id="userDisplay" class="mt-1 w-full h-10 px-3 rounded-lg bg-surface-container-low focus:outline-none" placeholder="Prénom Nom" /></label>
+          <label><span class="font-label-mono-sm text-secondary uppercase">Email (optionnel)</span>
+            <input id="userEmail" class="mt-1 w-full h-10 px-3 rounded-lg bg-surface-container-low focus:outline-none" placeholder="agent@ivry94.fr" /></label>
+          <label><span class="font-label-mono-sm text-secondary uppercase">Rôle</span>
+            <select id="userRoleSel" class="mt-1 w-full h-10 px-3 rounded-lg bg-surface-container-low focus:outline-none">
+              <option value="user">Utilisateur — accès application</option>
+              <option value="admin">Administrateur — accès complet + admin</option>
+              <option value="none">Aucun accès — connexion refusée</option>
+            </select></label>
+          <button data-act="userAdd" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary font-title-md hover:bg-primary shadow-md"><span class="material-symbols-outlined text-[18px]">person_add</span>Enregistrer</button>
+        </div>`, null, 'Le rôle est appliqué à la prochaine connexion (ou immédiatement si reconnecté).')}</div>
+    </div>
+    <div class="mt-space-lg">${card('Comment fonctionnent les habilitations ?', `
+      <div class="p-space-lg grid grid-cols-1 md:grid-cols-3 gap-space-md">
+        ${['none', 'user', 'admin'].map(k => `<div class="p-space-md rounded-xl bg-surface-container-low">
+          <div class="flex items-center gap-2">${roleBadge(k)}</div>
+          <p class="font-body-sm text-on-surface-variant mt-2">${esc(ADMIN_ROLES[k].desc)}</p></div>`).join('')}
+      </div>
+      <div class="px-space-lg pb-space-lg font-body-sm text-on-surface-variant">
+        <p class="mt-space-sm"><strong>Compte de secours local :</strong> <span class="font-label-mono-sm">admin</span> (mot de passe dédié) — permet l'accès administrateur même si l'AD / l'APM est indisponible.</p>
+        <p class="mt-space-sm">Les comptes <span class="font-label-mono-sm">env</span> sont forcés par la variable <span class="font-label-mono-sm">ASTECH_ADMIN_USERS</span> (non modifiables ici).</p>
+      </div>`, 'help')}</div>`;
+}
+async function runUserAdd() {
+  const s = state.users;
+  const login = (document.getElementById('userLogin').value || '').trim();
+  const display = (document.getElementById('userDisplay').value || '').trim();
+  const email = (document.getElementById('userEmail').value || '').trim();
+  const role = document.getElementById('userRoleSel').value;
+  if (!login) { s.error = "L'identifiant est obligatoire."; s.notice = null; return viewUsers(); }
+  s.error = null;
+  try { await api('/api/admin/users', { method: 'POST', body: { login, display, email, role } }); s.notice = 'Compte « ' + login + ' » enregistré (rôle : ' + role + ').'; s.rows = null; }
+  catch (e) { s.error = e.message; }
+  viewUsers();
+}
+async function runUserRole(login, role) {
+  const s = state.users; s.error = null; s.notice = null;
+  try { await api('/api/admin/users', { method: 'POST', body: { login, role } }); s.notice = 'Rôle de « ' + login + ' » mis à jour : ' + role + '.'; s.rows = null; }
+  catch (e) { s.error = e.message; }
+  viewUsers();
+}
+async function runUserDel(login) {
+  const s = state.users;
+  if (!window.confirm('Supprimer le compte « ' + login + ' » ? La personne n\u2019aura plus accès.')) return;
+  s.error = null; s.notice = null;
+  try { await api('/api/admin/users/' + encodeURIComponent(login), { method: 'DELETE' }); s.notice = 'Compte « ' + login + ' » supprimé.'; s.rows = null; }
+  catch (e) { s.error = e.message; }
+  viewUsers();
+}
+async function viewAdministration() {
+  const s = state.admin;
+  const nUsers = (state.users && state.users.rows) ? state.users.rows.length : null;
+  const tabBtn = (k, label, icon) => `<button data-act="adminTab:${k}" class="px-3 py-1.5 rounded font-title-md inline-flex items-center gap-1.5 ${s.tab === k ? 'bg-surface-container-lowest text-on-surface shadow-sm font-semibold' : 'text-secondary hover:text-on-surface'}"><span class="material-symbols-outlined text-[16px]">${icon}</span>${label}</button>`;
+  const tabs = `<div class="flex items-center gap-1 bg-surface-container-low p-1 rounded-lg mb-space-md">${tabBtn('users', 'Utilisateurs & rôles', 'manage_accounts')}${tabBtn('keys', 'Clés API', 'key')}</div>`;
+  if (s.tab === 'keys') { await viewApiKeys(); document.getElementById('view').insertAdjacentHTML('afterbegin', tabs); return; }
+  await viewUsers();
+  document.getElementById('view').insertAdjacentHTML('afterbegin', tabs);
+}
 async function viewApiKeys() {
   const s = state.apikeys;
 
@@ -2542,6 +2752,12 @@ function handleAction(action, value, el) {
     case 'procGroup': state.procs.group = value || ''; viewProcedures(); break;
     case 'procType': state.procs.type = el.value; viewProcedures(); break;
     case 'procStatus': state.procs.status = value || ''; viewProcedures(); break;
+    case 'pdf': { const parts = String(value || '').split('|'); openPdf(decodeURIComponent(parts[0]), parts[1] ? Number(parts[1]) : null, decodeURIComponent(parts[2] || '')); break; }
+    case 'adminTab': state.admin.tab = value; viewAdministration(); break;
+    case 'usersRefresh': state.users.rows = null; viewUsers(); break;
+    case 'userAdd': runUserAdd(); break;
+    case 'userRole': { const login = decodeURIComponent(value); const role = el.value; runUserRole(login, role); break; }
+    case 'userDel': runUserDel(decodeURIComponent(value)); break;
     case 'logout': doLogout(); break;
     case 'docTab': state.docs.tab = value; state.pages = {}; state.q = ''; viewDocuments(); break;
     case 'docModule': state.docs.module = value || ''; state.docs.tab = 'tables'; state.pages = {}; viewDocuments(); break;

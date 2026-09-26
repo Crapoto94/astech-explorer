@@ -12,7 +12,10 @@ const path = require('path');
 const crypto = require('crypto');
 const { AsyncLocalStorage } = require('async_hooks');
 const apikeys = require('./apikeys');
+const users = require('./users');
+const localauth = require('./localauth');
 const { ARCHITECTURE } = require('./architecture');
+const { DOCS: ARCH_DOCS, SOURCES: ARCH_SOURCES } = require('./architecture-docs');
 
 // Charge .env (local, non commité) avant toute lecture de process.env.
 (function loadDotEnv() {
@@ -2031,28 +2034,79 @@ async function adAuthenticate(username, password) {
   return { status: r.status, data };
 }
 async function authenticateAgent(req, res) {
-  if (!APM.configured) return sendJson(res, 503, { error: "Authentification AD non configurée (APM_API_KEY manquant)." });
   let body; try { body = await readJsonBody(req); } catch (e) { return sendJson(res, 400, { error: e.message }); }
   const username = String(body.username || '').trim();
   const password = String(body.password || '');
   if (!username || !password) return sendJson(res, 400, { error: 'Nom d\'utilisateur et mot de passe requis.' });
+  // Compte administrateur LOCAL de secours : fonctionne même sans AD/APM.
+  if (localauth.login && username.toLowerCase() === localauth.login && localauth.verify(username, password)) {
+    const exp = Date.now() + SESSION_TTL_MS;
+    const token = signSession({ sub: username.toLowerCase(), dn: 'Compte local (secours)', role: 'admin', local: true, iat: Date.now(), exp });
+    return sendJson(res, 200, { success: true, username: username.toLowerCase(), dn: 'Compte local (secours)', role: 'admin', local: true, expiresAt: new Date(exp).toISOString(), token });
+  }
+  if (!APM.configured) return sendJson(res, 503, { error: "Authentification AD non configurée (APM_API_KEY manquant). Utilisez le compte local de secours." });
   const allow = agentAllowed(username);
   if (!allow.ok) return sendJson(res, 403, { error: allow.reason });
+  // Rôle applicatif : par défaut 'user' si l'utilisateur est connu, sinon
+  // 'none' (accès refusé). ASTECH_ADMIN_USERS force 'admin'.
+  const role = users.roleOf(username);
+  if (role === 'none') return sendJson(res, 403, { error: "Accès refusé : votre compte n'est pas autorisé à utiliser ASTECH Explorer." });
   let out;
   try { out = await adAuthenticate(username, password); }
   catch (e) { return sendJson(res, 502, { error: 'APM injoignable : ' + e.message }); }
   const ok = out.status === 200 && out.data && (out.data.success === true || out.data.success === undefined);
   if (!ok) return sendJson(res, 401, { error: (out.data && out.data.error) || 'Identifiants invalides.' });
+  users.touchLogin(username);
   const exp = Date.now() + SESSION_TTL_MS;
-  const token = signSession({ sub: username, dn: out.data.dn || null, iat: Date.now(), exp });
-  return sendJson(res, 200, { success: true, username, dn: out.data.dn || null, expiresAt: new Date(exp).toISOString(), token });
+  const token = signSession({ sub: username, dn: out.data.dn || null, role, iat: Date.now(), exp });
+  return sendJson(res, 200, { success: true, username, dn: out.data.dn || null, role, expiresAt: new Date(exp).toISOString(), token });
+}
+// Rôle courant = source de vérité (users.json), re-lu à chaque requête.
+function currentRole(req) {
+  const s = readSession(req);
+  if (!s) return null;
+  // Le compte local de secours est toujours administrateur.
+  if (s.local || (localauth.login && String(s.sub).toLowerCase() === localauth.login)) return { session: s, role: 'admin' };
+  return { session: s, role: users.roleOf(s.sub) };
 }
 function whoami(req, res) {
-  const s = readSession(req);
-  return s ? sendJson(res, 200, { authenticated: true, username: s.sub, dn: s.dn, expiresAt: new Date(s.exp).toISOString() })
-    : sendJson(res, 401, { authenticated: false });
+  const cur = currentRole(req);
+  if (!cur) return sendJson(res, 401, { authenticated: false });
+  const { session: s, role } = cur;
+  return sendJson(res, role === 'none' ? 403 : 200, { authenticated: true, username: s.sub, dn: s.dn, role, local: !!s.local, expiresAt: new Date(s.exp).toISOString() });
 }
 async function logoutAgent(req, res) { return sendJson(res, 200, { success: true }); }
+
+// ─── Administration des utilisateurs (réservée aux admins) ───────────────────
+async function handleAdminUsers(req, res, p) {
+  const cur = currentRole(req);
+  if (!cur || cur.role !== 'admin') return sendJson(res, 403, { error: 'Réservé aux administrateurs.' });
+  loadUsers();
+  if (p === '/api/admin/users') {
+    if (req.method === 'GET') { const list = users.list(); return sendJson(res, 200, { count: list.length, roles: users.VALID_ROLES, rows: list }); }
+    if (req.method === 'POST' || req.method === 'PUT') {
+      let body; try { body = await readJsonBody(req); } catch (e) { return sendJson(res, 400, { error: e.message }); }
+      try {
+        const r = users.upsert({ login: body.login, display: body.display, role: body.role, email: body.email, createdBy: cur.session.sub });
+        return sendJson(res, 200, { user: r });
+      } catch (e) { return sendJson(res, e.status || 400, { error: e.message }); }
+    }
+    res.setHeader('Allow', 'GET, POST, PUT');
+    return sendJson(res, 405, { error: 'Méthode non autorisée' });
+  }
+  const m = /^\/api\/admin\/users\/([^/]+)$/.exec(p);
+  if (m) {
+    const login = decodeURIComponent(m[1]);
+    if (req.method === 'DELETE') {
+      try { const r = users.remove(login); return r ? sendJson(res, 200, { removed: true, user: r }) : sendJson(res, 404, { error: 'Utilisateur introuvable' }); }
+      catch (e) { return sendJson(e.status || 409, { error: e.message }); }
+    }
+    res.setHeader('Allow', 'DELETE');
+    return sendJson(res, 405, { error: 'Méthode non autorisée' });
+  }
+  return sendJson(res, 404, { error: 'Not found' });
+}
+function loadUsers() { try { users.load(); } catch { /* ignore */ } }
 
 async function handleAdminKeys(req, res, p) {
   if (p === '/api/admin/keys') {
@@ -2092,6 +2146,20 @@ const server = http.createServer((req, res) => {
   DB_ENV.run({ env }, () => handleRequest(req, res, p, sp));
 });
 
+const MIME = { '.pdf': 'application/pdf', '.mjs': 'text/javascript', '.js': 'text/javascript', '.wasm': 'application/wasm', '.json': 'application/json', '.css': 'text/css', '.png': 'image/png', '.bcmap': 'application/octet-stream', '.pfb': 'application/octet-stream', '.ttf': 'font/ttf', '.otf': 'font/otf', '.map': 'application/json' };
+function serveStatic(res, p) {
+  // p commence par /docs/architecture-pdf/ ou /vendor/ : on résout sous public/.
+  const rel = decodeURIComponent(p).replace(/^\/+/, '');
+  const file = path.join(__dirname, 'public', rel);
+  const root = path.join(__dirname, 'public');
+  if (!file.startsWith(root)) { res.writeHead(403); return res.end('Forbidden'); }
+  fs.readFile(file, (err, buf) => {
+    if (err) { res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found'); }
+    res.writeHead(200, { 'Content-Type': MIME[path.extname(file).toLowerCase()] || 'application/octet-stream', 'Cache-Control': 'public, max-age=86400' });
+    res.end(buf);
+  });
+}
+
 async function handleRequest(req, res, p, sp) {
   const term = (sp.get('q') || '').trim();
   try {
@@ -2099,6 +2167,11 @@ async function handleRequest(req, res, p, sp) {
       const html = fs.readFileSync(path.join(__dirname, 'public', 'index.html'));
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store, must-revalidate' });
       return res.end(html);
+    }
+    // Fichiers statiques (PDF d'architecture + librairie pdf.js) — servis sans session
+    // car une visionneuse <iframe>/fetch ne porte pas l'en-tête de session.
+    if (p.startsWith('/docs/architecture-pdf/') || p.startsWith('/vendor/')) {
+      return serveStatic(res, p);
     }
     if (p === '/api/config') {
       return sendJson(res, 200, { connectInfo: dbConnectInfo(), readOnly: !WRITE_ENABLED, writeEnabled: WRITE_ENABLED, dbEnv: currentDbEnv(), dbEnvs: dbEnvList(), limit: LIMIT, studioRh: STUDIO_RH.configured, studioRhUrl: STUDIO_RH.url || null, version: '3.0.0', publicApi: '/api/v1', apiKeysEnabled: true, authEnabled: AUTH_ENABLED_REQ, adConfigured: APM.configured, adUrl: APM.configured ? APM.url : null });
@@ -2113,18 +2186,27 @@ async function handleRequest(req, res, p, sp) {
     if (p === '/api/auth/logout') return logoutAgent(req, res);
     // API publique versionnée (référentiels, protégée par clé API)
     if (p === '/api/v1' || p.startsWith('/api/v1/')) return handleReferentielsApi(req, res, p, sp);
-    // À partir d'ici, routes internes : si l'auth est imposée, exiger une session AD valide.
-    if (AUTH_ENABLED_REQ && p.startsWith('/api/') && !readSession(req)) {
-      // Même origine / même site : les appels navigateur portent le jeton en en-tête.
-      if (req.method !== 'GET' && req.method !== 'HEAD' && p === '/api/') { /* no-op */ }
-      return sendJson(res, 401, { error: 'Authentification requise (session AD).' });
+    // À partir d'ici, routes internes : si l'auth est imposée, exiger une session
+    // AD valide ET un rôle applicatif (user ou admin).
+    if (AUTH_ENABLED_REQ && p.startsWith('/api/')) {
+      const cur = currentRole(req);
+      if (!cur) return sendJson(res, 401, { error: 'Authentification requise (session AD).' });
+      if (cur.role === 'none') return sendJson(res, 403, { error: "Accès refusé : compte non autorisé." });
     }
+    // Administration (utilisateurs, clés API) réservée aux admins si l'auth est imposée.
+    const isAdminPath = p === '/api/admin/keys' || p.startsWith('/api/admin/keys/') || p === '/api/admin/users' || p.startsWith('/api/admin/users/');
+    if (isAdminPath && AUTH_ENABLED_REQ) {
+      const cur = currentRole(req);
+      if (!cur || cur.role !== 'admin') return sendJson(res, 403, { error: 'Réservé aux administrateurs.' });
+    }
+    if (p === '/api/admin/users' || p.startsWith('/api/admin/users/')) return handleAdminUsers(req, res, p);
     if (p === '/api/admin/keys' || p.startsWith('/api/admin/keys/')) return handleAdminKeys(req, res, p);
     if (p === '/api/dashboard') return sendJson(res, 200, await getDashboard());
     if (p === '/api/referentiels-compteurs') return sendJson(res, 200, { counts: await refCounts() });
 
     // Architecture (référentiel statique issu des dossiers techniques)
-    if (p === '/api/architecture') return sendJson(res, 200, ARCHITECTURE);
+    if (p === '/api/architecture') return sendJson(res, 200, { ...ARCHITECTURE, docs: ARCH_DOCS, sources: ARCH_SOURCES });
+    if (p === '/api/architecture/docs') return sendJson(res, 200, { docs: ARCH_DOCS, sources: ARCH_SOURCES });
 
     // Magasins & stock
     if (p === '/api/magasins') return sendJson(res, 200, { rows: await listMagasins() });
