@@ -30,6 +30,21 @@ services:
       # Source Studio-RH (optionnelle). Laisser vide tant que non fournie.
       STUDIO_RH_API_URL: "${STUDIO_RH_API_URL:-}"
       STUDIO_RH_API_KEY: "${STUDIO_RH_API_KEY:-}"
+      STUDIO_RH_INSECURE_TLS: "${STUDIO_RH_INSECURE_TLS:-}"
+      # Authentification AD (APM de la Ville) + session applicative.
+      # Sans ces variables, le conteneur ne peut PAS imposer la connexion.
+      APM_API_URL: "${APM_API_URL:-}"
+      APM_API_KEY: "${APM_API_KEY:-}"
+      APM_INSECURE_TLS: "${APM_INSECURE_TLS:-}"
+      # 1 = impose la connexion AD pour accéder à l'application.
+      ASTECH_REQUIRE_AUTH: "${ASTECH_REQUIRE_AUTH:-0}"
+      ASTECH_AGENT_ALLOW: "${ASTECH_AGENT_ALLOW:-}"
+      ASTECH_AGENT_DENY: "${ASTECH_AGENT_DENY:-}"
+      ASTECH_ADMIN_USERS: "${ASTECH_ADMIN_USERS:-}"
+      ASTECH_SESSION_SECRET: "${ASTECH_SESSION_SECRET:-}"
+      ASTECH_SESSION_TTL_MS: "${ASTECH_SESSION_TTL_MS:-}"
+      ASTECH_LOCAL_ADMIN_LOGIN: "${ASTECH_LOCAL_ADMIN_LOGIN:-}"
+      ASTECH_LOCAL_ADMIN_PASSWORD_HASH: "${ASTECH_LOCAL_ADMIN_PASSWORD_HASH:-}"
       # API référentiels en lecture seule — clés au format "nom:cle,nom2:cle2"
       # (durables : reprises à chaque redémarrage même après reconstruction).
       # La gestion des clés (/api/admin/keys) est ouverte à l'UI locale, sans jeton.

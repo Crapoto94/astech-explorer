@@ -43,6 +43,9 @@ L'application est ensuite joignable sur `http://<serveur>:8099`.
 | `ORACLE_ASTECH_TEST_HOST/PORT/SERVICE/USER/PASSWORD` | Base Oracle **TEST** (optionnelle) | — |
 | `ASTECH_ENV` | Profil actif au démarrage (`prod`/`test`) | `prod` |
 | `STUDIO_RH_API_URL` / `STUDIO_RH_API_KEY` | Source Studio-RH | — |
+| `APM_API_URL` / `APM_API_KEY` | Authentification AD via l'APM de la Ville | — |
+| `ASTECH_REQUIRE_AUTH` | `1` = impose la connexion AD | `0` |
+| `ASTECH_SESSION_SECRET` | Secret de signature des sessions (HMAC) | généré |
 | `ASTECH_ALLOW_WRITES` | `1` = autorise les écritures | `0` |
 | `ASTECH_API_KEYS` | Clés API référentiels `nom:cle,...` | vide |
 | `PORT` | Port HTTP | `8099` |
@@ -110,4 +113,5 @@ Mise à jour : `git pull` puis `docker compose up -d --build`.
 | `Cannot find module './apikeys'` | Image ancienne : reconstruire (`--build`). |
 | `ORA-01005: null password given` | `ORACLE_ASTECH_PASSWORD` absent de `.env`. |
 | Écritures refusées (`403`) | `ASTECH_ALLOW_WRITES` ≠ `1`. |
+| Pas de demande de connexion dans Docker | `APM_*` / `ASTECH_REQUIRE_AUTH` non transmis au conteneur (voir `docker-compose.yml`) : le conteneur ne lit pas `.env`. |
 | Profil TEST absent de l'UI | Variables `ORACLE_ASTECH_TEST_*` non renseignées. |
