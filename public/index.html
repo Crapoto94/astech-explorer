@@ -98,6 +98,7 @@ tailwind.config = {
       <a data-link="#/referentiels" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/referentiels">RÃ©fÃ©rentiels</a>
       <a data-link="#/magasins" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/magasins">Magasins</a>
       <a data-link="#/parc" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/parc">Parc auto</a>
+      <a data-link="#/procedures" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/procedures">Procédures</a>
       <a data-link="#/interventions" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/interventions">Interventions</a>
       <a data-link="#/indices" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/indices">Indices</a>
       <a data-link="#/apikeys" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/apikeys">ClÃ©s API</a>
@@ -284,6 +285,7 @@ const state = {
   apikeys: { keys: null, loading: false, error: null, created: null, copied: false },
   magasins: { code: '', enStock: true, list: null },
   parc: { tab: 'vehicules', service: '', etat: '', page: 1 },
+  procs: { type: '', group: '' },
   locatif: { tab: 'echeances', mode: 'futures', num: '' },
   refs: { type: 'biens', genre: '' },
   inter: { etat: '', type: '', period: '12m', page: 1 },
@@ -301,7 +303,7 @@ function go(hash) { if (location.hash === hash) render(); else location.hash = h
 function setNavActive(route) {
   document.querySelectorAll('#mainNav a').forEach(a => {
     const r = a.getAttribute('data-link').replace('#/', '');
-    const on = (route === r) || (route === 'bien' && r === 'locatif') || (route === 'contrat' && r === 'locatif') || (route === 'locataire' && r === 'locatif') || (route === 'agent' && r === 'agents') || (route === 'intervention' && r === 'interventions') || (route === 'magasin' && r === 'magasins') || (route === 'vehicule' && r === 'parc');
+    const on = (route === r) || (route === 'bien' && r === 'locatif') || (route === 'contrat' && r === 'locatif') || (route === 'locataire' && r === 'locatif') || (route === 'agent' && r === 'agents') || (route === 'intervention' && r === 'interventions') || (route === 'magasin' && r === 'magasins') || (route === 'vehicule' && r === 'parc') || (route === 'procedure' && r === 'procedures');
     a.className = 'navlink text-body-sm font-body-sm pb-2 transition-colors border-b-2 ' + (on ? 'text-white border-primary-container font-semibold' : 'text-[#94a3b8] hover:text-white border-transparent');
   });
 }
@@ -320,6 +322,7 @@ async function render() {
       referentiels: viewReferentiels, interventions: viewInterventions, indices: viewIndices, apikeys: viewApiKeys,
       magasins: () => viewMagasins(arg), magasin: () => viewMagasins(arg),
       parc: () => viewParc(arg), vehicule: () => viewParcVehicule(arg),
+      procedures: viewProcedures, procedure: () => viewProcedure(arg),
       agent: () => viewAgentFiche(arg), bien: () => viewBien(arg), contrat: () => viewContrat(arg),
       locataire: () => viewLocataire(arg), intervention: () => viewInterventionFiche(arg)
     };
@@ -1387,6 +1390,82 @@ async function runPush(confirmProd) {
 
 
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• DEMANDE D'INTERVENTION â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ═══════════════════════════ PROCÉDURES STOCKÉES ═══════════════════════════ */
+function procTypeBadge(t) {
+  if (t === 'FUNCTION') return badge('FONCTION', 'purple');
+  if (t === 'PACKAGE') return badge('PACKAGE', 'primary');
+  if (t === 'PACKAGE BODY') return badge('PKG BODY', 'slate');
+  return badge('PROCÉDURE', 'blue');
+}
+async function viewProcedures() {
+  const s = state.procs;
+  const params = new URLSearchParams();
+  if (state.q) params.set('q', state.q);
+  if (s.type) params.set('type', s.type);
+  if (s.group) params.set('group', s.group);
+  const d = await api('/api/procedures?' + params.toString());
+  const rows = s.group ? d.rows.filter((r) => r.group === s.group) : d.rows;
+  const cols = [
+    { label: 'Nom', get: r => `<span class="font-label-mono-sm font-semibold text-primary">${esc(r.name)}</span>` },
+    { label: 'Type', center: true, get: r => procTypeBadge(r.type) },
+    { label: 'Description (déduite)', get: r => `<div class="font-body-sm clamp1" style="max-width:520px">${esc(r.description || '')}</div>` },
+    { label: 'Statut', center: true, get: r => r.status === 'VALID' ? badge('VALIDE', 'green') : badge('INVALIDE', 'red') },
+    { label: 'Lignes', right: true, get: r => cellMono(num(r.lignes), 'text-secondary') },
+    { label: 'Dernière MAJ', get: r => cellMono(r.maj, 'text-secondary') }
+  ];
+  const groupChips = `<div class="flex flex-wrap gap-2 mb-space-md">
+    <button data-act="procGroup:" class="px-3 py-1.5 rounded-lg font-label-mono-sm ${!s.group ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface hover:bg-surface-container-high'}">Tous <span class="opacity-70">(${num(d.total)})</span></button>
+    ${d.groups.map(g => `<button data-act="procGroup:${esc(g.key)}" title="${esc(g.desc)}" class="px-3 py-1.5 rounded-lg font-label-mono-sm ${s.group === g.key ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface hover:bg-surface-container-high'}">${esc(g.label)} <span class="opacity-70">(${num(g.count)})</span></button>`).join('')}
+  </div>`;
+  const invalides = d.rows.filter(r => r.status !== 'VALID').length;
+  view.innerHTML = `
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Procédures stockées' }])}
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md mb-space-md">
+      <div>
+        <span class="px-2 py-0.5 rounded bg-surface-container font-label-mono-sm text-primary font-semibold">DICTIONNAIRE: ALL_OBJECTS · ALL_SOURCE (schéma ASTECHIVR)</span>
+        <h1 class="font-headline-lg text-on-surface tracking-tight mt-1">Procédures stockées, fonctions &amp; packages</h1>
+        <p class="font-body-md text-on-surface-variant">Objets PL/SQL de la base, classés par domaine. Les descriptions sont déduites du nom (les commentaires source sont rarement renseignés).</p>
+      </div>
+      <div class="grid grid-cols-3 gap-space-sm">
+        <div class="p-space-sm rounded-xl bg-surface-container-lowest shadow-sm text-center"><div class="font-headline-md font-bold tabular">${num(d.total)}</div><div class="font-label-mono-sm text-secondary">objets</div></div>
+        <div class="p-space-sm rounded-xl bg-surface-container-lowest shadow-sm text-center"><div class="font-headline-md font-bold text-primary tabular">${num(d.groups.length)}</div><div class="font-label-mono-sm text-secondary">groupes</div></div>
+        <div class="p-space-sm rounded-xl bg-surface-container-lowest shadow-sm text-center"><div class="font-headline-md font-bold text-error tabular">${num(invalides)}</div><div class="font-label-mono-sm text-secondary">invalides</div></div>
+      </div>
+    </div>
+    <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm mb-space-md flex flex-wrap gap-space-sm items-center">
+      <div class="relative flex-1 min-w-[240px]"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
+        <input id="procQ" value="${esc(state.q)}" class="w-full h-10 pl-10 pr-3 rounded bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher une procédure, fonction, package…" /></div>
+      <select data-act="procType" class="h-9 px-3 rounded-lg bg-surface-container-low font-body-sm">
+        <option value="">Tous les types</option>
+        ${['PROCEDURE', 'FUNCTION', 'PACKAGE', 'PACKAGE BODY'].map(t => `<option value="${t}" ${s.type === t ? 'selected' : ''}>${t}</option>`).join('')}
+      </select>
+      <span class="ml-auto font-label-mono-sm text-on-surface-variant">${num(rows.length)} affichée(s)</span>
+    </div>
+    ${groupChips}
+    <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+      ${dataTable(cols, rows, { empty: 'Aucun objet.', key: 'procs_' + (s.group || 'all'), rowLink: r => '#/procedure/' + encodeURIComponent(r.name) + '?type=' + encodeURIComponent(r.type) })}
+    </div>`;
+  bindSearch('#procQ');
+}
+async function viewProcedure(arg) {
+  const type = new URLSearchParams(location.hash.split('?')[1] || '').get('type') || 'PROCEDURE';
+  const d = await api('/api/procedure/' + encodeURIComponent(arg) + '?type=' + encodeURIComponent(type));
+  view.innerHTML = `
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Procédures stockées', link: '#/procedures' }, { label: d.name }])}
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-space-lg">
+      <div>
+        <div class="flex items-center gap-2">${procTypeBadge(d.type)}<span class="font-label-mono-sm text-secondary">${esc(d.group)}</span></div>
+        <h1 class="font-headline-lg text-on-surface tracking-tight mt-1 font-label-mono-md">${esc(d.name)}</h1>
+        <p class="font-body-md text-on-surface-variant">${esc(d.description || '')}</p>
+      </div>
+      <div class="font-label-mono-sm text-secondary">${num(d.lines)} ligne(s) source</div>
+    </div>
+    <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+      <div class="p-space-lg bg-surface-container-low/50 flex items-center gap-2"><span class="material-symbols-outlined text-primary">code</span><h2 class="font-headline-sm text-on-surface">Code source</h2></div>
+      <pre class="p-space-lg overflow-x-auto font-label-mono-sm text-[12px] leading-relaxed bg-[#0f172a] text-[#cbd5e1] max-h-[70vh]">${esc(d.source || '(source indisponible)')}</pre>
+    </div>`;
+}
+
 /* ═══════════════════════════ PARC AUTOMOBILE ═══════════════════════════ */
 function parcEtatBadge(st) {
   const s = (st || '').toUpperCase();
@@ -1846,6 +1925,8 @@ function handleAction(action, value, el) {
     case 'parcTab': state.parc.tab = value; viewParc(); break;
     case 'parcService': state.parc.service = el.value; state.parc.page = 1; viewParc(); break;
     case 'parcPage': state.parc.page = value === 'next' ? state.parc.page + 1 : Math.max(1, state.parc.page - 1); viewParc(); break;
+    case 'procGroup': state.procs.group = value || ''; viewProcedures(); break;
+    case 'procType': state.procs.type = el.value; viewProcedures(); break;
     case 'magasinEnStock': state.magasins.enStock = el.checked; viewMagasins(); break;
     case 'interPeriod': it.period = el.value; it.page = 1; viewInterventions(); break;
     case 'interEtat': it.etat = el.value; it.page = 1; viewInterventions(); break;
@@ -1894,7 +1975,7 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawe
 function wireGlobalSearch() {
   const s = $('#globalSearch');
   let t;
-  s.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { state.q = s.value.trim(); const r = parseHash().route; if (['agents', 'locatif', 'referentiels', 'interventions', 'magasins', 'magasin', 'parc', 'vehicule'].includes(r)) { if (r === 'agents') state.agents.page = 1; if (r === 'interventions') state.inter.page = 1; pendingFocus = '#globalSearch'; render(); } }, 450); });
+  s.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { state.q = s.value.trim(); const r = parseHash().route; if (['agents', 'locatif', 'referentiels', 'interventions', 'magasins', 'magasin', 'parc', 'vehicule', 'procedures'].includes(r)) { if (r === 'agents') state.agents.page = 1; if (r === 'interventions') state.inter.page = 1; pendingFocus = '#globalSearch'; render(); } }, 450); });
   s.addEventListener('keydown', (e) => { if (e.key === 'Enter') { state.q = s.value.trim(); pendingFocus = '#globalSearch'; render(); } });
 }
 

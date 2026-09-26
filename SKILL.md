@@ -667,6 +667,13 @@ https://github.com/Crapoto94/astech), port **8099** :
   (prêt véhicule) ; `TOURNEES`/`PLANNINGAGENT` existent mais **vides**.
   Contrôle technique : pas de table dédiée (rubriques dans `PATRI_FORM`).
   Endpoints : `/api/parc` (+`stats`, `/permis`, `/vehicule/:id`) ; UI route `#/parc`.
+- **Procédures stockées** : `ALL_OBJECTS`/`ALL_SOURCE` du schéma `ASTECHIVR`
+  (1212 `PROCEDURE`, 294 `FUNCTION`, 2 `PACKAGE` + 1 body ; **705 en `RPT*`** =
+  rapports). Classement par groupe déduit du préfixe du nom (`PROC_GROUPS`) :
+  rapports, arbo, interventions, contrats, comptabilité, agents, stock, parc,
+  fluides, système, calculs, API/triggers, divers. Description heuristique
+  (`procVerb` + préfixe). Endpoints `/api/procedures` (+ `?q&type&group`),
+  `/api/procedure/:name?type=` (source). UI route `#/procedures`.
 - **Docker Linux** : `Dockerfile` (base Oracle Linux 8 + `oracle-instantclient-basic`
   + Node 20) et `docker-compose.yml` ; voir README/DEPLOIEMENT pour les variables d'env.
 - Recherche via `UPPER(...) LIKE :q` (bind), `FETCH FIRST n ROWS ONLY`,

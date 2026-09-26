@@ -968,6 +968,77 @@ async function listPermis() {
   return { rows: droits, nb_conducteurs: Number((conducteurs[0] || {}).n || 0) };
 }
 
+// ─── Procédures stockées (dictionnaire Oracle) ───────────────────────────────
+// Classement par groupe à partir du préfixe du nom + mots-clés, avec une
+// description générique déduite du nom (les commentaires source Oracle sont
+// rarement renseignés). Lecture seule : ALL_OBJECTS / ALL_SOURCE.
+const PROC_GROUPS = [
+  { key: 'rapports', label: 'Rapports & éditions', re: /^(RPT|RAPPORT|ETAT|IMP)/i, desc: "Rapport / édition (génération d'état imprimable ou export)." },
+  { key: 'triggers_api', label: 'API & triggers applicatifs', re: /^(TRIGGERS_API|API_)/i, desc: 'API applicative (package) ou déclencheur associé.' },
+  { key: 'arbo', label: 'Patrimoine (ARBO)', re: /^(ARBO|BIEN|PATRI|IMMO|LOC)/i, desc: "Traitement sur le patrimoine / les biens (ARBO)." },
+  { key: 'interventions', label: 'Interventions & GMAO', re: /^(INTERV|AFFECTERINTERV|CREATIONINTERV|SP_.*INTERV|DEMANDE)/i, desc: "Traitement sur les interventions / demandes (GMAO)." },
+  { key: 'contrats', label: 'Contrats & locatif', re: /^(CONTR|CONT|LOYER|QUITT|REVIS|LOCATIF|CLOT)/i, desc: 'Traitement contractuel ou locatif (contrats, loyers, quittances, révisions).' },
+  { key: 'comptabilite', label: 'Comptabilité & facturation', re: /^(FACT|COMPTA|OPCOMPTA|BUDGET|BUDG|L_FACT|RECAP|TRESOR|MANDAT)/i, desc: 'Traitement comptable ou de facturation.' },
+  { key: 'agents', label: 'Agents, droits & RH', re: /^(UTIL|AGENT|DEMANDEUR|DROIT|ROLE|GROUPE|MAJ_UTIL|SP_VERIF)/i, desc: 'Gestion des agents, des droits ou des groupes.' },
+  { key: 'stock', label: 'Stocks & magasins', re: /^(STOCK|STO|MAGASIN|SORTIE|ENTREE|INVENTAIRE)/i, desc: 'Traitement de stock / magasin.' },
+  { key: 'parc', label: 'Parc automobile', re: /^(VEH|PARC|CARBUR|NRJ_|SINISTRE|REMPLACVEH)/i, desc: 'Traitement sur le parc automobile.' },
+  { key: 'fluides', label: 'Fluides & énergie', re: /^(FLUID|NRJ|RELEVE|CONSO|ENERGIE)/i, desc: 'Traitement sur les fluides / relevés de compteurs.' },
+  { key: 'systeme', label: 'Système, outils & BDD', re: /^(BDD|MAJ_|MAJDATATYPES|GETNEXTVALUE|GETPARAMETER|ADDTIMETODATE|ARCHIV|TRACAB|EXPORT|EXP_)/i, desc: 'Utilitaire technique ou maintenance de base.' },
+  { key: 'calculs', label: 'Calculs & contrôles', re: /^(CALC|CAL|VERIF|VER|CONTROLE|CTRL|ANO_)/i, desc: 'Calcul métier ou contrôle de cohérence.' },
+  { key: 'divers', label: 'Autres', re: /./, desc: 'Traitement métier (regroupement générique).' },
+];
+// Verbes de description à partir du préfixe du nom.
+const PROC_VERBS = [
+  [/^(CRE|CON|INS|ADD)/i, 'Création'],
+  [/^(UPD|MAJ|MOD|AFFI_MAJ)/i, 'Mise à jour'],
+  [/^(DEL|SUP|REMOV)/i, 'Suppression'],
+  [/^(GET|F_GET|FIND|SEARCH)/i, 'Lecture / recherche'],
+  [/^(VER|VERIF|CTRL|CONTROLE)/i, 'Vérification / contrôle'],
+  [/^(CAL|CALC)/i, 'Calcul'],
+  [/^(VER)/i, 'Validation'],
+];
+function procGroup(name, type) {
+  if (type === 'PACKAGE' || type === 'PACKAGE BODY') return 'triggers_api';
+  for (const g of PROC_GROUPS) { if (g.re.test(name)) return g.key; }
+  return 'divers';
+}
+function procVerb(name) {
+  for (const [re, v] of PROC_VERBS) { if (re.test(name)) return v; }
+  return null;
+}
+function procDescribe(name, type, group) {
+  const g = PROC_GROUPS.find((x) => x.key === group) || { desc: 'Traitement métier.', label: 'Autres' };
+  const verb = procVerb(name);
+  const kind = type === 'FUNCTION' ? 'Fonction' : type === 'PACKAGE' || type === 'PACKAGE BODY' ? 'Package' : 'Procédure';
+  return `${kind}. ${verb ? verb + ' — ' : ''}${g.desc}`;
+}
+async function listProcedures(f = {}) {
+  const typeFilter = (f.type || '').toUpperCase();
+  const binds = {};
+  const w = [`o.owner='ASTECHIVR'`, `o.object_type IN ('PROCEDURE','FUNCTION','PACKAGE','PACKAGE BODY')`];
+  if (typeFilter && ['PROCEDURE', 'FUNCTION', 'PACKAGE', 'PACKAGE BODY'].includes(typeFilter)) { w.push('o.object_type = :typ'); binds.typ = typeFilter; }
+  if (f.q) { binds.q = '%' + f.q.toUpperCase() + '%'; w.push('UPPER(o.object_name) LIKE :q'); }
+  if (f.group) { w.push(`(CASE ${PROC_GROUPS.map((g, i) => `WHEN REGEXP_LIKE(o.object_name, '${g.re.source.replace(/^\^/, '^')}', 'i') THEN '${g.key}'`).join(' ')} ELSE 'divers' END) = :grp`); binds.grp = f.group; }
+  const rows = await exec(`SELECT o.object_name AS name, o.object_type AS type, o.status, TO_CHAR(o.last_ddl_time,'DD/MM/YYYY') AS maj,
+      NVL((SELECT COUNT(*) FROM all_source s WHERE s.owner=o.owner AND s.name=o.object_name AND s.type=o.object_type),0) AS lignes
+    FROM all_objects o WHERE ${w.join(' AND ')} ORDER BY o.object_name FETCH FIRST 4100 ROWS ONLY`, binds, 4100);
+  const items = rows.map((r) => {
+    const group = procGroup(r.name, r.type);
+    return { name: r.name, type: r.type, status: r.status, maj: r.maj, lignes: Number(r.lignes), group, description: procDescribe(r.name, r.type, group) };
+  });
+  const byGroup = {};
+  for (const it of items) byGroup[it.group] = (byGroup[it.group] || 0) + 1;
+  const groups = PROC_GROUPS.map((g) => ({ key: g.key, label: g.label, desc: g.desc, count: byGroup[g.key] || 0 })).filter((g) => g.count > 0);
+  return { total: items.length, groups, rows: items };
+}
+async function getProcedureSource(name, type) {
+  const t = (type || 'PROCEDURE').toUpperCase();
+  const rows = await exec(`SELECT line, text FROM all_source WHERE owner='ASTECHIVR' AND name=:name AND type=:type ORDER BY type, line FETCH FIRST 4000 ROWS ONLY`, { name: String(name), type: t }, 4000);
+  const src = rows.map((r) => r.text).join('');
+  const group = procGroup(name, t);
+  return { name, type: t, group, description: procDescribe(name, t, group), lines: rows.length, source: src };
+}
+
 // ─── Magasins & stock ────────────────────────────────────────────────────────
 // Un « magasin » est une structure (V_SOCIETES) ; les articles sont dans STOCK
 // via STOCK.SREF_SOC = V_SOCIETES.COD.
@@ -1514,6 +1585,11 @@ async function handleRequest(req, res, p, sp) {
       const row = await refById(m[1], decodeURIComponent(m[2]));
       return row ? sendJson(res, 200, { type: m[1], row }) : sendJson(res, 404, { error: 'Entrée introuvable' });
     }
+
+    // Procédures stockées
+    if (p === '/api/procedures') return sendJson(res, 200, await listProcedures({ q: term, type: sp.get('type') || '', group: sp.get('group') || '' }));
+    m = p.match(/^\/api\/procedure\/([^/]+)$/);
+    if (m) { const d = await getProcedureSource(decodeURIComponent(m[1]), sp.get('type') || 'PROCEDURE'); return d ? sendJson(res, 200, d) : sendJson(res, 404, { error: 'Objet introuvable' }); }
 
     // Parc automobile
     if (p === '/api/parc') return sendJson(res, 200, await listParc({ q: term, service: sp.get('service') || '', etat: sp.get('etat') || '', page: sp.get('page'), pageSize: sp.get('pageSize') }));
