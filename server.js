@@ -2207,6 +2207,12 @@ async function handleRequest(req, res, p, sp) {
     // Architecture (référentiel statique issu des dossiers techniques)
     if (p === '/api/architecture') return sendJson(res, 200, { ...ARCHITECTURE, docs: ARCH_DOCS, sources: ARCH_SOURCES });
     if (p === '/api/architecture/docs') return sendJson(res, 200, { docs: ARCH_DOCS, sources: ARCH_SOURCES });
+    if (p === '/api/architecture/audit') {
+      try {
+        const md = fs.readFileSync(path.join(__dirname, 'AUDIT_TECHNIQUE.md'), 'utf8');
+        return sendJson(res, 200, { titre: 'Audit technique — base Oracle ASTECHIVR', markdown: md });
+      } catch (e) { return sendJson(res, 404, { error: 'Audit indisponible : ' + e.message }); }
+    }
 
     // Magasins & stock
     if (p === '/api/magasins') return sendJson(res, 200, { rows: await listMagasins() });

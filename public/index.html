@@ -1677,6 +1677,64 @@ async function openPdf(fichier, page, titre) {
   }
 }
 
+/* ═══════════════════════════ RENDU MARKDOWN (audit) ═══════════════════════════ */
+// Convertisseur Markdown minimal (titres, tableaux, listes, gras, code en ligne).
+function mdToHtml(md) {
+  const escHtml = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const inline = (s) => escHtml(s)
+    .replace(/`([^`]+)`/g, '<code class="px-1 py-0.5 rounded bg-surface-container font-label-mono-sm">$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  const lines = String(md).replace(/\r\n/g, '\n').split('\n');
+  const hsize = { 1: 'font-headline-lg', 2: 'font-headline-md', 3: 'font-title-lg', 4: 'font-title-md', 5: 'font-title-sm', 6: 'font-title-sm' };
+  let html = '', i = 0, buf = [];
+  const flush = () => { if (buf.length) { html += `<p class="font-body-md text-on-surface-variant my-2">${buf.map(inline).join('<br>')}</p>`; buf = []; } };
+  const cells = (row) => row.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((c) => c.trim());
+  while (i < lines.length) {
+    const l = lines[i];
+    if (/^\s*\|/.test(l) && i + 1 < lines.length && /^\s*\|?\s*:?-{2,}/.test(lines[i + 1])) {
+      flush();
+      const head = cells(l); i += 2; const body = [];
+      while (i < lines.length && /^\s*\|/.test(lines[i])) { body.push(cells(lines[i])); i++; }
+      html += '<div class="overflow-x-auto my-3"><table class="w-full text-left font-body-sm border-collapse">'
+        + '<thead><tr>' + head.map((h) => `<th class="border-b-2 border-surface-container-high px-2 py-1.5 font-title-sm text-on-surface whitespace-nowrap">${inline(h)}</th>`).join('') + '</tr></thead><tbody>'
+        + body.map((r) => '<tr>' + r.map((c) => `<td class="border-b border-surface-container px-2 py-1.5 align-top text-on-surface-variant">${inline(c)}</td>`).join('') + '</tr>').join('')
+        + '</tbody></table></div>';
+      continue;
+    }
+    let m;
+    if ((m = l.match(/^(#{1,6})\s+(.*)$/))) { flush(); const n = m[1].length; html += `<h${n} class="${hsize[n] || 'font-title-sm'} text-on-surface font-bold mt-6 mb-2">${inline(m[2])}</h${n}>`; i++; continue; }
+    if (/^\s*(-{3,}|\*{3,})\s*$/.test(l)) { flush(); html += '<hr class="my-4 border-surface-container-high">'; i++; continue; }
+    if (/^\s*[-*]\s+/.test(l)) { flush(); html += '<ul class="list-disc pl-5 my-2 space-y-1 font-body-md text-on-surface-variant">'; while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) { html += '<li>' + inline(lines[i].replace(/^\s*[-*]\s+/, '')) + '</li>'; i++; } html += '</ul>'; continue; }
+    if (/^\s*\d+\.\s+/.test(l)) { flush(); html += '<ol class="list-decimal pl-5 my-2 space-y-1 font-body-md text-on-surface-variant">'; while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) { html += '<li>' + inline(lines[i].replace(/^\s*\d+\.\s+/, '')) + '</li>'; i++; } html += '</ol>'; continue; }
+    if (/^\s*$/.test(l)) { flush(); i++; continue; }
+    buf.push(l); i++;
+  }
+  flush();
+  return html;
+}
+async function openAudit() {
+  let el = document.getElementById('auditOverlay');
+  if (!el) { el = document.createElement('div'); el.id = 'auditOverlay'; el.className = 'fixed inset-0 z-[90] flex flex-col bg-[#0f172a]/95 backdrop-blur-sm'; document.body.appendChild(el); }
+  el.innerHTML = `
+    <div class="flex items-center justify-between gap-space-sm px-space-lg py-space-sm bg-surface-container-lowest border-b border-surface-container">
+      <div class="flex items-center gap-2 min-w-0"><span class="material-symbols-outlined text-primary">fact_check</span>
+        <div class="min-w-0"><div class="font-title-md text-on-surface truncate">Audit technique — base Oracle ASTECHIVR</div>
+          <div class="font-label-mono-sm text-secondary truncate">AUDIT_TECHNIQUE.md</div></div></div>
+      <button id="auditClose" class="p-1 rounded hover:bg-surface-container"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="flex-1 overflow-auto p-space-lg"><div id="auditBody" class="max-w-5xl mx-auto bg-surface-container-lowest rounded-xl shadow-sm p-space-lg">
+      <div class="text-on-surface-variant font-body-sm"><span class="material-symbols-outlined animate-spin align-middle mr-2">progress_activity</span>Chargement…</div></div></div>`;
+  const close = () => el.remove();
+  document.getElementById('auditClose').onclick = close;
+  try {
+    const r = await api('/api/architecture/audit');
+    document.getElementById('auditBody').innerHTML = mdToHtml(r.markdown || '');
+  } catch (e) {
+    document.getElementById('auditBody').innerHTML = `<div class="text-error font-body-md">Erreur : ${esc(e.message)}</div>`;
+  }
+}
+
 /* ═══════════════════════════ ARCHITECTURE AS-TECH ═══════════════════════════ */
 async function viewArchitecture() {
   const d = await api('/api/architecture');
@@ -1779,8 +1837,15 @@ async function viewArchitecture() {
     <div class="mt-space-lg">${cc('POSTE004 — est-ce la Symphonie Box ?', `<div class="p-space-md rounded-xl bg-amber-50 border border-amber-200">
       <div class="font-title-md font-bold text-amber-800">${esc(d.poste004.question || 'Reconnaissance POSTE004')}</div>
       <p class="font-body-sm text-on-surface mt-1 font-semibold">${esc(d.poste004.conclusion)}</p>
+      ${d.poste004.cause ? `<p class="font-body-sm text-on-surface mt-2"><span class="font-semibold">Cause racine :</span> ${esc(d.poste004.cause)}</p>` : ''}
       <p class="font-body-sm text-on-surface-variant mt-2">${esc(d.poste004.indice || '')}</p>
+      ${d.poste004.reseau ? `<p class="font-body-sm text-on-surface-variant mt-1"><span class="font-semibold">Réseau :</span> ${esc(d.poste004.reseau)}</p>` : ''}
+      ${d.poste004.correctif ? `<p class="font-body-sm text-on-surface-variant mt-1"><span class="font-semibold">Correctif :</span> ${esc(d.poste004.correctif)}</p>` : ''}
       ${d.poste004.autres ? `<p class="font-body-sm text-on-surface-variant mt-1">${esc(d.poste004.autres)}</p>` : ''}</div>`, 'search')}</div>
+
+    <div class="mt-space-lg">${cc('Audit technique de la base Oracle', `<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
+      <p class="font-body-sm text-on-surface-variant max-w-3xl">Analyse du dictionnaire Oracle : structures, intégrité, sécurité, dette PL/SQL, décalage aux bonnes pratiques 2026 et faisabilité d'une migration de SGBD.</p>
+      <button data-act="audit" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary shadow-md font-title-md transition-all whitespace-nowrap"><span class="material-symbols-outlined text-[18px]">fact_check</span>Lire l'audit technique</button></div>`, 'fact_check')}</div>
 
     <div class="mt-space-lg">${cc('Documents sources (visionneuse PDF)', `<div class="grid grid-cols-1 md:grid-cols-2 gap-space-sm">
       ${(d.docs || []).map(doc => `<button data-act="pdf:${encodeURIComponent(doc.fichier)}||${encodeURIComponent(doc.titre)}" class="text-left p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container flex items-start gap-2">
@@ -2782,6 +2847,7 @@ function handleAction(action, value, el) {
     case 'procType': state.procs.type = el.value; viewProcedures(); break;
     case 'procStatus': state.procs.status = value || ''; viewProcedures(); break;
     case 'pdf': { const parts = String(value || '').split('|'); openPdf(decodeURIComponent(parts[0]), parts[1] ? Number(parts[1]) : null, decodeURIComponent(parts[2] || '')); break; }
+    case 'audit': openAudit(); break;
     case 'adminTab': state.admin.tab = value; viewAdministration(); break;
     case 'usersRefresh': state.users.rows = null; viewUsers(); break;
     case 'userAdd': runUserAdd(); break;
