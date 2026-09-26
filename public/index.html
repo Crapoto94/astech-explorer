@@ -114,6 +114,7 @@ tailwind.config = {
       <a data-link="#/documents" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/documents">Docs associés</a>
       <a data-link="#/procedures" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/procedures">Procédures</a>
       <a data-link="#/architecture" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/architecture">Architecture</a>
+      <a data-link="#/api" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/api">API Explorer</a>
       <a data-link="#/interventions" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/interventions">Interventions</a>
       <a data-link="#/indices" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/indices">Indices</a>
     </nav>
@@ -399,6 +400,7 @@ const state = {
   users: { rows: null, loading: false, error: null, notice: null, roles: ['none', 'user', 'admin'] },
   indices: { type: '', annee: '', verif: null, loading: false, error: null, pushScope: 'manquants', plan: null, pushResult: null, pushing: false },
   demande: { open: false, options: null, error: null, submitted: false, bienRows: [], form: {} },
+  api: { target: null, method: 'GET', path: '', query: '', body: '', result: null, error: null, running: false, filter: '', routes: [], targets: [] },
   pages: {}
 };
 
@@ -431,7 +433,7 @@ async function render() {
       administration: viewAdministration, users: viewUsers,
       magasins: () => viewMagasins(arg), magasin: () => viewMagasins(arg),
       parc: () => viewParc(arg), vehicule: () => viewParcVehicule(arg),
-      procedures: viewProcedures, procedure: () => viewProcedure(arg), architecture: viewArchitecture,
+      procedures: viewProcedures, procedure: () => viewProcedure(arg), architecture: viewArchitecture, api: viewApiExplorer,
       documents: viewDocuments,
       agent: () => viewAgentFiche(arg), bien: () => viewBien(arg), contrat: () => viewContrat(arg),
       locataire: () => viewLocataire(arg), intervention: () => viewInterventionFiche(arg)
@@ -1751,6 +1753,76 @@ async function openAudit(id) {
   }
 }
 
+/* ═══════════════════════════ API EXPLORER ═══════════════════════════ */
+function apiMethodTone(m) { return m === 'GET' ? 'green' : m === 'POST' ? 'blue' : m === 'PUT' ? 'amber' : 'red'; }
+async function viewApiExplorer() {
+  const s = state.api;
+  const d = await api('/api/explorer/targets');
+  s.targets = d.targets || []; s.routes = d.routes || [];
+  if (!s.target || !s.targets.some(t => t.id === s.target)) s.target = (s.targets.find(t => t.ready) || s.targets[0] || {}).id || '';
+  const cur = s.targets.find(t => t.id === s.target) || {};
+  const groups = [...new Set(s.targets.map(t => t.group))];
+  const chips = groups.map(g => `<div class="flex flex-wrap items-center gap-2">
+      <span class="font-label-mono-sm text-secondary uppercase whitespace-nowrap">${esc(g)}</span>
+      ${s.targets.filter(t => t.group === g).map(t => `<button data-act="apiTarget:${esc(t.id)}" class="px-3 py-1.5 rounded-lg font-title-sm ${t.id === s.target ? 'bg-primary-container text-on-primary shadow-md' : 'bg-surface-container-low text-on-surface hover:bg-surface-container'}">${esc(t.label)}${t.ready ? '' : ' <span class="text-[10px] text-error">(à configurer)</span>'}</button>`).join('')}</div>`).join('');
+  const filter = (s.filter || '').toLowerCase();
+  const routes = s.routes.filter(r => !filter || (r.path + ' ' + r.method + ' ' + (r.summary || '')).toLowerCase().includes(filter));
+  const routeList = routes.map(r => `<button data-act="apiRoute:${r.method} ${r.path}" class="w-full text-left flex items-center gap-2 px-2 py-1.5 rounded hover:bg-surface-container">
+      ${badge(r.method, apiMethodTone(r.method))}
+      <span class="font-label-mono-sm text-on-surface truncate">${esc(r.path)}</span>
+      ${r.write ? '<span class="material-symbols-outlined text-[14px] text-error" title="Écriture">edit</span>' : ''}
+      <span class="ml-auto font-body-sm text-secondary truncate max-w-[45%]">${esc(r.summary || '')}</span></button>`).join('');
+  const resultBox = s.error
+    ? `<div class="p-space-md rounded-xl bg-error-container/40 border border-error/30 text-on-error-container font-body-sm">${esc(s.error)}</div>`
+    : s.result
+      ? `<div class="flex flex-wrap items-center gap-2 mb-2">${badge(String(s.result.status), s.result.ok ? 'green' : 'red')}<span class="font-label-mono-sm text-secondary">${esc(s.result.method)} ${esc(s.result.url)} · ${esc(String(s.result.duree_ms))} ms</span></div>
+        <pre class="p-space-md rounded-xl bg-[#0f172a] text-[#cbd5e1] font-label-mono-sm overflow-auto max-h-[420px]">${esc(typeof s.result.body === 'string' ? s.result.body : JSON.stringify(s.result.body, null, 2))}</pre>`
+      : '<p class="font-body-sm text-on-surface-variant">Aucune requête exécutée.</p>';
+  view.innerHTML = `
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'API Explorer' }])}
+    <div class="mb-space-lg">
+      <span class="px-2 py-0.5 rounded bg-surface-container font-label-mono-sm text-primary font-semibold">REST / JSON · session & clé API</span>
+      <h1 class="font-headline-lg text-on-surface tracking-tight mt-1">API Explorer</h1>
+      <p class="font-body-md text-on-surface-variant max-w-3xl">Parcourir et exécuter les API : interfaces OPUS ↔ NEOCITY (AS-Tech / NEOCITY) et API d'ASTECH Explorer (interne / publique). Les identifiants restent côté serveur.</p>
+    </div>
+    ${d.canExecute ? '' : '<div class="mb-space-lg p-space-sm rounded-lg bg-error-container/40 border border-error/30 text-on-error-container font-body-sm">Exécution réservée aux administrateurs.</div>'}
+    <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm mb-space-lg space-y-space-sm">${chips}</div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
+      <div class="space-y-space-md">
+        <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm">
+          <div class="font-title-md font-bold text-on-surface mb-2">Requête → ${esc(cur.label || '')}</div>
+          <div class="flex flex-wrap items-center gap-2 mb-2">
+            <select id="apiMethod" data-act="apiMethod" class="h-9 px-2 rounded-lg bg-surface-container-low font-label-mono-sm">${['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].map(m => `<option ${m === s.method ? 'selected' : ''}>${m}</option>`).join('')}</select>
+            <span class="font-label-mono-sm text-secondary truncate">${esc(cur.base || (cur.id === 'internal' || cur.id === 'public' ? 'même origine' : 'non configuré'))}</span>
+          </div>
+          <input id="apiPath" value="${esc(s.path)}" placeholder="/api/agents  ou  /signalements" class="w-full h-9 px-3 rounded-lg bg-surface-container-low font-label-mono-sm mb-2 focus:outline-none" />
+          <input id="apiQuery" value="${esc(s.query)}" placeholder="query string (a=1&b=2)" class="w-full h-9 px-3 rounded-lg bg-surface-container-low font-label-mono-sm mb-2 focus:outline-none" />
+          ${s.method !== 'GET' ? `<textarea id="apiBody" rows="5" placeholder='{ "cle": "valeur" }' class="w-full p-3 rounded-lg bg-surface-container-low font-label-mono-sm mb-2 focus:outline-none">${esc(s.body)}</textarea>` : ''}
+          <button data-act="apiSend" ${s.running ? 'disabled' : ''} class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary shadow-md font-title-md ${s.running ? 'opacity-60' : ''}"><span class="material-symbols-outlined text-[18px]">${s.running ? 'progress_activity' : 'send'}</span>${s.running ? 'Envoi…' : 'Envoyer'}</button>
+        </div>
+        <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm"><div class="font-title-md font-bold text-on-surface mb-2">Réponse</div>${resultBox}</div>
+      </div>
+      <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm">
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <div class="font-title-md font-bold text-on-surface whitespace-nowrap">Routes (${routes.length})</div>
+          <input id="apiFilter" data-act="apiFilter" value="${esc(s.filter)}" placeholder="filtrer…" class="h-8 px-3 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" />
+        </div>
+        <div class="space-y-0.5 max-h-[70vh] overflow-auto">${routeList || '<p class="font-body-sm text-secondary">Aucune route.</p>'}</div>
+      </div>
+    </div>`;
+}
+async function runApiSend() {
+  const s = state.api;
+  const p = document.getElementById('apiPath'); if (p) s.path = p.value;
+  const q = document.getElementById('apiQuery'); if (q) s.query = q.value;
+  const b = document.getElementById('apiBody'); if (b) s.body = b.value;
+  s.running = true; s.error = null; s.result = null; await viewApiExplorer();
+  try {
+    s.result = await api('/api/explorer/request', { method: 'POST', body: { target: s.target, method: s.method, path: s.path, query: s.query, body: s.body } });
+  } catch (e) { s.error = e.message; }
+  finally { s.running = false; await viewApiExplorer(); }
+}
+
 /* ═══════════════════════════ ARCHITECTURE AS-TECH ═══════════════════════════ */
 async function viewArchitecture() {
   const d = await api('/api/architecture');
@@ -1852,6 +1924,17 @@ async function viewArchitecture() {
         ${badgeLine('Cohérence de version', esc(d.exploitation.coherence))}
       </div>`, 'settings', 'exploitation')}
     </div>
+
+    ${d.neocity ? `<div class="mt-space-lg">${cc('Interface OPUS ↔ NEOCITY', `<div class="space-y-space-sm">
+      <p class="font-body-sm text-on-surface-variant">${d.neocity.fonctionnement.map(esc).join(' ')}</p>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-md">
+        <div class="p-space-md rounded-xl bg-surface-container-low"><div class="font-title-sm font-bold text-on-surface mb-1">Correspondance des statuts</div>${tbl([{ label: 'Position ASTech', get: r => cellMono(r.astech) }, { label: 'Statut NEOCITY', get: r => cellMono(r.neocity, 'text-primary') }], d.neocity.statuts)}</div>
+        <div class="p-space-md rounded-xl bg-surface-container-low"><div class="font-title-sm font-bold text-on-surface mb-1">Architecture & échanges</div><ul class="font-body-sm text-on-surface-variant list-disc pl-5 space-y-1">${d.neocity.architecture.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>
+      </div>
+      ${tbl([{ label: 'Source', get: r => esc(r.source) }, { label: 'Destination', get: r => esc(r.dest) }, { label: 'Proto', center: true, get: r => badge(r.proto, 'purple') }, { label: 'Port', center: true, get: r => cellMono(r.port) }, { label: 'Rôle', get: r => esc(r.role) }], d.neocity.flux)}
+      <div class="p-space-md rounded-xl bg-surface-container-low"><div class="font-title-sm font-bold text-on-surface mb-1">Paramétrage</div><ul class="font-body-sm text-on-surface-variant list-disc pl-5 space-y-1">${d.neocity.parametrage.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+        <p class="mt-2 p-space-sm rounded-lg bg-amber-50 border border-amber-200 font-body-sm text-amber-900 font-semibold">${esc(d.neocity.alerte)}</p></div>
+    </div>`, 'hub')}</div>` : ''}
 
     <div class="mt-space-lg">${cc('POSTE004 — est-ce la Symphonie Box ?', `<div class="p-space-md rounded-xl bg-amber-50 border border-amber-200">
       <div class="font-title-md font-bold text-amber-800">${esc(d.poste004.question || 'Reconnaissance POSTE004')}</div>
@@ -2870,6 +2953,11 @@ function handleAction(action, value, el) {
     case 'procStatus': state.procs.status = value || ''; viewProcedures(); break;
     case 'pdf': { const parts = String(value || '').split('|'); openPdf(decodeURIComponent(parts[0]), parts[1] ? Number(parts[1]) : null, decodeURIComponent(parts[2] || '')); break; }
     case 'audit': openAudit(value || 'technique'); break;
+    case 'apiTarget': state.api.target = value; state.api.result = null; state.api.error = null; viewApiExplorer(); break;
+    case 'apiMethod': state.api.method = el.value; state.api.result = null; state.api.error = null; viewApiExplorer(); break;
+    case 'apiRoute': { const sp = String(value || '').indexOf(' '); state.api.method = sp > 0 ? String(value).slice(0, sp) : 'GET'; state.api.path = sp > 0 ? String(value).slice(sp + 1) : String(value || ''); state.api.result = null; state.api.error = null; viewApiExplorer(); break; }
+    case 'apiFilter': state.api.filter = el.value; viewApiExplorer().then(() => { const x = document.getElementById('apiFilter'); if (x) { x.focus(); try { x.setSelectionRange(x.value.length, x.value.length); } catch (e) { /* ignore */ } } }); break;
+    case 'apiSend': runApiSend(); break;
     case 'adminTab': state.admin.tab = value; viewAdministration(); break;
     case 'usersRefresh': state.users.rows = null; viewUsers(); break;
     case 'userAdd': runUserAdd(); break;

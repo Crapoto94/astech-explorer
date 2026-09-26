@@ -19,6 +19,7 @@ Analyse de la **documentation fournisseur** (éditeur AS-Tech Solutions) fournie
 | `Mise_a_jour_AWO_Opus.docx` | DOCX | 738 mots | Procédure de mise à jour (schéma + binaires + Symphonie) |
 | `FS_AWO_Interface_SEDIT_Locatif.pdf` | PDF | 28 p. / 5 196 mots | Spécification fonctionnelle interface SEDIT (locatif) |
 | `FS_OPUS_SEDIT_Architecture_Preconisations.pdf` | PDF | 11 p. / 1 666 mots | Architecture interface OPUS vers SEDIT |
+| `Opus_NEOCITY_Architecture_PreconisationsRempli.pdf` | PDF | 7 p. / ~1 100 mots | Architecture interface OPUS ↔ NEOCITY (flux, statuts, comptes, paramétrage) |
 | `212153_PV_INSTALLATION_3906-1.pdf` | PDF | 1 p. / 163 mots | PV d'installation (client CD-33, autre collectivité) |
 | `RE Axel BION ... 204571 ... .msg` | Outlook | 23 255 car. | Échange technique Ivry du 20/06/2024 |
 | `RE ExterneRE Points divers support.msg` | Outlook | 21 034 car. | Points divers support (2024-09-25) |
@@ -58,6 +59,7 @@ Constat : la quasi-totalité des documents est orientée infrastructure / déplo
 
 - Pas de modèle d'identité/permissions pour l'installation Ivry (comptes, rôles, habilitations).
 - Le Plan d'Assurance Sécurité et les certifications (ISO 27001, HDS) concernent l'hébergement SaaS AsTechOnLine (Novadys), pas le déploiement chez la Ville.
+- Le document `Opus_NEOCITY_Architecture_PreconisationsRempli.pdf` contient des **identifiants en clair** (mot de passe, client secret et client ID NEOCITY, identifiants d'utilisateur d'interface). À traiter comme compromis : rotation des secrets et retrait de la documentation.
 - Pas de volet RGPD / données personnelles ni de politique de secrets.
 
 ### 3.5 Exploitation et soutien

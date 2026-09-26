@@ -117,6 +117,39 @@ const ARCHITECTURE = {
     { nom: 'ASTech.AuthHELPDESK.exe / LicExp.exe / LicAppelExp.exe', role: 'Interne (auth, licences)' },
   ],
 
+  neocity: {
+    titre: 'Interface OPUS ↔ NEOCITY',
+    source: 'Opus_NEOCITY_Architecture_PreconisationsRempli.pdf',
+    fonctionnement: [
+      'Transfert des signalements : les signalements NEOCITY alimentent les demandes ASTech (thème 26 / Demandes).',
+      'Mise à jour des statuts : les changements de position côté ASTech sont renvoyés à NEOCITY.',
+    ],
+    statuts: [
+      { astech: 'E / Envoi', neocity: 'open' },
+      { astech: 'V / Vérification', neocity: 'pending' },
+      { astech: 'C / En cours', neocity: 'pending' },
+      { astech: 'T / Terminé', neocity: 'finished' },
+      { astech: 'R / Rejeté', neocity: 'rejected' },
+    ],
+    architecture: [
+      'Service web NEOCITY : expose des méthodes de mise à jour du statut des signalements.',
+      "ASTech Symphonie : un container Docker Talend (ETL) porte l'interface et exporte les données (demandes) vers NEOCITY.",
+      'Échanges bidirectionnels via HTTP(S).',
+    ],
+    flux: [
+      { source: "Serveur d'API NEOCITY", dest: 'Serveur Symphonie (container Nginx)', proto: 'HTTP(S)', port: '80 / 443', role: 'Transfert des signalements' },
+      { source: 'Serveur Symphonie (container Nginx)', dest: "Serveur d'API NEOCITY", proto: 'HTTP(S)', port: '80 / 443', role: 'Mise à jour des statuts' },
+      { source: 'Poste client (navigateur)', dest: 'Serveur Symphonie (container Nginx)', proto: 'HTTP(S)', port: '80 / 443', role: 'Accès utilisateur' },
+    ],
+    parametrage: [
+      'Thème 26 / Demandes actif avec « Valeur par défaut en création de documents depuis ASTech Symphonie ».',
+      "Utilisateur dédié NEOCITY : rôle demandeur, groupe demandeur avec droits de création de demandes d'intervention (destination « Service »), accès au thème.",
+      "En authentification externe (SSO/LDAP), l'utilisateur NEOCITY doit pouvoir s'y connecter.",
+      'URL API As-Tech : https://astech.ivry94.fr/app.php/ — URL API NEOCITY : https://api.neocity.fr.',
+    ],
+    alerte: 'Le document fournisseur contient des identifiants en clair (mot de passe, client secret et client ID NEOCITY). À considérer comme compromis : faire tourner les secrets et les sortir de la documentation.',
+  },
+
   exploitation: {
     demarrage: [
       'Instance Oracle',

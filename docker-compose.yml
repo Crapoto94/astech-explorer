@@ -51,6 +51,16 @@ services:
       ASTECH_API_KEYS: "${ASTECH_API_KEYS:-}"
       # Fichier des clés générées dynamiquement (persisté via le volume).
       ASTECH_KEYS_FILE: "/app/data/api-keys.json"
+      # API Explorer : cibles externes (interface OPUS ↔ NEOCITY).
+      ASTECH_API_URL: "${ASTECH_API_URL:-}"
+      ASTECH_API_USER: "${ASTECH_API_USER:-}"
+      ASTECH_API_PASSWORD: "${ASTECH_API_PASSWORD:-}"
+      ASTECH_API_AUTH: "${ASTECH_API_AUTH:-}"
+      ASTECH_API_TOKEN: "${ASTECH_API_TOKEN:-}"
+      NEOCITY_API_URL: "${NEOCITY_API_URL:-}"
+      NEOCITY_API_USER: "${NEOCITY_API_USER:-}"
+      NEOCITY_API_PASSWORD: "${NEOCITY_API_PASSWORD:-}"
+      NEOCITY_API_AUTH: "${NEOCITY_API_AUTH:-}"
     volumes:
       - astech-data:/app/data
     restart: unless-stopped

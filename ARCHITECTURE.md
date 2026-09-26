@@ -178,7 +178,52 @@ le SMB et les services Windows ; certificat SSL sur IIS et NGINX si HTTPS.
 
 ---
 
-## 8. Exploitation
+## 8. Interface OPUS ↔ NEOCITY
+
+Interface d'interopérabilité entre **OPUS Service** (ASTech Symphonie) et
+**NEOCITY** (gestion des signalements / demandes). Document source :
+`Opus_NEOCITY_Architecture_PreconisationsRempli.pdf` (voir §11).
+
+### 8.1 Mode de fonctionnement
+
+- **Transfert des signalements** : les signalements NEOCITY alimentent les
+  **demandes** ASTech (thème `26 / Demandes`).
+- **Mise à jour des statuts** : les changements de position côté ASTech sont
+  renvoyés à NEOCITY.
+
+Correspondance des statuts :
+
+| Position ASTech | Statut NEOCITY |
+|---|---|
+| `E` / Envoi | `open` |
+| `V` / Vérification | `pending` |
+| `C` / En cours | `pending` |
+| `T` / Terminé | `finished` |
+| `R` / Rejeté | `rejected` |
+
+### 8.2 Architecture
+
+- **Service web NEOCITY** : expose des méthodes de mise à jour du statut des signalements.
+- **ASTech Symphonie** : un container Docker **Talend** (ETL) porte l'interface et exporte les données (demandes) vers NEOCITY.
+- Les échanges sont **bidirectionnels** via HTTP(S).
+
+| Origine | Destination | Proto | Port | Rôle |
+|---|---|---|---|---|
+| Serveur d'API NEOCITY | Serveur Symphonie (container Nginx) | HTTP(S) | 80 / 443 | Transfert des signalements |
+| Serveur Symphonie (container Nginx) | Serveur d'API NEOCITY | HTTP(S) | 80 / 443 | Mise à jour des statuts |
+| Poste client (navigateur) | Serveur Symphonie (container Nginx) | HTTP(S) | 80 / 443 | Accès utilisateur |
+
+### 8.3 Paramétrage et comptes
+
+- Thème **`26 / Demandes` actif**, avec « Valeur par défaut en création de documents depuis ASTech Symphonie ».
+- Utilisateur dédié **NEOCITY** : rôle demandeur, groupe demandeur avec droits de création de demandes d'intervention (destination « Service ») sur les sociétés concernées, accès au thème.
+- En authentification externe (SSO/LDAP), l'utilisateur NEOCITY doit pouvoir s'y connecter.
+- URL API As-Tech : `https://astech.ivry94.fr/app.php/` — URL API NEOCITY : `https://api.neocity.fr` (valeurs du document fournisseur).
+- Attention : le document fournisseur contient des **identifiants en clair** (mot de passe, client secret et client ID NEOCITY). À considérer comme compromis : faire tourner les secrets et les sortir de la documentation.
+
+---
+
+## 9. Exploitation
 
 **Démarrage** (ordre) : instance Oracle → services IIS → `ASTech.IntrfRelv_Srvc`
 → `SBCG.Export_SRVC` → `SBCG.Export_SRVC_FormDyn` → Symphonie Box.
@@ -195,7 +240,7 @@ le SMB et les services Windows ; certificat SSL sur IIS et NGINX si HTTPS.
 
 ---
 
-## 9. Question : `POSTE004` est-il la Symphonie Box ?
+## 10. Question : `POSTE004` est-il la Symphonie Box ?
 
 **Non.** `POSTE004` n'est **pas** la Symphonie Box (ni un serveur de fichiers
 documentaire). C'est un **poste de travail** qui sert de **répertoire de
@@ -268,7 +313,7 @@ léger.
 
 ---
 
-## 10. Sources analysées
+## 11. Sources analysées
 
 Dossier `DOC TECHNIQUE/` (non versionné) :
 
@@ -285,3 +330,4 @@ Dossier `DOC TECHNIQUE/` (non versionné) :
 - `Mise_a_jour_AWO_Opus.docx`
 - `FS_AWO_Interface_SEDIT_Locatif.pdf`
 - `FS_OPUS_SEDIT_Architecture_Preconisations.pdf`
+- `Opus_NEOCITY_Architecture_PreconisationsRempli.pdf`
