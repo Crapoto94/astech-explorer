@@ -60,7 +60,7 @@ tailwind.config = {
 </head>
 <body class="bg-surface font-body-md text-on-surface antialiased min-h-screen flex flex-col">
 
-<!-- â•â•â•â•â•â•â•â•â•â•â• HEADER â•â•â•â•â•â•â•â•â•â•â• -->
+<!-- ═══════════ HEADER ═══════════ -->
 <header class="fixed top-0 w-full z-50 bg-[#0f172a] text-[#cbd5e1] border-b border-[#1e293b]">
   <div class="h-28 w-full max-w-7xl mx-auto px-gutter-lg flex flex-col justify-between pt-2 pb-0">
     <div class="flex items-center justify-between gap-space-lg w-full">
@@ -69,7 +69,7 @@ tailwind.config = {
         <div class="flex items-center gap-space-sm">
           <span class="font-headline-md text-headline-md font-bold tracking-tight text-white">ASTECH Explorer</span>
           <span class="hidden lg:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#1e293b] text-[#94a3b8] font-label-mono-sm text-label-mono-sm border border-[#334155]">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>Oracle 19c â€¢ PIVRY01
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>Oracle 19c • PIVRY01
           </span>
         </div>
       </div>
@@ -77,7 +77,7 @@ tailwind.config = {
         <div class="relative flex items-center">
           <span class="material-symbols-outlined absolute left-2.5 text-[#64748b] text-[18px]">search</span>
           <input id="globalSearch" class="w-full h-8 pl-8 pr-12 rounded bg-[#1e293b] text-white placeholder-[#64748b] font-body-sm text-body-sm border border-[#334155] focus:outline-none focus:border-primary-container" placeholder="Rechercher agent, matricule, contrat, bien..." type="text"/>
-          <span class="absolute right-2 font-label-mono-sm text-label-mono-sm text-[#64748b] border border-[#334155] px-1 rounded">EntrÃ©e</span>
+          <span class="absolute right-2 font-label-mono-sm text-label-mono-sm text-[#64748b] border border-[#334155] px-1 rounded">Entrée</span>
         </div>
       </div>
       <div class="flex items-center gap-space-md">
@@ -95,20 +95,21 @@ tailwind.config = {
       <a data-link="#/agents" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/agents">Agents &amp; Comptes</a>
       <a data-link="#/synchro" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/synchro">Synchro RH</a>
       <a data-link="#/locatif" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/locatif">Gestion Locative</a>
-      <a data-link="#/referentiels" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/referentiels">RÃ©fÃ©rentiels</a>
+      <a data-link="#/referentiels" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/referentiels">Référentiels</a>
       <a data-link="#/magasins" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/magasins">Magasins</a>
       <a data-link="#/parc" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/parc">Parc auto</a>
+      <a data-link="#/documents" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/documents">Docs associés</a>
       <a data-link="#/procedures" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/procedures">Procédures</a>
       <a data-link="#/interventions" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/interventions">Interventions</a>
       <a data-link="#/indices" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/indices">Indices</a>
-      <a data-link="#/apikeys" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/apikeys">ClÃ©s API</a>
+      <a data-link="#/apikeys" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/apikeys">Clés API</a>
     </nav>
   </div>
 </header>
 
 <main id="view" class="w-full max-w-7xl mx-auto px-gutter-lg pt-32 flex-1 bg-surface"></main>
 
-<!-- â•â•â•â•â•â•â•â•â•â•â• DRAWER â•â•â•â•â•â•â•â•â•â•â• -->
+<!-- ═══════════ DRAWER ═══════════ -->
 <div id="drawer" class="hidden fixed inset-0 z-[60]">
   <div class="absolute inset-0 bg-[#0f172a]/50 backdrop-blur-sm" onclick="closeDrawer()"></div>
   <div id="drawerPanel" class="absolute right-0 top-0 h-full w-full max-w-[520px] bg-surface-container-lowest shadow-2xl overflow-y-auto"></div>
@@ -116,13 +117,13 @@ tailwind.config = {
 
 <footer class="w-full bg-[#0f172a] text-[#94a3b8] border-t border-[#1e293b] mt-space-xl">
   <div class="max-w-7xl mx-auto px-gutter-lg py-space-md flex flex-col sm:flex-row items-center justify-between gap-space-sm font-label-mono-sm text-label-mono-sm">
-    <div>Proxy Oracle ASTECH â€¢ SchÃ©ma <span class="text-[#cbd5e1]">ASTECHIVR</span> â€¢ Port <span class="text-[#cbd5e1]">8099</span> â€¢ <span class="text-emerald-400">Thick mode actif</span> â€¢ <span class="text-emerald-400">SELECT uniquement</span></div>
-    <div>ASTECH Explorer v3.0.0 â€¢ <span id="footInfo">PIVRY01</span></div>
+    <div>Proxy Oracle ASTECH • Schéma <span class="text-[#cbd5e1]">ASTECHIVR</span> • Port <span class="text-[#cbd5e1]">8099</span> • <span class="text-emerald-400">Thick mode actif</span> • <span class="text-emerald-400">SELECT uniquement</span></div>
+    <div>ASTECH Explorer v3.0.0 • <span id="footInfo">PIVRY01</span></div>
   </div>
 </footer>
 
 <script>
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• Helpers â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ═══════════════════════════ Helpers ═══════════════════════════ */
 const $ = (s) => document.querySelector(s);
 const view = $('#view');
 const drawer = $('#drawer');
@@ -131,7 +132,7 @@ const drawerPanel = $('#drawerPanel');
 const esc = (v) => v === null || v === undefined ? '' : String(v).replace(/[<>&"']/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' }[c]));
 const num = (n) => (n === null || n === undefined || n === '' || isNaN(Number(n))) ? '' : new Intl.NumberFormat('fr-FR').format(Number(n));
 const money = (n) => (n === null || n === undefined || n === '' || isNaN(Number(n))) ? '' : new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(n));
-const dash = '<span class="text-outline">â€”</span>';
+const dash = '<span class="text-outline">—</span>';
 const cell = (v) => (v === null || v === undefined || v === '') ? dash : esc(v);
 const cellMono = (v, cls) => (v === null || v === undefined || v === '') ? dash : `<span class="font-label-mono-sm text-label-mono-sm ${cls || 'text-on-surface'}">${esc(v)}</span>`;
 
@@ -146,7 +147,7 @@ async function api(path, opts) {
   if (o.body !== undefined) { headers['Content-Type'] = 'application/json'; init.body = JSON.stringify(o.body); }
   if (Object.keys(headers).length) init.headers = headers;
   const r = await fetch(withEnv(path), Object.keys(init).length ? init : undefined);
-  let d; try { d = await r.json(); } catch { d = { error: 'RÃ©ponse invalide' }; }
+  let d; try { d = await r.json(); } catch { d = { error: 'Réponse invalide' }; }
   if (!r.ok) throw new Error(d.error || ('Erreur ' + r.status));
   return d;
 }
@@ -164,11 +165,11 @@ async function initEnvSwitch() {
       return `<button data-act="dbEnv:${esc(e.id)}" title="${esc(e.label)}" class="px-2 py-0.5 rounded ${cls}">${txt}</button>`;
     }).join('');
     box.classList.remove('hidden'); box.classList.add('inline-flex');
-  } catch (e) { /* pas de sÃ©lection d'environnement */ }
+  } catch (e) { /* pas de sélection d'environnement */ }
 }
 
 const ROLE_LETTERS = { U: 'Utilisateur', D: 'Demandeur', R: 'Affectataire', I: 'Intervenant', C: 'Conducteur', A: 'Usager', S: 'ATT' };
-const INTERV_TYPES = { PR: 'PrÃ©ventif', RE: 'RÃ©paration', EN: 'Entretien', CO: 'ContrÃ´le', EV: 'Ã‰vÃ©nement', SC: 'Sortie comptoir', SECU: 'SÃ©curitÃ©', MOBU: 'Maintenance', NID: 'Nettoyage', BANC: 'Bancs', CORB: 'Corbeilles', SIGN: 'Signalisation', SIGV: 'Signalisation verticale', BARRI: 'BarriÃ¨res', NSTA: 'Non standard' };
+const INTERV_TYPES = { PR: 'Préventif', RE: 'Réparation', EN: 'Entretien', CO: 'Contrôle', EV: 'Événement', SC: 'Sortie comptoir', SECU: 'Sécurité', MOBU: 'Maintenance', NID: 'Nettoyage', BANC: 'Bancs', CORB: 'Corbeilles', SIGN: 'Signalisation', SIGV: 'Signalisation verticale', BARRI: 'Barrières', NSTA: 'Non standard' };
 const INDICE_TYPES = { 1: 'IRL', 2: 'ICC', 5: 'ILC', 6: 'ILAT' };
 
 function badge(text, tone, icon) {
@@ -180,7 +181,7 @@ function badge(text, tone, icon) {
   return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-label-mono-sm text-label-mono-sm font-semibold ${tones[tone] || tones.slate}">${icon ? `<span class="material-symbols-outlined text-[13px]">${icon}</span>` : ''}${esc(text)}</span>`;
 }
 function statusBadge(s) {
-  const map = { 'PlanifiÃ©e': ['blue', 'event'], 'Ã‰mise': ['green', 'send'], 'MandatÃ©e': ['purple', 'task_alt'], 'Ã‰chue (non Ã©mise)': ['amber', 'priority_high'] };
+  const map = { 'Planifiée': ['blue', 'event'], 'Émise': ['green', 'send'], 'Mandatée': ['purple', 'task_alt'], 'Échue (non émise)': ['amber', 'priority_high'] };
   const [tone, icon] = map[s] || ['slate', ''];
   return badge(s, tone, icon);
 }
@@ -194,7 +195,7 @@ function typeBadge(nb) {
     : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-mono-sm text-label-mono-sm"><span class="material-symbols-outlined text-[13px]">shield</span>Agent simple</span>`;
 }
 function indiceBadge(typ) { const t = INDICE_TYPES[typ] || ('T' + typ); const tone = typ == 1 ? 'blue' : typ == 2 ? 'amber' : typ == 5 ? 'green' : 'purple'; return badge(t, tone); }
-function intervBadge(etat) { return etat === 'En cours' ? badge('En cours', 'primary', 'pending') : badge('ClÃ´turÃ©e', 'slate', 'check_circle'); }
+function intervBadge(etat) { return etat === 'En cours' ? badge('En cours', 'primary', 'pending') : badge('Clôturée', 'slate', 'check_circle'); }
 
 function kpi(label, value, sub, icon, tone) {
   const tones = { primary: 'text-primary-container', error: 'text-error', tertiary: 'text-tertiary', plain: 'text-on-surface' };
@@ -216,27 +217,35 @@ function card(title, body, actions, subtitle) {
     <div class="flex-1">${body}</div>
   </div>`;
 }
+const PAGE_SIZES = [25, 50, 100, 500, 2000, 0]; // 0 = tous
 function dataTable(cols, rows, opts = {}) {
-  if (!rows || !rows.length) return `<div class="p-space-xl text-center text-on-surface-variant font-body-sm">${esc(opts.empty || 'Aucun rÃ©sultat.')}</div>`;
+  if (!rows || !rows.length) return `<div class="p-space-xl text-center text-on-surface-variant font-body-sm">${esc(opts.empty || 'Aucun résultat.')}</div>`;
   let display = rows, footer = '';
-  const pageSize = opts.pageSize || 25;
-  if (opts.key && rows.length > pageSize) {
+  state.pageSizes = state.pageSizes || {};
+  const defaultSize = opts.pageSize || 25;
+  const chosen = (opts.key && state.pageSizes[opts.key] !== undefined) ? state.pageSizes[opts.key] : defaultSize;
+  const pageSize = chosen; // 0 => tout afficher
+  const sizeSel = (k) => `<select data-act="pageSize" data-pkey="${esc(k)}" class="h-7 px-2 rounded bg-surface-container-lowest border border-surface-container text-on-surface font-label-mono-sm focus:outline-none">
+    ${PAGE_SIZES.map(n => `<option value="${n}" ${Number(pageSize) === n ? 'selected' : ''}>${n === 0 ? 'Tous' : n}</option>`).join('')}
+  </select>`;
+  if (opts.key && (pageSize === 0 || rows.length > pageSize)) {
     state.pages = state.pages || {};
-    const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+    const totalPages = pageSize === 0 ? 1 : Math.max(1, Math.ceil(rows.length / pageSize));
     let page = state.pages[opts.key] || 1;
     if (page > totalPages) page = totalPages;
     if (page < 1) page = 1;
     state.pages[opts.key] = page;
-    const start = (page - 1) * pageSize;
-    display = rows.slice(start, start + pageSize);
+    const start = pageSize === 0 ? 0 : (page - 1) * pageSize;
+    display = pageSize === 0 ? rows : rows.slice(start, start + pageSize);
     footer = `<div class="px-space-md py-space-sm bg-surface-container-low flex flex-wrap items-center justify-between gap-space-sm text-on-surface-variant font-label-mono-sm text-label-mono-sm border-t border-surface-container">
-      <span>Affichage <span class="font-semibold text-on-surface">${start + 1}-${start + display.length}</span> sur <span class="font-semibold text-on-surface">${num(rows.length)}</span></span>
-      <div class="flex items-center gap-1">
-        <button data-act="page" data-pkey="${esc(opts.key)}" data-pdir="prev" class="px-2.5 py-1 rounded bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-colors disabled:opacity-40" ${page <= 1 ? 'disabled' : ''}>PrÃ©cÃ©dent</button>
+      <span class="flex items-center gap-2">Affichage <span class="font-semibold text-on-surface">${start + 1}-${start + display.length}</span> sur <span class="font-semibold text-on-surface">${num(rows.length)}</span>
+        <span class="text-outline">•</span> Lignes ${sizeSel(opts.key)}</span>
+      ${pageSize === 0 ? '' : `<div class="flex items-center gap-1">
+        <button data-act="page" data-pkey="${esc(opts.key)}" data-pdir="prev" class="px-2.5 py-1 rounded bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-colors disabled:opacity-40" ${page <= 1 ? 'disabled' : ''}>Précédent</button>
         <span class="px-2 py-0.5 rounded bg-primary text-on-primary font-semibold">${page}</span>
         <span class="text-outline">/ ${totalPages}</span>
         <button data-act="page" data-pkey="${esc(opts.key)}" data-pdir="next" class="px-2.5 py-1 rounded bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-colors disabled:opacity-40" ${page >= totalPages ? 'disabled' : ''}>Suivant</button>
-      </div>
+      </div>`}
     </div>`;
   }
   const thead = cols.map(c => `<th class="py-2.5 px-3 font-semibold ${c.right ? 'text-right' : ''} ${c.center ? 'text-center' : ''} ${c.w || ''}">${esc(c.label)}</th>`).join('');
@@ -254,13 +263,13 @@ function dataTable(cols, rows, opts = {}) {
   return `<div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead><tr class="bg-surface-container text-secondary font-label-mono-sm text-label-mono-sm uppercase tracking-wider">${thead}</tr></thead><tbody class="font-body-sm text-body-sm text-on-surface">${body}</tbody></table></div>${footer}`;
 }
 function bilanRows(rows, labelKey, opts = {}) {
-  if (!rows || !rows.length) return `<div class="p-space-lg text-center text-on-surface-variant font-body-sm">${esc(opts.empty || 'Aucune donnÃ©e.')}</div>`;
+  if (!rows || !rows.length) return `<div class="p-space-lg text-center text-on-surface-variant font-body-sm">${esc(opts.empty || 'Aucune donnée.')}</div>`;
   const max = Math.max(1, ...rows.map((r) => Number(r[opts.valueKey || 'n']) || 0));
   const bar = ({ primary: 'bg-primary-container', tertiary: 'bg-tertiary', emerald: 'bg-emerald-500', error: 'bg-error', amber: 'bg-amber-500' }[opts.tone] || 'bg-primary-container');
   return rows.map((r) => {
     const n = Number(r[opts.valueKey || 'n']) || 0;
     const pct = Math.max(2, Math.round((n / max) * 100));
-    const label = r[labelKey] || 'â€”';
+    const label = r[labelKey] || '—';
     return `<div class="px-space-lg py-2 flex items-center gap-3 border-b border-surface-container-low last:border-0">
       <div class="w-40 shrink-0 font-body-sm text-on-surface truncate" title="${esc(label)}">${esc(label)}</div>
       <div class="flex-1 h-2 rounded-full bg-surface-container"><div class="h-2 rounded-full ${bar}" style="width:${pct}%"></div></div>
@@ -277,15 +286,16 @@ function breadcrumb(items) {
 }
 const GMAIL = 'bg-surface-container-low';
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• State & Router â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ═══════════════════════════ State & Router ═══════════════════════════ */
 const state = {
   q: '',
-  agents: { tab: 'all', service: '', role: '', page: 1, pageSize: 25 },
+  agents: { tab: 'all', service: '', role: '', actif: '', page: 1, pageSize: 25 },
   synchro: { scope: 'droits', tab: 'desactiver', result: null, running: false, error: null, selected: null, selCreate: null, desact: { plan: null, result: null, busy: false, error: null }, creer: { plan: null, result: null, busy: false, error: null } },
   apikeys: { keys: null, loading: false, error: null, created: null, copied: false },
   magasins: { code: '', enStock: true, list: null },
   parc: { tab: 'vehicules', service: '', etat: '', page: 1 },
-  procs: { type: '', group: '' },
+  procs: { type: '', group: '', status: '' },
+  docs: { tab: 'modules', module: '', cheminsView: 'tree' },
   locatif: { tab: 'echeances', mode: 'futures', num: '' },
   refs: { type: 'biens', genre: '' },
   inter: { etat: '', type: '', period: '12m', page: 1 },
@@ -307,7 +317,7 @@ function setNavActive(route) {
     a.className = 'navlink text-body-sm font-body-sm pb-2 transition-colors border-b-2 ' + (on ? 'text-white border-primary-container font-semibold' : 'text-[#94a3b8] hover:text-white border-transparent');
   });
 }
-function loading() { view.innerHTML = '<div class="p-space-xl text-center text-on-surface-variant font-body-sm"><span class="material-symbols-outlined align-middle animate-spin mr-2">progress_activity</span>Chargement des donnÃ©es Oracleâ€¦</div>'; }
+function loading() { view.innerHTML = '<div class="p-space-xl text-center text-on-surface-variant font-body-sm"><span class="material-symbols-outlined align-middle animate-spin mr-2">progress_activity</span>Chargement des données Oracle…</div>'; }
 function errorBox(msg) { view.innerHTML = `<div class="bg-error-container/40 border border-error/30 text-on-error-container p-space-lg rounded-xl font-body-sm">${esc(msg)}</div>`; }
 
 let pendingFocus = null;
@@ -323,6 +333,7 @@ async function render() {
       magasins: () => viewMagasins(arg), magasin: () => viewMagasins(arg),
       parc: () => viewParc(arg), vehicule: () => viewParcVehicule(arg),
       procedures: viewProcedures, procedure: () => viewProcedure(arg),
+      documents: viewDocuments,
       agent: () => viewAgentFiche(arg), bien: () => viewBien(arg), contrat: () => viewContrat(arg),
       locataire: () => viewLocataire(arg), intervention: () => viewInterventionFiche(arg)
     };
@@ -331,23 +342,23 @@ async function render() {
   } catch (e) { errorBox(e.message); }
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• DASHBOARD â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ═══════════════════════════ DASHBOARD ═══════════════════════════ */
 async function viewDashboard() {
   const d = await api('/api/dashboard');
   const k = d.kpi;
   const ik = d.interventions || { totals: {}, by_type: [], by_site: [], by_service: [], by_demandeur: [] };
   const intervTypeRows = (ik.by_type || []).map((r) => ({ ...r, label: INTERV_TYPES[r.typ] || r.typ }));
-  const intervSiteRows = (ik.by_site || []).map((r) => ({ ...r, label: (r.site || 'â€”') + (r.code ? ' (' + r.code + ')' : '') }));
+  const intervSiteRows = (ik.by_site || []).map((r) => ({ ...r, label: (r.site || '—') + (r.code ? ' (' + r.code + ')' : '') }));
   const kpis = `
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-lg mb-space-xl">
-      ${kpi('Agents & Comptes', num(k.total_agents), `<span class="text-on-surface font-semibold">${num(k.agents_actifs)} actifs</span> Â· ${num(k.agents_simples)} simples Â· <span class="text-tertiary font-semibold">${num(k.admins)} admins</span>`, 'badge', 'plain')}
-      ${kpi('Synchro Studio-RH', '<span class="text-[22px]">Non connectÃ©e</span>', `<a data-link="#/synchro" class="text-primary font-semibold cursor-pointer hover:underline">Configurer la source â†’</a>`, 'sync_problem', 'error')}
-      ${kpi('Gestion Locative (â‰¥ 2024)', num(k.biens), `${num(k.contrats_actifs)} contrats actifs Â· ${num(k.locataires)} locataires`, 'apartment', 'primary')}
-      ${kpi('Quittancement & Ã‰chÃ©ances', money(d.kpi.montant_echeances), `${num(k.echeances)} Ã©chÃ©ances prÃ©v. Â· ${num(k.echeances_terminees)} historiques`, 'payments', 'primary')}
+      ${kpi('Agents & Comptes', num(k.total_agents), `<span class="text-on-surface font-semibold">${num(k.agents_actifs)} actifs</span> · ${num(k.agents_simples)} simples · <span class="text-tertiary font-semibold">${num(k.admins)} admins</span>`, 'badge', 'plain')}
+      ${kpi('Synchro Studio-RH', '<span class="text-[22px]">Non connectée</span>', `<a data-link="#/synchro" class="text-primary font-semibold cursor-pointer hover:underline">Configurer la source →</a>`, 'sync_problem', 'error')}
+      ${kpi('Gestion Locative (≥ 2024)', num(k.biens), `${num(k.contrats_actifs)} contrats actifs · ${num(k.locataires)} locataires`, 'apartment', 'primary')}
+      ${kpi('Quittancement & Échéances', money(d.kpi.montant_echeances), `${num(k.echeances)} échéances prév. · ${num(k.echeances_terminees)} historiques`, 'payments', 'primary')}
     </div>`;
 
   const echCols = [
-    { label: 'Ã‰chÃ©ance', get: r => cellMono(r.date_echeance), right: false },
+    { label: 'Échéance', get: r => cellMono(r.date_echeance), right: false },
     { label: 'Contrat', get: r => `<a data-link="#/contrat/${r.contrat_ref}" class="text-primary font-label-mono-sm hover:underline">${esc(r.contrat || '')}</a>` },
     { label: 'Locataire', get: r => r.locataire ? `<a data-link="#/locataire/${encodeURIComponent(r.locataire)}" class="hover:underline">${esc(r.locataire)}</a>` : dash },
     { label: 'Bien', get: r => r.bien_id ? `<a data-link="#/bien/${r.bien_id}" class="hover:underline">${esc(r.bien || r.code_bien || '')}</a>` : dash },
@@ -355,10 +366,10 @@ async function viewDashboard() {
     { label: 'Statut', center: true, get: r => statusBadge(r.statut) }
   ];
   const contratsCols = [
-    { label: 'NÂ° Contrat', get: r => `<a data-link="#/contrat/${r.id}" class="text-primary font-label-mono-sm font-semibold hover:underline">${esc(r.code)}</a>` },
+    { label: 'N° Contrat', get: r => `<a data-link="#/contrat/${r.id}" class="text-primary font-label-mono-sm font-semibold hover:underline">${esc(r.code)}</a>` },
     { label: 'Titulaire', get: r => r.locataire ? `<a data-link="#/locataire/${encodeURIComponent(r.locataire)}" class="font-semibold hover:underline">${esc(r.locataire)}</a>` : dash },
     { label: 'Bien', get: r => r.bien_id ? `<a data-link="#/bien/${r.bien_id}" class="hover:underline">${esc(r.bien || '')}</a>` : dash },
-    { label: 'ValiditÃ©', get: r => cellMono((r.debut_contrat || '?') + ' â†’ ' + (r.fin_contrat || '?'), 'text-secondary') },
+    { label: 'Validité', get: r => cellMono((r.debut_contrat || '?') + ' → ' + (r.fin_contrat || '?'), 'text-secondary') },
     { label: 'Loyer', right: true, get: r => cellMono(money(r.loyer), 'font-semibold') }
   ];
   const indicesHtml = (d.indices || []).map(i => `
@@ -370,7 +381,7 @@ async function viewDashboard() {
   view.innerHTML = `
     ${breadcrumb([{ label: 'Accueil' }, { label: 'Vue d\'ensemble', link: null }, { label: 'PIVRY01.ASTECHIVR' }])}
     <div class="flex items-center gap-space-md mb-space-lg">
-      <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Tableau de bord opÃ©rationnel</h1>
+      <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Tableau de bord opérationnel</h1>
       <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-label-mono-sm text-label-mono-sm"><span class="material-symbols-outlined text-[14px] text-primary">database</span>Mode Lecture Seule</span>
     </div>
     <div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm mb-space-xl flex flex-wrap items-center justify-between gap-space-md">
@@ -380,43 +391,43 @@ async function viewDashboard() {
         <div class="h-6 w-px bg-surface-container-high hidden sm:block"></div>
         <div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-primary">memory</span><div><div class="font-label-mono-sm text-label-mono-sm text-secondary">Driver</div><div class="font-label-mono-md text-label-mono-md text-on-surface">Thick OCI (oracledb)</div></div></div>
         <div class="h-6 w-px bg-surface-container-high hidden sm:block"></div>
-        <div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-secondary">update</span><div><div class="font-label-mono-sm text-label-mono-sm text-secondary">Synchro RH</div><div class="font-label-mono-md text-label-mono-md text-error font-semibold" id="dashRhStatus">Inactive (Studio-RH non branchÃ©)</div></div></div>
+        <div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-secondary">update</span><div><div class="font-label-mono-sm text-label-mono-sm text-secondary">Synchro RH</div><div class="font-label-mono-md text-label-mono-md text-error font-semibold" id="dashRhStatus">Inactive (Studio-RH non branché)</div></div></div>
       </div>
-      <div class="flex items-center gap-space-xs font-label-mono-sm text-label-mono-sm bg-surface-container px-2.5 py-1 rounded text-on-surface"><span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>RequÃªtes SELECT</div>
+      <div class="flex items-center gap-space-xs font-label-mono-sm text-label-mono-sm bg-surface-container px-2.5 py-1 rounded text-on-surface"><span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>Requêtes SELECT</div>
     </div>
     ${kpis}
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
       <div class="lg:col-span-8 flex flex-col gap-space-lg">
-        ${card('Prochaines Ã©chÃ©ances locatives', dataTable(echCols, d.prochainesEcheances), `<span class="font-label-mono-sm text-label-mono-sm text-secondary">â‰¥ 01/01/2024</span><a data-link="#/locatif" class="text-primary font-title-sm text-title-sm hover:underline">Tout voir â†’</a>`, 'Surveillance des loyers Ã  venir')}
-        ${card('Derniers contrats enregistrÃ©s', dataTable(contratsCols, d.derniersContrats), `<a data-link="#/locatif" class="text-primary font-title-sm text-title-sm hover:underline">Gestion locative â†’</a>`)}
+        ${card('Prochaines échéances locatives', dataTable(echCols, d.prochainesEcheances), `<span class="font-label-mono-sm text-label-mono-sm text-secondary">≥ 01/01/2024</span><a data-link="#/locatif" class="text-primary font-title-sm text-title-sm hover:underline">Tout voir →</a>`, 'Surveillance des loyers à venir')}
+        ${card('Derniers contrats enregistrés', dataTable(contratsCols, d.derniersContrats), `<a data-link="#/locatif" class="text-primary font-title-sm text-title-sm hover:underline">Gestion locative →</a>`)}
       </div>
       <div class="lg:col-span-4 flex flex-col gap-space-lg">
-        ${card('Indices INSEE', `<div class="p-space-lg pt-0 space-y-space-sm">${indicesHtml}<a data-link="#/indices" class="block text-center text-primary font-title-sm text-title-sm pt-2 hover:underline">GÃ©rer les indices â†’</a></div>`)}
+        ${card('Indices INSEE', `<div class="p-space-lg pt-0 space-y-space-sm">${indicesHtml}<a data-link="#/indices" class="block text-center text-primary font-title-sm text-title-sm pt-2 hover:underline">Gérer les indices →</a></div>`)}
         ${card('GMAO & Interventions', `<div class="px-space-lg pb-space-lg grid grid-cols-3 gap-space-sm">
             <div class="p-space-sm rounded bg-surface-container-low flex flex-col"><span class="font-headline-md text-headline-md text-on-surface font-bold tabular">${num(k.interventions)}</span><span class="font-body-sm text-[12px] text-secondary">En cours</span></div>
-            <div class="p-space-sm rounded bg-surface-container-low flex flex-col"><span class="font-headline-md text-headline-md text-tertiary font-bold tabular">${num(ik.totals.cloturees)}</span><span class="font-body-sm text-[12px] text-secondary">ClÃ´turÃ©es</span></div>
+            <div class="p-space-sm rounded bg-surface-container-low flex flex-col"><span class="font-headline-md text-headline-md text-tertiary font-bold tabular">${num(ik.totals.cloturees)}</span><span class="font-body-sm text-[12px] text-secondary">Clôturées</span></div>
             <div class="p-space-sm rounded bg-surface-container-low flex flex-col"><span class="font-headline-md text-headline-md text-primary font-bold tabular">${num(k.demandes)}</span><span class="font-body-sm text-[12px] text-secondary">Demandes</span></div>
-          </div><div class="px-space-lg pb-space-lg"><a data-link="#/interventions" class="text-primary font-title-sm text-title-sm hover:underline">Ouvrir la GMAO â†’</a></div>`)}
+          </div><div class="px-space-lg pb-space-lg"><a data-link="#/interventions" class="text-primary font-title-sm text-title-sm hover:underline">Ouvrir la GMAO →</a></div>`)}
         ${card('Alerte Synchro RH', `<div class="px-space-lg pb-space-lg"><div class="p-space-sm rounded bg-surface-container-low flex flex-col gap-1">
-            <div class="flex items-center justify-between"><span class="font-title-sm text-title-sm">Source Studio-RH</span><span id="dashRhBadge">${badge('Non connectÃ©e', 'red')}</span></div>
-            <p class="font-body-sm text-[12px] text-on-surface-variant" id="dashRhText">La confrontation des matricules (API Studio-RH) n\'est pas encore branchÃ©e. Seuls les comptes ASTECH sont exploitables en lecture.</p>
-          </div><a data-link="#/synchro" class="block text-center text-primary font-title-sm text-title-sm pt-3 hover:underline">Ouvrir la rÃ©conciliation RH â†’</a></div>`)}
+            <div class="flex items-center justify-between"><span class="font-title-sm text-title-sm">Source Studio-RH</span><span id="dashRhBadge">${badge('Non connectée', 'red')}</span></div>
+            <p class="font-body-sm text-[12px] text-on-surface-variant" id="dashRhText">La confrontation des matricules (API Studio-RH) n\'est pas encore branchée. Seuls les comptes ASTECH sont exploitables en lecture.</p>
+          </div><a data-link="#/synchro" class="block text-center text-primary font-title-sm text-title-sm pt-3 hover:underline">Ouvrir la réconciliation RH →</a></div>`)}
       </div>
     </div>
     <div class="mt-space-xl">
       <div class="flex items-center justify-between gap-space-md mb-space-md">
         <h2 class="font-headline-md text-on-surface">Indicateurs des interventions (GMAO)</h2>
-        <a data-link="#/interventions" class="text-primary font-title-sm hover:underline">Ouvrir la GMAO â†’</a>
+        <a data-link="#/interventions" class="text-primary font-title-sm hover:underline">Ouvrir la GMAO →</a>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-lg mb-space-lg">
-        ${kpi('Interventions en cours', num(ik.totals.en_cours), 'toutes pÃ©riodes', 'pending_actions', 'primary')}
-        ${kpi('Interventions clÃ´turÃ©es', num(ik.totals.cloturees), 'historique', 'task_alt', 'tertiary')}
-        ${kpi('Demandes (DI)', num(k.demandes), 'demandes rattachÃ©es', 'description', 'plain')}
-        ${kpi('Types d\u2019intervention', num((ik.by_type || []).length), 'rÃ©partition ci-dessous', 'category', 'primary')}
+        ${kpi('Interventions en cours', num(ik.totals.en_cours), 'toutes périodes', 'pending_actions', 'primary')}
+        ${kpi('Interventions clôturées', num(ik.totals.cloturees), 'historique', 'task_alt', 'tertiary')}
+        ${kpi('Demandes (DI)', num(k.demandes), 'demandes rattachées', 'description', 'plain')}
+        ${kpi('Types d\u2019intervention', num((ik.by_type || []).length), 'répartition ci-dessous', 'category', 'primary')}
       </div>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
         ${card('Par type', `<div class="pb-space-sm">${bilanRows(intervTypeRows, 'label', { tone: 'primary', empty: 'Aucune intervention.' })}</div>`)}
-        ${card('Par site (SXXX)', `<div class="pb-space-sm">${bilanRows(intervSiteRows, 'label', { tone: 'tertiary', empty: 'Aucun site concernÃ©.' })}</div>`)}
+        ${card('Par site (SXXX)', `<div class="pb-space-sm">${bilanRows(intervSiteRows, 'label', { tone: 'tertiary', empty: 'Aucun site concerné.' })}</div>`)}
         ${card('Par service', `<div class="pb-space-sm">${bilanRows(ik.by_service, 'service', { tone: 'amber', empty: 'Aucune intervention.' })}</div>`)}
         ${card('Par demandeur', `<div class="pb-space-sm">${bilanRows(ik.by_demandeur, 'demandeur', { tone: 'emerald', empty: 'Aucune intervention.' })}</div>`)}
       </div>
@@ -424,14 +435,14 @@ async function viewDashboard() {
   api('/api/config').then(c => {
     $('#srvInfo').textContent = 'Oracle 19c EE (' + c.connectInfo + ')'; $('#footInfo').textContent = c.connectInfo;
     const on = !!c.studioRh;
-    const rs = $('#dashRhStatus'); if (rs) { rs.textContent = on ? 'Active (Studio-RH branchÃ©)' : 'Inactive (Studio-RH non branchÃ©)'; rs.classList.toggle('text-error', !on); rs.classList.toggle('text-emerald-600', on); }
-    const rb = $('#dashRhBadge'); if (rb) rb.innerHTML = on ? badge('ConnectÃ©e', 'green') : badge('Non connectÃ©e', 'red');
-    const rt = $('#dashRhText'); if (rt) rt.textContent = on ? ('Confrontation active via l\'API Studio-RH (' + (c.studioRhUrl || '') + ').') : "La confrontation des matricules (API Studio-RH) n'est pas encore branchÃ©e. Seuls les comptes ASTECH sont exploitables en lecture.";
+    const rs = $('#dashRhStatus'); if (rs) { rs.textContent = on ? 'Active (Studio-RH branché)' : 'Inactive (Studio-RH non branché)'; rs.classList.toggle('text-error', !on); rs.classList.toggle('text-emerald-600', on); }
+    const rb = $('#dashRhBadge'); if (rb) rb.innerHTML = on ? badge('Connectée', 'green') : badge('Non connectée', 'red');
+    const rt = $('#dashRhText'); if (rt) rt.textContent = on ? ('Confrontation active via l\'API Studio-RH (' + (c.studioRhUrl || '') + ').') : "La confrontation des matricules (API Studio-RH) n'est pas encore branchée. Seuls les comptes ASTECH sont exploitables en lecture.";
     if (on) { const p = $('#studioPill'); p.className = p.className.replace('sync_problem', 'sync'); p.classList.remove('text-[#94a3b8]'); p.classList.add('text-emerald-400'); }
   }).catch(() => {});
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• AGENTS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ═══════════════════════════ AGENTS ═══════════════════════════ */
 async function viewAgents() {
   const [stats, services, roles] = await Promise.all([api('/api/agents/stats'), api('/api/services'), api('/api/roles')]);
   const a = state.agents;
@@ -439,11 +450,14 @@ async function viewAgents() {
   if (state.q) params.set('q', state.q);
   if (a.tab === 'utilisateur' || a.tab === 'simple') params.set('type', a.tab);
   if (a.tab === 'admin') params.set('admin', '1');
-  if (a.tab === 'inactif') params.set('actif', 'inactif');
+  const actif = a.actif || (a.tab === 'inactif' ? 'inactif' : '');
+  if (actif) params.set('actif', actif);
   if (a.service) params.set('service', a.service);
   if (a.role) params.set('role', a.role);
-  params.set('page', a.page); params.set('pageSize', a.pageSize);
-  const res = await api('/api/agents?' + params.toString());
+  const all = a.pageSize === 0;
+  params.set('page', all ? 1 : a.page); params.set('pageSize', all ? 100 : a.pageSize);
+  let res = await api('/api/agents?' + params.toString());
+  if (all && res.total > res.rows.length) { params.set('pageSize', 200); res = await api('/api/agents?' + params.toString()); }
   const totalPages = Math.max(1, Math.ceil(res.total / res.pageSize));
 
   const tabs = [['all', 'Tous', stats.total], ['utilisateur', 'Utilisateurs avec droits', stats.utilisateurs], ['simple', 'Agents simples', stats.agents_simples], ['admin', 'Administrateurs', stats.admins], ['inactif', 'Inactifs', stats.inactifs]];
@@ -451,35 +465,35 @@ async function viewAgents() {
 
   const cols = [
     { label: 'Matricule', get: r => `<span class="font-label-mono-md text-label-mono-md font-bold ${Number(r.nb) > 0 ? 'text-primary' : 'text-secondary'}">${esc(r.matricule)}</span>` },
-    { label: 'Nom & PrÃ©nom', get: r => `<div class="font-title-md text-title-md text-on-surface">${esc(r.nom || r.des || '')}</div><div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">${esc(r.email || '')}</div>` },
+    { label: 'Nom & Prénom', get: r => `<div class="font-title-md text-title-md text-on-surface">${esc(r.nom || r.des || '')}</div><div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">${esc(r.email || '')}</div>` },
     { label: 'Service', get: r => `<div class="text-on-surface">${esc(r.service || '')}</div><div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">${esc(r.sserv || '')}</div>` },
     { label: 'Type', get: r => typeBadge(r.nb) },
     { label: 'Droits', get: r => Number(r.nb) > 0 ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container-highest text-primary font-label-mono-sm text-label-mono-sm font-medium">${num(r.nb)} menus</span>` : `<span class="font-label-mono-sm text-label-mono-sm text-outline italic">Aucun droit</span>` },
-    { label: 'RÃ´les', get: r => roleBadges(r.roleapp) },
+    { label: 'Rôles', get: r => roleBadges(r.roleapp) },
     { label: 'Admin', center: true, get: r => (r.gest === 'O' && r.ordon === 'O' && r.compta === 'O') ? badge('ADMIN', 'purple') : dash },
-    { label: 'DerniÃ¨re MAJ', get: r => r.maj ? `<div class="font-label-mono-sm text-label-mono-sm text-on-surface">${esc(r.maj)}</div>` : dash }
+    { label: 'Dernière MAJ', get: r => r.maj ? `<div class="font-label-mono-sm text-label-mono-sm text-on-surface">${esc(r.maj)}</div>` : dash }
   ];
 
   view.innerHTML = `
     <div class="bg-surface-container-high px-space-lg py-space-sm rounded-lg mb-space-lg flex flex-wrap items-center justify-between gap-space-sm shadow-sm">
       <div class="flex items-center gap-space-sm"><span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-on-primary"><span class="material-symbols-outlined text-[16px]">verified_user</span></span>
-        <p class="font-body-sm text-body-sm text-on-surface">Vue <span class="font-label-mono-sm font-semibold text-primary">SBCG_USERPROFIL</span> / <span class="font-label-mono-sm font-semibold text-primary">DEMANDEUR</span> â€” distinction Â« utilisateur avec droits Â» / Â« agent simple Â».</p></div>
+        <p class="font-body-sm text-body-sm text-on-surface">Vue <span class="font-label-mono-sm font-semibold text-primary">SBCG_USERPROFIL</span> / <span class="font-label-mono-sm font-semibold text-primary">DEMANDEUR</span> — distinction « utilisateur avec droits » / « agent simple ».</p></div>
       <span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant bg-surface-container-highest px-2 py-0.5 rounded">${num(res.total)} personnes</span>
     </div>
-    <div class="mb-space-lg"><span class="font-label-mono-sm text-label-mono-sm uppercase tracking-wider text-primary font-semibold">ASTECH Repository Â§2.1 â€¢ Â§6.2</span>
+    <div class="mb-space-lg"><span class="font-label-mono-sm text-label-mono-sm uppercase tracking-wider text-primary font-semibold">ASTECH Repository §2.1 • §6.2</span>
       <h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight leading-none mt-1">Gestion des Agents &amp; Comptes</h1>
       <p class="font-body-md text-body-md text-on-surface-variant mt-1 max-w-3xl">Qualification des comptes Oracle avec droits (<span class="font-label-mono-sm">SBCG_USERPROFIL</span>) par opposition aux agents de terrain sans profil de connexion (dotations EPI, demandeurs).</p></div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md mb-space-lg">
-      ${kpi('Total RÃ©pertoire', num(stats.total), `<span class="text-tertiary font-semibold">${num(stats.admins)} admins</span> Â· table SBCG_USERS`, 'groups', 'plain')}
-      ${kpi('Comptes actifs', num(stats.actifs), `${num(stats.inactifs)} inactifs Â· flag DEMANDEUR.SDEM_SIGN='O'`, 'how_to_reg', 'primary')}
-      ${kpi('Utilisateurs avec droits', num(stats.utilisateurs), 'â‰¥ 1 profil SBCG_USERPROFIL', 'badge', 'plain')}
+      ${kpi('Total Répertoire', num(stats.total), `<span class="text-tertiary font-semibold">${num(stats.admins)} admins</span> · table SBCG_USERS`, 'groups', 'plain')}
+      ${kpi('Comptes actifs', num(stats.actifs), `${num(stats.inactifs)} inactifs · flag DEMANDEUR.SDEM_SIGN='O'`, 'how_to_reg', 'primary')}
+      ${kpi('Utilisateurs avec droits', num(stats.utilisateurs), '≥ 1 profil SBCG_USERPROFIL', 'badge', 'plain')}
       ${kpi('Agents simples', num(stats.agents_simples), 'Sans droit ASTECH', 'engineering', 'plain')}
     </div>
     <div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm mb-space-lg flex flex-col gap-space-md">
       <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-space-md">
         <div class="relative flex-1 min-w-[260px]">
           <span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[20px]">search</span>
-          <input id="agentQ" value="${esc(state.q)}" class="w-full h-10 pl-10 pr-20 rounded-lg bg-surface-container-low text-on-surface placeholder-on-surface-variant font-body-sm focus:outline-none focus:bg-surface-container" placeholder="Rechercher nom, matricule (USR_NAME), serviceâ€¦" />
+          <input id="agentQ" value="${esc(state.q)}" class="w-full h-10 pl-10 pr-20 rounded-lg bg-surface-container-low text-on-surface placeholder-on-surface-variant font-body-sm focus:outline-none focus:bg-surface-container" placeholder="Rechercher nom, matricule (USR_NAME), service…" />
           <span class="absolute right-3 top-3 font-label-mono-sm text-label-mono-sm text-on-surface-variant bg-surface-container-highest px-1.5 py-0.5 rounded">LIKE :q</span>
         </div>
         <div class="flex items-center p-1 bg-surface-container rounded-lg shrink-0 overflow-x-auto">${tabsHtml}</div>
@@ -490,10 +504,18 @@ async function viewAgents() {
           ${services.rows.map(s => `<option value="${esc(s.code)}" ${a.service === s.code ? 'selected' : ''}>${esc(s.nom)}</option>`).join('')}
         </select>
         <select data-act="agentRole" class="h-8 pl-3 pr-8 rounded bg-surface-container-low text-on-surface font-body-sm focus:outline-none">
-          <option value="">Tous RÃ´les Applicatifs</option>
-          ${roles.map(r => `<option value="${r.lettre}" ${a.role === r.lettre ? 'selected' : ''}>${r.lettre} â€” ${esc(r.libelle)} (${num(r.nb)})</option>`).join('')}
+          <option value="">Tous Rôles Applicatifs</option>
+          ${roles.map(r => `<option value="${r.lettre}" ${a.role === r.lettre ? 'selected' : ''}>${r.lettre} — ${esc(r.libelle)} (${num(r.nb)})</option>`).join('')}
         </select>
-        <span class="ml-auto font-label-mono-sm text-label-mono-sm text-on-surface-variant">Filtre : <strong class="text-on-surface">${esc((tabs.find(t => t[0] === a.tab) || [])[1] || '')}</strong> â€¢ RÃ©sultats : <span class="text-primary font-bold">${num(res.total)}</span></span>
+        <div class="flex items-center p-0.5 bg-surface-container rounded-lg font-label-mono-sm text-label-mono-sm">
+          <button data-act="agentActif:" class="px-2.5 py-1 rounded ${!actif ? 'bg-surface-container-lowest text-primary font-semibold shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}">Tous</button>
+          <button data-act="agentActif:actif" class="px-2.5 py-1 rounded ${actif === 'actif' ? 'bg-emerald-600 text-white font-semibold' : 'text-emerald-700 hover:text-emerald-800'}">Actifs <span class="opacity-70">(${num(stats.actifs)})</span></button>
+          <button data-act="agentActif:inactif" class="px-2.5 py-1 rounded ${actif === 'inactif' ? 'bg-error text-on-error font-semibold' : 'text-error hover:text-error/80'}">Inactifs <span class="opacity-70">(${num(stats.inactifs)})</span></button>
+        </div>
+        <select data-act="agentPageSize" class="h-8 pl-3 pr-8 rounded bg-surface-container-low text-on-surface font-body-sm focus:outline-none" title="Nombre d'enregistrements par page">
+          ${[25, 50, 100, 500, 2000, 0].map(n => `<option value="${n}" ${Number(a.pageSize) === n ? 'selected' : ''}>${n === 0 ? 'Tous' : n + ' / page'}</option>`).join('')}
+        </select>
+        <span class="ml-auto font-label-mono-sm text-label-mono-sm text-on-surface-variant">Filtre : <strong class="text-on-surface">${esc((tabs.find(t => t[0] === a.tab) || [])[1] || '')}</strong> • Résultats : <span class="text-primary font-bold">${num(res.total)}</span></span>
       </div>
     </div>
     <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
@@ -534,12 +556,12 @@ async function viewAgentFiche(matricule) {
   const d = await api('/api/agent/' + encodeURIComponent(matricule));
   const c = d.compte, dem = d.demandeur || {};
   const admin = dem.gest === 'O' && dem.ordon === 'O' && dem.compta === 'O';
-  const info = [['SchÃ©ma', 'ASTECHIVR.SBCG_USERS'], ['Matricule', c.matricule], ['USR_ID', c.usr_id], ['Nom', c.nom],
-    ['Service', dem.sserv], ['Courriel', dem.email], ['Login AD (AUTHSYS)', dem.authsys], ['Date invalidation', c.datinvalid || 'â€”'],
-    ['Inscrit au rÃ©pertoire (USR_DEM)', c.dem], ['DerniÃ¨re MAJ', c.maj], ['MAJ mot de passe', c.majpwd]];
+  const info = [['Schéma', 'ASTECHIVR.SBCG_USERS'], ['Matricule', c.matricule], ['USR_ID', c.usr_id], ['Nom', c.nom],
+    ['Service', dem.sserv], ['Courriel', dem.email], ['Login AD (AUTHSYS)', dem.authsys], ['Date invalidation', c.datinvalid || '—'],
+    ['Inscrit au répertoire (USR_DEM)', c.dem], ['Dernière MAJ', c.maj], ['MAJ mot de passe', c.majpwd]];
   const droitsRows = (d.droits || []).map(x => `<tr class="border-b border-surface-container-low"><td class="py-2 px-3 font-label-mono-sm">${esc(x.mnu_id)}</td><td class="py-2 px-3">${esc(x.libelle || ('Module ' + (x.module ?? '')))}</td><td class="py-2 px-3 font-label-mono-sm text-secondary">${esc(x.module ?? '')}/${esc(x.onglet ?? '')}</td><td class="py-2 px-3 text-right">${badge('Niv ' + x.auth, x.auth >= 15 ? 'green' : x.auth >= 7 ? 'blue' : 'amber')}</td></tr>`).join('');
-  const groupes = (d.groupes || []).map(g => `<span class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-mono-sm font-medium">${esc(g.code)} â€” ${esc(g.des || '')}</span>`).join('') || '<span class="text-on-surface-variant font-body-sm">Aucun groupe.</span>';
-  const demandes = (d.demandes || []).map(x => `<div class="p-2 rounded bg-surface-container-low"><div class="font-title-sm">${esc(x.ndt || '')}</div><div class="font-label-mono-sm text-secondary">${esc(x.num)} â€¢ ${esc(x.dat || '')}</div></div>`).join('') || '<span class="text-on-surface-variant font-body-sm">Aucune demande.</span>';
+  const groupes = (d.groupes || []).map(g => `<span class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-mono-sm font-medium">${esc(g.code)} — ${esc(g.des || '')}</span>`).join('') || '<span class="text-on-surface-variant font-body-sm">Aucun groupe.</span>';
+  const demandes = (d.demandes || []).map(x => `<div class="p-2 rounded bg-surface-container-low"><div class="font-title-sm">${esc(x.ndt || '')}</div><div class="font-label-mono-sm text-secondary">${esc(x.num)} • ${esc(x.dat || '')}</div></div>`).join('') || '<span class="text-on-surface-variant font-body-sm">Aucune demande.</span>';
 
   const drawerHtml = `
     <div class="sticky top-0 bg-surface-container-lowest p-space-lg border-b border-surface-container flex items-start justify-between z-10">
@@ -555,7 +577,7 @@ async function viewAgentFiche(matricule) {
       <div class="bg-surface-container p-space-md rounded-lg font-body-sm flex flex-col gap-1">
         ${info.map(([k, v]) => `<div class="flex items-center justify-between"><span class="text-on-surface-variant font-label-mono-sm uppercase">${esc(k)}</span><span class="font-label-mono-sm text-on-surface">${cell(v)}</span></div>`).join('')}
       </div>
-      <div class="flex items-center justify-between font-label-mono-sm"><span class="text-secondary uppercase">RÃ´le applicatif</span><span>${roleBadges(dem.roleapp) || dash}</span></div>
+      <div class="flex items-center justify-between font-label-mono-sm"><span class="text-secondary uppercase">Rôle applicatif</span><span>${roleBadges(dem.roleapp) || dash}</span></div>
       <div class="grid grid-cols-3 gap-2">
         <div class="p-2 rounded bg-surface-container-low text-center"><div class="font-headline-md font-bold tabular">${num(d.droits.length)}</div><div class="font-label-mono-sm text-secondary">Menus</div></div>
         <div class="p-2 rounded bg-surface-container-low text-center"><div class="font-headline-md font-bold tabular">${num(d.autorisations.n_auth)}</div><div class="font-label-mono-sm text-secondary">Autorisations</div></div>
@@ -564,18 +586,18 @@ async function viewAgentFiche(matricule) {
       <div><div class="font-title-sm uppercase tracking-wider text-secondary mb-2">Matrice menus (SBCG_USERPROFIL)</div>
         <div class="max-h-72 overflow-y-auto rounded-lg bg-surface-container-low">${droitsRows ? `<table class="w-full text-left font-body-sm"><tbody>${droitsRows}</tbody></table>` : '<div class="p-3 text-on-surface-variant font-body-sm">Aucun droit.</div>'}</div></div>
       <div><div class="font-title-sm uppercase tracking-wider text-secondary mb-2">Groupes applicatifs</div><div class="flex flex-wrap gap-1.5">${groupes}</div></div>
-      <div><div class="font-title-sm uppercase tracking-wider text-secondary mb-2">DerniÃ¨res demandes (DI)</div><div class="space-y-2">${demandes}</div></div>
-      <div class="p-space-sm rounded bg-surface-container-low text-on-surface-variant font-label-mono-sm text-label-mono-sm flex items-center gap-2"><span class="material-symbols-outlined text-[16px]">info</span>Aucune Ã©criture possible : application en lecture seule.</div>
+      <div><div class="font-title-sm uppercase tracking-wider text-secondary mb-2">Dernières demandes (DI)</div><div class="space-y-2">${demandes}</div></div>
+      <div class="p-space-sm rounded bg-surface-container-low text-on-surface-variant font-label-mono-sm text-label-mono-sm flex items-center gap-2"><span class="material-symbols-outlined text-[16px]">info</span>Aucune écriture possible : application en lecture seule.</div>
     </div>`;
   openDrawer(drawerHtml);
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• SYNCHRO RH â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ═══════════════════════════ SYNCHRO RH ═══════════════════════════ */
 async function viewSynchro() {
   const cfg = await api('/api/config');
   const s = state.synchro;
   const res = s.result;
-  // Par dÃ©faut, tous les comptes Â« Ã  dÃ©sactiver Â» sont sÃ©lectionnÃ©s.
+  // Par défaut, tous les comptes « à désactiver » sont sélectionnés.
   if (res && s.selected === null) s.selected = new Set(res.orphelins_astech.map((r) => String(r.matricule)));
   if (res && s.selCreate === null) s.selCreate = new Set((res.orphelins_rh || []).map((r) => String(r.matricule)));
   const sel = s.selected || new Set();
@@ -590,26 +612,26 @@ async function viewSynchro() {
   const allCreateSelected = rhRows.length > 0 && selCreateCount === rhRows.length;
 
   const runBtn = s.running
-    ? `<button disabled class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-wait"><span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>Interrogation de Studio-RHâ€¦</button>`
+    ? `<button disabled class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-wait"><span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>Interrogation de Studio-RH…</button>`
     : `<button data-act="syncRun" ${cfg.studioRh ? '' : 'disabled'} class="inline-flex items-center gap-2 px-4 py-2 rounded-lg ${cfg.studioRh ? 'bg-primary-container text-on-primary hover:bg-primary shadow-md' : 'bg-surface-dim text-on-surface-variant cursor-not-allowed'} font-title-md transition-all"><span class="material-symbols-outlined text-[18px]">sync</span>Lancer la synchronisation RH</button>`;
 
   const counters = res ? `
     <div class="grid grid-cols-1 md:grid-cols-4 gap-space-md mb-space-lg">
-      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="flex items-center justify-between"><span class="font-title-sm text-secondary uppercase">Concordants</span><span class="material-symbols-outlined text-outline">check_circle</span></div><div class="font-headline-xl font-bold mt-space-sm tabular">${num(res.stats.concordants)}</div><div class="font-label-mono-sm text-secondary">matricule prÃ©sent &amp; actif dans RH</div></div>
-      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="flex items-center justify-between"><span class="font-title-sm text-error uppercase font-bold">Ã€ dÃ©sactiver (ASTECH)</span><span class="material-symbols-outlined text-error">person_off</span></div><div class="font-headline-xl font-bold text-error mt-space-sm tabular">${num(res.stats.orphelins_astech)}</div><div class="font-label-mono-sm text-secondary">absents des agents RH actifs</div></div>
-      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="flex items-center justify-between"><span class="font-title-sm text-primary uppercase font-bold">Ã€ crÃ©er (ASTECH)</span><span class="material-symbols-outlined text-primary">person_add</span></div><div class="font-headline-xl font-bold mt-space-sm tabular">${res.rh_mode === 'list' ? num(res.stats.orphelins_rh) : 'â€”'}</div><div class="font-label-mono-sm text-secondary">${res.rh_mode === 'list' ? 'agents RH actifs sans compte ASTECH' : "liste RH complÃ¨te non exposÃ©e par l'API"}</div></div>
-      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="flex items-center justify-between"><span class="font-title-sm text-secondary uppercase">VÃ©rifiÃ©s / erreurs</span><span class="material-symbols-outlined text-outline">rule</span></div><div class="font-headline-xl font-bold mt-space-sm tabular">${num(res.stats.verifies)} <span class="text-[16px] text-secondary">/ ${num(res.stats.erreurs)}</span></div><div class="font-label-mono-sm text-secondary">${res.scope === 'actifs' ? "pÃ©rimÃ¨tre SDEM_SIGN='O'" : 'pÃ©rimÃ¨tre comptes avec droits'} â€¢ ${(res.duree_ms / 1000).toFixed(1)} s</div></div>
+      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="flex items-center justify-between"><span class="font-title-sm text-secondary uppercase">Concordants</span><span class="material-symbols-outlined text-outline">check_circle</span></div><div class="font-headline-xl font-bold mt-space-sm tabular">${num(res.stats.concordants)}</div><div class="font-label-mono-sm text-secondary">matricule présent &amp; actif dans RH</div></div>
+      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="flex items-center justify-between"><span class="font-title-sm text-error uppercase font-bold">À désactiver (ASTECH)</span><span class="material-symbols-outlined text-error">person_off</span></div><div class="font-headline-xl font-bold text-error mt-space-sm tabular">${num(res.stats.orphelins_astech)}</div><div class="font-label-mono-sm text-secondary">absents des agents RH actifs</div></div>
+      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="flex items-center justify-between"><span class="font-title-sm text-primary uppercase font-bold">À créer (ASTECH)</span><span class="material-symbols-outlined text-primary">person_add</span></div><div class="font-headline-xl font-bold mt-space-sm tabular">${res.rh_mode === 'list' ? num(res.stats.orphelins_rh) : '—'}</div><div class="font-label-mono-sm text-secondary">${res.rh_mode === 'list' ? 'agents RH actifs sans compte ASTECH' : "liste RH complète non exposée par l'API"}</div></div>
+      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="flex items-center justify-between"><span class="font-title-sm text-secondary uppercase">Vérifiés / erreurs</span><span class="material-symbols-outlined text-outline">rule</span></div><div class="font-headline-xl font-bold mt-space-sm tabular">${num(res.stats.verifies)} <span class="text-[16px] text-secondary">/ ${num(res.stats.erreurs)}</span></div><div class="font-label-mono-sm text-secondary">${res.scope === 'actifs' ? "périmètre SDEM_SIGN='O'" : 'périmètre comptes avec droits'} • ${(res.duree_ms / 1000).toFixed(1)} s</div></div>
     </div>` : '';
 
   const colsOrph = [
     { label: '', center: true, get: r => `<input type="checkbox" data-act="syncSelect:${esc(String(r.matricule))}" class="w-4 h-4 accent-[#dc2626] cursor-pointer" ${sel.has(String(r.matricule)) ? 'checked' : ''} />` },
     { label: 'Matricule', get: r => cellMono(r.matricule, 'font-bold text-error') },
-    { label: 'Nom & PrÃ©nom', get: r => `<div class="font-title-md text-on-surface">${esc(r.nom || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.email || '')}</div>` },
+    { label: 'Nom & Prénom', get: r => `<div class="font-title-md text-on-surface">${esc(r.nom || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.email || '')}</div>` },
     { label: 'Service', get: r => `<div>${esc(r.service || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.sserv || '')}</div>` },
     { label: 'Droits', get: r => Number(r.nb) > 0 ? `<span class="px-2 py-0.5 rounded bg-surface-container-highest text-primary font-label-mono-sm font-medium">${num(r.nb)} menus</span>` : badge('sans droit', 'slate') },
-    { label: 'RÃ´les', get: r => roleBadges(r.roleapp) },
+    { label: 'Rôles', get: r => roleBadges(r.roleapp) },
     { label: 'Admin', center: true, get: r => (r.gest === 'O' && r.ordon === 'O' && r.compta === 'O') ? badge('ADMIN', 'purple') : dash },
-    { label: 'DerniÃ¨re MAJ', get: r => cellMono(r.maj, 'text-secondary') }
+    { label: 'Dernière MAJ', get: r => cellMono(r.maj, 'text-secondary') }
   ];
   const colsConc = [
     { label: 'Matricule', get: r => cellMono(r.matricule, 'font-bold text-on-surface') },
@@ -621,7 +643,7 @@ async function viewSynchro() {
   const colsCreation = [
     { label: '', center: true, get: r => `<input type="checkbox" data-act="syncSelectCreate:${esc(String(r.matricule))}" class="w-4 h-4 accent-[#16a34a] cursor-pointer" ${selC.has(String(r.matricule)) ? 'checked' : ''} />` },
     { label: 'Matricule RH', get: r => cellMono(r.matricule, 'font-bold text-primary') },
-    { label: 'Nom & PrÃ©nom', get: r => `<div class="font-title-md text-on-surface">${esc(r.nom || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.email || '')}</div>` },
+    { label: 'Nom & Prénom', get: r => `<div class="font-title-md text-on-surface">${esc(r.nom || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.email || '')}</div>` },
     { label: 'Service', get: r => cell(r.service) },
     { label: 'Direction', get: r => cell(r.direction) },
     { label: 'Fonction', get: r => cell(r.fonction) }
@@ -632,8 +654,8 @@ async function viewSynchro() {
     <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
       <div class="px-space-lg py-space-sm bg-surface-container-low flex flex-wrap items-center justify-between gap-space-sm">
         <div class="flex items-center gap-1 bg-surface-container-low p-1 rounded-lg overflow-x-auto">
-          ${tabBtn('desactiver', 'Ã€ dÃ©sactiver dans ASTECH', res.orphelins_astech.length, 'bg-error-container text-on-error-container')}
-          ${res.rh_mode === 'list' ? tabBtn('a_creer', 'Ã€ crÃ©er dans ASTECH', res.orphelins_rh.length, 'bg-primary-fixed text-on-primary-fixed') : ''}
+          ${tabBtn('desactiver', 'À désactiver dans ASTECH', res.orphelins_astech.length, 'bg-error-container text-on-error-container')}
+          ${res.rh_mode === 'list' ? tabBtn('a_creer', 'À créer dans ASTECH', res.orphelins_rh.length, 'bg-primary-fixed text-on-primary-fixed') : ''}
           ${tabBtn('concordants', 'Concordants', res.concordants.length)}
         </div>
         <div class="flex flex-wrap items-center gap-space-md">
@@ -646,8 +668,8 @@ async function viewSynchro() {
             </label>
             <button data-act="syncSelectNone" class="px-2.5 py-1.5 rounded-lg bg-surface-container-lowest shadow-sm font-label-mono-sm hover:bg-surface-container">Aucun</button>
             ${d.busy
-              ? `<button disabled class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-wait"><span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>Traitementâ€¦</button>`
-              : `<button data-act="syncDesactiver" ${(selCount && cfg.writeEnabled) ? '' : 'disabled'} title="${cfg.writeEnabled ? "DÃ©sactiver les comptes sÃ©lectionnÃ©s dans ASTECH" : 'Ã‰criture dÃ©sactivÃ©e (ASTECH_ALLOW_WRITES=1 requis)'}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg ${(selCount && cfg.writeEnabled) ? 'bg-error text-on-error hover:bg-error/90 shadow-md' : 'bg-surface-dim text-on-surface-variant cursor-not-allowed'} font-title-md transition-all"><span class="material-symbols-outlined text-[18px]">person_off</span>DÃ©sactiver la sÃ©lection (${num(selCount)})</button>`}
+              ? `<button disabled class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-wait"><span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>Traitement…</button>`
+              : `<button data-act="syncDesactiver" ${(selCount && cfg.writeEnabled) ? '' : 'disabled'} title="${cfg.writeEnabled ? "Désactiver les comptes sélectionnés dans ASTECH" : 'Écriture désactivée (ASTECH_ALLOW_WRITES=1 requis)'}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg ${(selCount && cfg.writeEnabled) ? 'bg-error text-on-error hover:bg-error/90 shadow-md' : 'bg-surface-dim text-on-surface-variant cursor-not-allowed'} font-title-md transition-all"><span class="material-symbols-outlined text-[18px]">person_off</span>Désactiver la sélection (${num(selCount)})</button>`}
           </div>` : s.tab === 'a_creer' ? `
           <div class="flex flex-wrap items-center gap-2">
             <label class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-container-lowest shadow-sm cursor-pointer font-label-mono-sm">
@@ -656,28 +678,28 @@ async function viewSynchro() {
             </label>
             <button data-act="syncCreateNone" class="px-2.5 py-1.5 rounded-lg bg-surface-container-lowest shadow-sm font-label-mono-sm hover:bg-surface-container">Aucun</button>
             ${c.busy
-              ? `<button disabled class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-wait"><span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>Traitementâ€¦</button>`
-              : `<button data-act="syncCreer" ${(selCreateCount && cfg.writeEnabled) ? '' : 'disabled'} title="${cfg.writeEnabled ? "CrÃ©er les comptes ASTECH sÃ©lectionnÃ©s" : 'Ã‰criture dÃ©sactivÃ©e (ASTECH_ALLOW_WRITES=1 requis)'}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg ${(selCreateCount && cfg.writeEnabled) ? 'bg-primary text-on-primary hover:bg-primary/90 shadow-md' : 'bg-surface-dim text-on-surface-variant cursor-not-allowed'} font-title-md transition-all"><span class="material-symbols-outlined text-[18px]">person_add</span>CrÃ©er la sÃ©lection dans ASTECH (${num(selCreateCount)})</button>`}
-          </div>` : `<button disabled class="px-3.5 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-not-allowed" title="Application en lecture seule">Appliquer la sÃ©lection (indisponible)</button>`}
+              ? `<button disabled class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-wait"><span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>Traitement…</button>`
+              : `<button data-act="syncCreer" ${(selCreateCount && cfg.writeEnabled) ? '' : 'disabled'} title="${cfg.writeEnabled ? "Créer les comptes ASTECH sélectionnés" : 'Écriture désactivée (ASTECH_ALLOW_WRITES=1 requis)'}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg ${(selCreateCount && cfg.writeEnabled) ? 'bg-primary text-on-primary hover:bg-primary/90 shadow-md' : 'bg-surface-dim text-on-surface-variant cursor-not-allowed'} font-title-md transition-all"><span class="material-symbols-outlined text-[18px]">person_add</span>Créer la sélection dans ASTECH (${num(selCreateCount)})</button>`}
+          </div>` : `<button disabled class="px-3.5 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-not-allowed" title="Application en lecture seule">Appliquer la sélection (indisponible)</button>`}
         </div>
       </div>
       ${s.tab === 'desactiver' ? dataTable(colsOrph, res.orphelins_astech, { empty: 'Aucune non-concordance : tous les comptes existent dans Studio-RH.', key: 'sync_desactiver_' + res.scope })
-        : s.tab === 'a_creer' ? dataTable(colsCreation, res.orphelins_rh, { empty: 'Aucun agent RH Ã  crÃ©er.', key: 'sync_creer' })
+        : s.tab === 'a_creer' ? dataTable(colsCreation, res.orphelins_rh, { empty: 'Aucun agent RH à créer.', key: 'sync_creer' })
         : dataTable(colsConc, res.concordants, { empty: 'Aucun concordant.', key: 'sync_conc_' + res.scope })}
     </div>
     <p class="font-label-mono-sm text-label-mono-sm text-secondary mt-space-md flex items-start gap-2"><span class="material-symbols-outlined text-[16px]">info</span>${esc(res.note_rh)}</p>` : `
     <div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-xl text-center">
       <span class="material-symbols-outlined text-[40px] text-outline">compare_arrows</span>
-      <p class="font-body-md text-on-surface-variant mt-2">Aucune synchronisation lancÃ©e. Choisis le pÃ©rimÃ¨tre puis clique sur Â« Lancer la synchronisation RH Â».</p>
+      <p class="font-body-md text-on-surface-variant mt-2">Aucune synchronisation lancée. Choisis le périmètre puis clique sur « Lancer la synchronisation RH ».</p>
     </div>`;
 
   view.innerHTML = `
-    ${breadcrumb([{ label: 'Accueil' }, { label: 'Synchro RH' }, { label: 'Studio-RH â†” ASTECH' }])}
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Synchro RH' }, { label: 'Studio-RH ↔ ASTECH' }])}
     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md mb-space-lg">
       <div>
-        <span class="font-label-mono-sm px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-semibold uppercase tracking-wider">Oracle ASTECHIVR â†” Studio-RH</span>
-        <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight mt-1">RÃ©conciliation Studio-RH â†” ASTECH</h1>
-        <p class="font-body-md text-body-md text-secondary">Confrontation des matricules agents (clÃ© = matricule / USR_NAME) entre le SIRH et Oracle ASTECHIVR.</p>
+        <span class="font-label-mono-sm px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-semibold uppercase tracking-wider">Oracle ASTECHIVR ↔ Studio-RH</span>
+        <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight mt-1">Réconciliation Studio-RH ↔ ASTECH</h1>
+        <p class="font-body-md text-body-md text-secondary">Confrontation des matricules agents (clé = matricule / USR_NAME) entre le SIRH et Oracle ASTECHIVR.</p>
       </div>
       <div class="flex flex-wrap items-center gap-space-sm">
         <select data-act="syncScope" class="h-9 px-3 rounded-lg bg-surface-container-low font-body-sm focus:outline-none">
@@ -690,21 +712,21 @@ async function viewSynchro() {
     <div class="p-space-md rounded-xl bg-surface-container-low shadow-sm flex items-start gap-space-md relative overflow-hidden mb-space-lg">
       <div class="absolute left-0 top-0 bottom-0 w-1.5 ${cfg.studioRh ? 'bg-emerald-500' : 'bg-error'}"></div>
       <span class="material-symbols-outlined text-[24px] ${cfg.studioRh ? 'text-emerald-600' : 'text-error'}">${cfg.studioRh ? 'verified_user' : 'sync_problem'}</span>
-      <div><div class="font-title-md text-on-surface font-bold">${cfg.studioRh ? 'Source Studio-RH connectÃ©e' : 'Source Studio-RH non connectÃ©e'}</div>
-        <p class="font-body-sm text-on-surface-variant mt-0.5">${cfg.studioRh ? 'API ' + esc(cfg.studioRhUrl || '') + ' â€” interrogation de /api/agents/search par matricule.' : "Renseigner STUDIO_RH_API_URL et STUDIO_RH_API_KEY (fichier .env ou config.json) cÃ´tÃ© serveur."}</p></div>
+      <div><div class="font-title-md text-on-surface font-bold">${cfg.studioRh ? 'Source Studio-RH connectée' : 'Source Studio-RH non connectée'}</div>
+        <p class="font-body-sm text-on-surface-variant mt-0.5">${cfg.studioRh ? 'API ' + esc(cfg.studioRhUrl || '') + ' — interrogation de /api/agents/search par matricule.' : "Renseigner STUDIO_RH_API_URL et STUDIO_RH_API_KEY (fichier .env ou config.json) côté serveur."}</p></div>
     </div>
     ${s.error ? `<div class="bg-error-container/40 border border-error/30 text-on-error-container p-space-md rounded-xl font-body-sm mb-space-lg">${esc(s.error)}</div>` : ''}
     ${d.error ? `<div class="bg-error-container/40 border border-error/30 text-on-error-container p-space-md rounded-xl font-body-sm mb-space-lg">${esc(d.error)}</div>` : ''}
-    ${d.result ? `<div class="p-space-md rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 font-body-sm mb-space-lg flex items-start gap-2"><span class="material-symbols-outlined text-[20px]">task_alt</span><div><div class="font-title-md font-bold">${num(d.result.applied)} compte(s) dÃ©sactivÃ©(s) dans ASTECH</div><div class="text-emerald-800 mt-0.5">${(d.result.errors || []).length ? num(d.result.errors.length) + ' erreur(s). ' : ''}Journal d'audit : <span class="font-label-mono-sm">${esc(d.result.journalFile || 'â€”')}</span></div></div></div>` : ''}
+    ${d.result ? `<div class="p-space-md rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 font-body-sm mb-space-lg flex items-start gap-2"><span class="material-symbols-outlined text-[20px]">task_alt</span><div><div class="font-title-md font-bold">${num(d.result.applied)} compte(s) désactivé(s) dans ASTECH</div><div class="text-emerald-800 mt-0.5">${(d.result.errors || []).length ? num(d.result.errors.length) + ' erreur(s). ' : ''}Journal d'audit : <span class="font-label-mono-sm">${esc(d.result.journalFile || '—')}</span></div></div></div>` : ''}
     ${c.error ? `<div class="bg-error-container/40 border border-error/30 text-on-error-container p-space-md rounded-xl font-body-sm mb-space-lg">${esc(c.error)}</div>` : ''}
-    ${c.result ? `<div class="p-space-md rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 font-body-sm mb-space-lg flex items-start gap-2"><span class="material-symbols-outlined text-[20px]">task_alt</span><div><div class="font-title-md font-bold">${num(c.result.created)} compte(s) crÃ©Ã©(s) dans ASTECH</div><div class="text-emerald-800 mt-0.5">${(c.result.errors || []).length ? num(c.result.errors.length) + ' erreur(s). ' : ''}Journal d'audit : <span class="font-label-mono-sm">${esc(c.result.journalFile || 'â€”')}</span></div></div></div>` : ''}
+    ${c.result ? `<div class="p-space-md rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 font-body-sm mb-space-lg flex items-start gap-2"><span class="material-symbols-outlined text-[20px]">task_alt</span><div><div class="font-title-md font-bold">${num(c.result.created)} compte(s) créé(s) dans ASTECH</div><div class="text-emerald-800 mt-0.5">${(c.result.errors || []).length ? num(c.result.errors.length) + ' erreur(s). ' : ''}Journal d'audit : <span class="font-label-mono-sm">${esc(c.result.journalFile || '—')}</span></div></div></div>` : ''}
     ${s.running ? `<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg mb-space-lg">
       <div class="flex items-center justify-between mb-2">
-        <span class="font-title-sm text-on-surface flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-primary animate-spin">progress_activity</span>Synchronisation Studio-RH en coursâ€¦</span>
+        <span class="font-title-sm text-on-surface flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-primary animate-spin">progress_activity</span>Synchronisation Studio-RH en cours…</span>
         <span id="syncText" class="font-label-mono-sm text-label-mono-sm text-primary font-semibold tabular">0 / 0</span>
       </div>
       <div class="w-full bg-surface-container rounded-full h-2 overflow-hidden"><div id="syncBar" class="bg-primary-container h-2 rounded-full transition-all duration-200" style="width:0%"></div></div>
-      <p class="font-label-mono-sm text-label-mono-sm text-secondary mt-2">Interrogation de <span class="font-mono">/api/agents/search</span> pour chaque matricule (10 requÃªtes en parallÃ¨le).</p>
+      <p class="font-label-mono-sm text-label-mono-sm text-secondary mt-2">Interrogation de <span class="font-mono">/api/agents/search</span> pour chaque matricule (10 requêtes en parallèle).</p>
     </div>` : ''}
     ${counters}
     ${results}`;
@@ -725,10 +747,10 @@ async function runDesactiver() {
     d.plan = plan;
     const env = DB_ENV_SEL || APP.active;
     const introuvables = (plan.introuvables || []).length;
-    const msg = `DÃ©sactiver ${plan.requested} compte(s) dans ASTECH ?\n\nEnvironnement : ${String(env).toUpperCase()}\n`
-      + (introuvables ? `${introuvables} matricule(s) introuvable(s) seront ignorÃ©s.\n` : '')
+    const msg = `Désactiver ${plan.requested} compte(s) dans ASTECH ?\n\nEnvironnement : ${String(env).toUpperCase()}\n`
+      + (introuvables ? `${introuvables} matricule(s) introuvable(s) seront ignorés.\n` : '')
       + "\nRenseigne USR_DATINVALID sur SBCG_USERS et SDEM_SIGN='N' sur DEMANDEUR."
-      + (env === 'prod' ? '\n\nâš  Ã‰CRITURE EN PRODUCTION.' : '') + '\n\nConfirmer ?';
+      + (env === 'prod' ? '\n\n⚠ ÉCRITURE EN PRODUCTION.' : '') + '\n\nConfirmer ?';
     if (!window.confirm(msg)) { d.busy = false; await viewSynchro(); return; }
     const body = { matricules, dryRun: false };
     if (env === 'prod') body.confirm = 'PROD';
@@ -736,7 +758,7 @@ async function runDesactiver() {
     d.result = r;
     for (const a of (r.applied_rows || [])) sel.delete(String(a.matricule));
     s.selected = new Set();
-    s.result = null; // cache invalidÃ© cÃ´tÃ© serveur : relancer la synchro
+    s.result = null; // cache invalidé côté serveur : relancer la synchro
   } catch (e) { d.error = e.message; }
   finally { d.busy = false; await viewSynchro(); }
 }
@@ -753,10 +775,10 @@ async function runCreer() {
     c.plan = plan;
     const env = DB_ENV_SEL || APP.active;
     const existants = (plan.deja_existants || []).length;
-    const msg = `CrÃ©er ${plan.requested} compte(s) ASTECH ?\n\nEnvironnement : ${String(env).toUpperCase()}\n`
-      + (existants ? `${existants} matricule(s) dÃ©jÃ  prÃ©sent(s) seront ignorÃ©s.\n` : '')
-      + "\nCrÃ©e les comptes inactifs (USR_DATINVALID non nul, SDEM_SIGN='N'). Aucun mot de passe ni profil de droits n'est attribuÃ©."
-      + (env === 'prod' ? '\n\nâš  Ã‰CRITURE EN PRODUCTION.' : '') + '\n\nConfirmer ?';
+    const msg = `Créer ${plan.requested} compte(s) ASTECH ?\n\nEnvironnement : ${String(env).toUpperCase()}\n`
+      + (existants ? `${existants} matricule(s) déjà présent(s) seront ignorés.\n` : '')
+      + "\nCrée les comptes inactifs (USR_DATINVALID non nul, SDEM_SIGN='N'). Aucun mot de passe ni profil de droits n'est attribué."
+      + (env === 'prod' ? '\n\n⚠ ÉCRITURE EN PRODUCTION.' : '') + '\n\nConfirmer ?';
     if (!window.confirm(msg)) { c.busy = false; await viewSynchro(); return; }
     const body = { agents, dryRun: false };
     if (env === 'prod') body.confirm = 'PROD';
@@ -764,7 +786,7 @@ async function runCreer() {
     c.result = r;
     for (const a of (r.created_rows || [])) sel.delete(String(a.matricule));
     s.selCreate = new Set();
-    s.result = null; // cache invalidÃ© cÃ´tÃ© serveur : relancer la synchro
+    s.result = null; // cache invalidé côté serveur : relancer la synchro
   } catch (e) { c.error = e.message; }
   finally { c.busy = false; await viewSynchro(); }
 }
@@ -793,8 +815,8 @@ function runSyncRh() {
   });
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• LOCATIF â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
-const LOC_TABS = [['echeances', 'Ã‰chÃ©ancier & Quittances', 'calendar_month'], ['biens', 'Biens immobiliers', 'apartment'], ['baux', 'Baux & Contrats', 'gavel'], ['locataires', 'Locataires', 'groups'], ['revisions', 'RÃ©visions de loyers', 'trending_up']];
+/* ═══════════════════════════ LOCATIF ═══════════════════════════ */
+const LOC_TABS = [['echeances', 'Échéancier & Quittances', 'calendar_month'], ['biens', 'Biens immobiliers', 'apartment'], ['baux', 'Baux & Contrats', 'gavel'], ['locataires', 'Locataires', 'groups'], ['revisions', 'Révisions de loyers', 'trending_up']];
 async function viewLocatif() {
   const t = state.locatif.tab;
   const subnav = LOC_TABS.map(([k, label, icon]) => `<button data-act="locTab:${k}" class="flex items-center gap-2 px-3.5 py-2 rounded-xl font-title-md whitespace-nowrap transition-colors ${t === k ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container-lowest text-on-surface hover:bg-surface-container shadow-sm'}"><span class="material-symbols-outlined text-[18px] ${t === k ? '' : 'text-secondary'}">${icon}</span>${label}</button>`).join('');
@@ -802,7 +824,7 @@ async function viewLocatif() {
     ${breadcrumb([{ label: 'Accueil' }, { label: 'Gestion Locative' }])}
     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md pb-space-lg">
       <div>
-        <span class="inline-flex items-center gap-1 text-primary font-label-mono-sm font-semibold bg-primary-fixed px-2 py-0.5 rounded-full"><span class="material-symbols-outlined text-[14px]">tune</span>CUTOFF â‰¥ 01/01/2024</span>
+        <span class="inline-flex items-center gap-1 text-primary font-label-mono-sm font-semibold bg-primary-fixed px-2 py-0.5 rounded-full"><span class="material-symbols-outlined text-[14px]">tune</span>CUTOFF ≥ 01/01/2024</span>
         <h1 class="font-headline-lg font-bold text-on-surface tracking-tight mt-1">Gestion Locative du Patrimoine</h1>
         <p class="font-body-sm text-on-surface-variant">Biens, baux, locataires et quittancement en base Oracle ASTECH.</p>
       </div>
@@ -816,32 +838,32 @@ async function viewLocatif() {
   if (t === 'revisions') return locRevisions(body);
   return locEcheances(body);
 }
-function statutTone(s) { return s === 'MandatÃ©e' ? 'purple' : s === 'Ã‰mise' ? 'green' : s === 'Ã‰chue (non Ã©mise)' ? 'amber' : 'blue'; }
+function statutTone(s) { return s === 'Mandatée' ? 'purple' : s === 'Émise' ? 'green' : s === 'Échue (non émise)' ? 'amber' : 'blue'; }
 async function locEcheances(body) {
   const d = await api('/api/quittances?q=' + encodeURIComponent(state.q));
   const mode = state.locatif.mode;
   const rows = mode === 'futures' ? (d.futures || []) : (d.passees || []);
   const cols = [
-    { label: 'Ã‰chÃ©ance', get: r => `<div class="font-label-mono-sm font-semibold">${esc(r.date_echeance)}</div><div class="font-label-mono-sm text-secondary">${esc(r.periode || '')}</div>` },
-    { label: 'Quittance', get: r => r.num_quittance ? cellMono(r.num_quittance, 'text-primary') : '<span class="font-label-mono-sm text-outline">â€” non Ã©mise â€”</span>' },
+    { label: 'Échéance', get: r => `<div class="font-label-mono-sm font-semibold">${esc(r.date_echeance)}</div><div class="font-label-mono-sm text-secondary">${esc(r.periode || '')}</div>` },
+    { label: 'Quittance', get: r => r.num_quittance ? cellMono(r.num_quittance, 'text-primary') : '<span class="font-label-mono-sm text-outline">— non émise —</span>' },
     { label: 'Bien', get: r => r.bien_id ? `<a data-link="#/bien/${r.bien_id}" class="font-title-sm hover:underline">${esc(r.bien || r.code_bien || '')}</a><div class="font-label-mono-sm text-secondary">${esc(r.code_bien || '')}</div>` : dash },
     { label: 'Locataire', get: r => r.locataire ? `<a data-link="#/locataire/${encodeURIComponent(r.locataire)}" class="font-semibold hover:underline">${esc(r.locataire)}</a>` : dash },
     { label: 'Contrat', get: r => `<a data-link="#/contrat/${r.contrat_ref}" class="text-primary font-label-mono-sm hover:underline">${esc(r.contrat || '')}</a>` },
     { label: 'HT / TTC', right: true, get: r => `<div class="font-semibold tabular">${money(r.montant_ttc)}</div><div class="font-label-mono-sm text-secondary">${money(r.montant_ht)} HT</div>` },
-    { label: 'Mandat', get: r => r.num_mandat ? cellMono(r.num_mandat, 'text-tertiary') : '<span class="font-label-mono-sm text-outline">non gÃ©nÃ©rÃ©</span>' },
+    { label: 'Mandat', get: r => r.num_mandat ? cellMono(r.num_mandat, 'text-tertiary') : '<span class="font-label-mono-sm text-outline">non généré</span>' },
     { label: 'Statut', center: true, get: r => statusBadge(r.statut) }
   ];
   body.innerHTML = `
     <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm mb-space-md flex flex-wrap gap-space-sm items-center">
       <div class="flex items-center bg-surface-container p-1 rounded-lg">
-        <button data-act="locMode:futures" class="px-3 py-1.5 rounded-md font-title-sm ${mode === 'futures' ? 'bg-surface-container-lowest text-on-surface shadow-sm' : 'text-on-surface-variant'}"><span class="material-symbols-outlined text-[16px] text-primary align-middle">arrow_upward</span> Ã€ venir (${num((d.futures || []).length)})</button>
-        <button data-act="locMode:passees" class="px-3 py-1.5 rounded-md font-title-sm ${mode === 'passees' ? 'bg-surface-container-lowest text-on-surface shadow-sm' : 'text-on-surface-variant'}"><span class="material-symbols-outlined text-[16px] align-middle">history</span> PassÃ©es (${num((d.passees || []).length)})</button>
+        <button data-act="locMode:futures" class="px-3 py-1.5 rounded-md font-title-sm ${mode === 'futures' ? 'bg-surface-container-lowest text-on-surface shadow-sm' : 'text-on-surface-variant'}"><span class="material-symbols-outlined text-[16px] text-primary align-middle">arrow_upward</span> À venir (${num((d.futures || []).length)})</button>
+        <button data-act="locMode:passees" class="px-3 py-1.5 rounded-md font-title-sm ${mode === 'passees' ? 'bg-surface-container-lowest text-on-surface shadow-sm' : 'text-on-surface-variant'}"><span class="material-symbols-outlined text-[16px] align-middle">history</span> Passées (${num((d.passees || []).length)})</button>
       </div>
       <div class="relative flex-1 min-w-[240px]"><span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[18px]">search</span>
-        <input id="locQ" value="${esc(state.q)}" class="w-full h-9 pl-9 pr-4 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher locataire, bien, nÂ° quittanceâ€¦" /></div>
-      <span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant ml-auto">PÃ©rimÃ¨tre â‰¥ 01/01/2024 â€¢ tri ${mode === 'futures' ? 'ASC' : 'DESC'}</span>
+        <input id="locQ" value="${esc(state.q)}" class="w-full h-9 pl-9 pr-4 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher locataire, bien, n° quittance…" /></div>
+      <span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant ml-auto">Périmètre ≥ 01/01/2024 • tri ${mode === 'futures' ? 'ASC' : 'DESC'}</span>
     </div>
-    <div class="rounded-xl bg-surface-container-lowest shadow-sm overflow-hidden">${dataTable(cols, rows, { empty: 'Aucune Ã©chÃ©ance.', key: 'loc_ech_' + mode })}</div>`;
+    <div class="rounded-xl bg-surface-container-lowest shadow-sm overflow-hidden">${dataTable(cols, rows, { empty: 'Aucune échéance.', key: 'loc_ech_' + mode })}</div>`;
   bindSearch('#locQ');
 }
 async function locBiens(body) {
@@ -849,17 +871,17 @@ async function locBiens(body) {
   body.innerHTML = `
     <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm mb-space-md flex flex-wrap gap-space-sm items-center">
       <div class="relative flex-1 min-w-[240px]"><span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[18px]">search</span>
-        <input id="locQ" value="${esc(state.q)}" class="w-full h-9 pl-9 pr-4 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher code, dÃ©signation, adresseâ€¦" /></div>
+        <input id="locQ" value="${esc(state.q)}" class="w-full h-9 pl-9 pr-4 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher code, désignation, adresse…" /></div>
       <span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">${num(d.rows.length)} biens locatifs</span>
     </div>
     ${card('Biens locatifs (ARBO + ARBO_LOCATIF)', dataTable([
       { label: 'Code', get: r => `<span class="font-label-mono-sm font-semibold text-primary">${esc(r.code)}</span>` },
-      { label: 'DÃ©signation', get: r => `<div class="font-title-sm">${esc(r.bien || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.adresse || '')}</div>` },
-      { label: 'CatÃ©gorie', get: r => `${cell(r.categorie)}${r.sous_cat ? ' / ' + esc(r.sous_cat) : ''}` },
+      { label: 'Désignation', get: r => `<div class="font-title-sm">${esc(r.bien || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.adresse || '')}</div>` },
+      { label: 'Catégorie', get: r => `${cell(r.categorie)}${r.sous_cat ? ' / ' + esc(r.sous_cat) : ''}` },
       { label: 'Genre', get: r => cell(r.genre) },
       { label: 'Type logement', get: r => cell(r.type_log) },
-      { label: 'PiÃ¨ces', right: true, get: r => cell(r.pieces) },
-      { label: 'Surface', right: true, get: r => r.surface ? `${num(r.surface)} mÂ²` : dash }
+      { label: 'Pièces', right: true, get: r => cell(r.pieces) },
+      { label: 'Surface', right: true, get: r => r.surface ? `${num(r.surface)} m²` : dash }
     ], d.rows, { rowLink: r => '#/bien/' + r.id, key: 'loc_biens' }))}`;
   bindSearch('#locQ');
 }
@@ -868,17 +890,17 @@ async function locBaux(body) {
   body.innerHTML = `
     <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm mb-space-md flex flex-wrap gap-space-sm items-center">
       <div class="relative flex-1 min-w-[240px]"><span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[18px]">search</span>
-        <input id="locQ" value="${esc(state.q)}" class="w-full h-9 pl-9 pr-4 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher nÂ° contrat, locataire, bienâ€¦" /></div>
+        <input id="locQ" value="${esc(state.q)}" class="w-full h-9 pl-9 pr-4 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher n° contrat, locataire, bien…" /></div>
       <span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">${num(d.rows.length)} contrats</span>
     </div>
     ${card('Baux & contrats', dataTable([
-      { label: 'NÂ°', get: r => `<span class="font-label-mono-sm font-semibold text-primary">${esc(r.code)}</span>` },
+      { label: 'N°', get: r => `<span class="font-label-mono-sm font-semibold text-primary">${esc(r.code)}</span>` },
       { label: 'Objet', get: r => `<div class="font-title-sm clamp1" style="max-width:320px">${esc(r.objet || '')}</div>` },
       { label: 'Locataire', get: r => r.locataire ? `<a data-link="#/locataire/${encodeURIComponent(r.locataire)}" class="font-semibold hover:underline">${esc(r.locataire)}</a>` : dash },
       { label: 'Bien', get: r => cell(r.code_bien) },
-      { label: 'DÃ©but', get: r => cell(r.debut_contrat) },
+      { label: 'Début', get: r => cell(r.debut_contrat) },
       { label: 'Fin', get: r => cell(r.fin_contrat) },
-      { label: 'Ã‰tat', center: true, get: r => r.actif === 'O' ? badge('Ouvert', 'green') : r.actif === 'C' ? badge('Clos', 'slate') : badge(r.actif || '?', 'amber') },
+      { label: 'État', center: true, get: r => r.actif === 'O' ? badge('Ouvert', 'green') : r.actif === 'C' ? badge('Clos', 'slate') : badge(r.actif || '?', 'amber') },
       { label: 'Loyer', right: true, get: r => cellMono(money(r.loyer), 'font-semibold') }
     ], d.rows, { rowLink: r => '#/contrat/' + r.id, key: 'loc_baux' }))}`;
   bindSearch('#locQ');
@@ -888,7 +910,7 @@ async function locLocataires(body) {
   body.innerHTML = `
     <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm mb-space-md flex flex-wrap gap-space-sm items-center">
       <div class="relative flex-1 min-w-[240px]"><span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[18px]">search</span>
-        <input id="locQ" value="${esc(state.q)}" class="w-full h-9 pl-9 pr-4 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher un locataireâ€¦" /></div>
+        <input id="locQ" value="${esc(state.q)}" class="w-full h-9 pl-9 pr-4 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher un locataire…" /></div>
       <span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">${num(d.rows.length)} locataires</span>
     </div>
     ${card('Locataires (CONTL_CONTRACTANT)', dataTable([
@@ -904,84 +926,84 @@ async function locRevisions(body) {
   body.innerHTML = `
     <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm mb-space-md flex flex-wrap gap-space-sm items-center">
       <div class="relative flex-1 min-w-[240px]"><span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[18px]">search</span>
-        <input id="locQ" value="${esc(state.q)}" class="w-full h-9 pl-9 pr-4 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher locataire, contrat, bienâ€¦" /></div>
-      <span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">${num(d.rows.length)} rÃ©visions</span>
+        <input id="locQ" value="${esc(state.q)}" class="w-full h-9 pl-9 pr-4 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher locataire, contrat, bien…" /></div>
+      <span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">${num(d.rows.length)} révisions</span>
     </div>
-    ${card('RÃ©visions de loyers (CONTRAT_REVISION)', dataTable([
+    ${card('Révisions de loyers (CONTRAT_REVISION)', dataTable([
       { label: 'Date', get: r => cell(r.dat) },
       { label: 'Application', get: r => cell(r.dat_appli) },
       { label: 'Contrat', get: r => `<a data-link="#/contrat/${r.contrat_id}" class="text-primary font-label-mono-sm hover:underline">${esc(r.contrat || '')}</a>` },
       { label: 'Locataire', get: r => r.locataire ? `<a data-link="#/locataire/${encodeURIComponent(r.locataire)}" class="hover:underline">${esc(r.locataire)}</a>` : dash },
       { label: 'Indice', get: r => cell(r.indice) },
       { label: 'Loyer avant', right: true, get: r => money(r.loyer_avant) },
-      { label: 'Loyer aprÃ¨s', right: true, get: r => cellMono(money(r.loyer_apres), 'font-semibold') },
-      { label: 'Ã‰volution', right: true, get: r => r.pourc != null ? `<span class="${Number(r.pourc) >= 0 ? 'text-emerald-700' : 'text-error'} font-semibold">${Number(r.pourc).toFixed(2)} %</span>` : dash }
-    ], d.rows, { empty: 'Aucune rÃ©vision.', key: 'loc_rev' }))}`;
+      { label: 'Loyer après', right: true, get: r => cellMono(money(r.loyer_apres), 'font-semibold') },
+      { label: 'Évolution', right: true, get: r => r.pourc != null ? `<span class="${Number(r.pourc) >= 0 ? 'text-emerald-700' : 'text-error'} font-semibold">${Number(r.pourc).toFixed(2)} %</span>` : dash }
+    ], d.rows, { empty: 'Aucune révision.', key: 'loc_rev' }))}`;
   bindSearch('#locQ');
 }
 function echeancesTable(rows) {
   return dataTable([
-    { label: 'Ã‰chÃ©ance', get: r => `<div class="font-label-mono-sm font-semibold">${esc(r.date_echeance)}</div><div class="font-label-mono-sm text-secondary">${esc(r.periode || '')}</div>` },
-    { label: 'Du / Au', get: r => cellMono((r.du || '?') + ' â†’ ' + (r.au || '?'), 'text-secondary') },
+    { label: 'Échéance', get: r => `<div class="font-label-mono-sm font-semibold">${esc(r.date_echeance)}</div><div class="font-label-mono-sm text-secondary">${esc(r.periode || '')}</div>` },
+    { label: 'Du / Au', get: r => cellMono((r.du || '?') + ' → ' + (r.au || '?'), 'text-secondary') },
     { label: 'Statut', center: true, get: r => statusBadge(r.statut) },
     { label: 'HT', right: true, get: r => money(r.montant_ht) },
     { label: 'TTC', right: true, get: r => cellMono(money(r.montant_ttc), 'font-semibold') },
-    { label: 'NÂ° quittance', get: r => r.num_quittance ? cellMono(r.num_quittance, 'text-primary') : dash },
+    { label: 'N° quittance', get: r => r.num_quittance ? cellMono(r.num_quittance, 'text-primary') : dash },
     { label: 'Date quit.', get: r => cell(r.date_quittance) },
     { label: 'Mandat', get: r => cell(r.num_mandat) }
-  ], rows, { empty: 'Aucune Ã©chÃ©ance.' });
+  ], rows, { empty: 'Aucune échéance.' });
 }
 
 async function viewBien(id) {
   const d = await api('/api/bien/' + encodeURIComponent(id));
   const b = d.bien;
-  const infos = [['Code', b.code], ['DÃ©signation', b.bien], ['Nom court', b.nom_court], ['Adresse', b.adresse],
-    ['CatÃ©gorie', b.categorie], ['Sous-catÃ©gorie', b.sous_cat], ['Genre', b.genre], ['Type logement', b.type_log],
-    ['Destination', b.destination], ['PiÃ¨ces', b.pieces], ['Surface (mÂ²)', b.surface], ['Tiers', b.tiers], ['Contact', b.contact]]
+  const infos = [['Code', b.code], ['Désignation', b.bien], ['Nom court', b.nom_court], ['Adresse', b.adresse],
+    ['Catégorie', b.categorie], ['Sous-catégorie', b.sous_cat], ['Genre', b.genre], ['Type logement', b.type_log],
+    ['Destination', b.destination], ['Pièces', b.pieces], ['Surface (m²)', b.surface], ['Tiers', b.tiers], ['Contact', b.contact]]
     .filter(x => x[1] != null && x[1] !== '');
   view.innerHTML = `
     ${breadcrumb([{ label: 'Accueil' }, { label: 'Gestion Locative', link: '#/locatif' }, { label: 'Bien' }, { label: b.bien }])}
     <h1 class="font-headline-lg text-on-surface tracking-tight mb-space-lg">${esc(b.bien)}</h1>
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
-      <div class="lg:col-span-4">${card('CaractÃ©ristiques', `<dl class="px-space-lg pb-space-lg grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 font-body-sm">${infos.map(([k, v]) => `<dt class="text-secondary">${esc(k)}</dt><dd class="text-on-surface">${esc(v)}</dd>`).join('')}</dl>`)}</div>
+      <div class="lg:col-span-4">${card('Caractéristiques', `<dl class="px-space-lg pb-space-lg grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 font-body-sm">${infos.map(([k, v]) => `<dt class="text-secondary">${esc(k)}</dt><dd class="text-on-surface">${esc(v)}</dd>`).join('')}</dl>`)}</div>
       <div class="lg:col-span-8 flex flex-col gap-space-lg">
         ${card(`Contrats / baux (${d.contrats.length})`, dataTable([
-          { label: 'NÂ°', get: r => `<a data-link="#/contrat/${r.id}" class="text-primary font-label-mono-sm font-semibold hover:underline">${esc(r.code)}</a>` },
+          { label: 'N°', get: r => `<a data-link="#/contrat/${r.id}" class="text-primary font-label-mono-sm font-semibold hover:underline">${esc(r.code)}</a>` },
           { label: 'Locataire', get: r => r.locataire ? `<a data-link="#/locataire/${encodeURIComponent(r.locataire)}" class="hover:underline">${esc(r.locataire)}</a>` : dash },
-          { label: 'EntrÃ©e', get: r => cell(r.entree) }, { label: 'Sortie', get: r => cell(r.sortie) },
-          { label: 'Ã‰tat', center: true, get: r => r.actif === 'O' ? badge('Ouvert', 'green') : badge(r.actif || '?', 'slate') },
+          { label: 'Entrée', get: r => cell(r.entree) }, { label: 'Sortie', get: r => cell(r.sortie) },
+          { label: 'État', center: true, get: r => r.actif === 'O' ? badge('Ouvert', 'green') : badge(r.actif || '?', 'slate') },
           { label: 'Loyer', right: true, get: r => cellMono(money(r.loyer), 'font-semibold') }
         ], d.contrats, { empty: 'Aucun contrat.' }))}
       </div>
     </div>
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-space-lg mt-space-lg">
-      ${card(`Ã‰chÃ©ances Ã  venir (${(d.futures || []).length})`, echeancesTable(d.futures))}
-      ${card(`Ã‰chÃ©ances passÃ©es (${(d.passees || []).length})`, echeancesTable(d.passees))}
+      ${card(`Échéances à venir (${(d.futures || []).length})`, echeancesTable(d.futures))}
+      ${card(`Échéances passées (${(d.passees || []).length})`, echeancesTable(d.passees))}
     </div>`;
 }
 async function viewContrat(id) {
   const d = await api('/api/contrat/' + encodeURIComponent(id));
   const c = d.contrat;
   const infos = [['Code', c.code], ['Objet', c.objet], ['Locataire', c.locataire], ['Bien', c.bien],
-    ['EntrÃ©e (bail)', c.entree], ['Sortie (bail)', c.sortie], ['Contrat dÃ©but', c.debut_contrat], ['Contrat fin', c.fin_contrat],
-    ['Quittancement depuis', c.quittance_depuis], ['ClÃ´ture', c.cloture], ['DerniÃ¨re rÃ©vision', c.derniere_revision],
-    ['Prochaine rÃ©vision', c.prochaine_revision], ['Ã‰tat', c.actif], ['Loyer', money(c.loyer)], ['DÃ©pÃ´t', money(c.depot)]]
+    ['Entrée (bail)', c.entree], ['Sortie (bail)', c.sortie], ['Contrat début', c.debut_contrat], ['Contrat fin', c.fin_contrat],
+    ['Quittancement depuis', c.quittance_depuis], ['Clôture', c.cloture], ['Dernière révision', c.derniere_revision],
+    ['Prochaine révision', c.prochaine_revision], ['État', c.actif], ['Loyer', money(c.loyer)], ['Dépôt', money(c.depot)]]
     .filter(x => x[1] != null && x[1] !== '');
   view.innerHTML = `
     ${breadcrumb([{ label: 'Accueil' }, { label: 'Gestion Locative', link: '#/locatif' }, { label: 'Contrat' }, { label: c.code }])}
     <h1 class="font-headline-lg text-on-surface tracking-tight mb-space-lg">Contrat ${esc(c.code)}</h1>
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
       <div class="lg:col-span-4 flex flex-col gap-space-lg">${card('Informations', `<dl class="px-space-lg pb-space-lg grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 font-body-sm">${infos.map(([k, v]) => `<dt class="text-secondary">${esc(k)}</dt><dd class="text-on-surface">${esc(v)}</dd>`).join('')}</dl>`)}
-        ${card(`RÃ©visions (${(d.revisions || []).length})`, dataTable([
+        ${card(`Révisions (${(d.revisions || []).length})`, dataTable([
           { label: 'Date', get: r => cell(r.dat) },
           { label: 'Indice', get: r => cell(r.indice) },
           { label: 'Avant', right: true, get: r => money(r.loyer_avant) },
-          { label: 'AprÃ¨s', right: true, get: r => cellMono(money(r.loyer_apres), 'font-semibold') },
+          { label: 'Après', right: true, get: r => cellMono(money(r.loyer_apres), 'font-semibold') },
           { label: '%', right: true, get: r => r.pourc != null ? `<span class="font-semibold">${Number(r.pourc).toFixed(2)} %</span>` : dash }
-        ], d.revisions, { empty: 'Aucune rÃ©vision.' }))}</div>
+        ], d.revisions, { empty: 'Aucune révision.' }))}</div>
       <div class="lg:col-span-8 flex flex-col gap-space-lg">
-        ${card(`Ã‰chÃ©ances Ã  venir (${(d.futures || []).length})`, echeancesTable(d.futures))}
-        ${card(`Ã‰chÃ©ances passÃ©es (${(d.passees || []).length})`, echeancesTable(d.passees))}
+        ${card(`Échéances à venir (${(d.futures || []).length})`, echeancesTable(d.futures))}
+        ${card(`Échéances passées (${(d.passees || []).length})`, echeancesTable(d.passees))}
       </div>
     </div>`;
 }
@@ -992,19 +1014,19 @@ async function viewLocataire(name) {
     <h1 class="font-headline-lg text-on-surface tracking-tight mb-space-lg">${esc(name)}</h1>
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
       <div class="lg:col-span-7">${card(`Contrats / biens (${d.contrats.length})`, dataTable([
-        { label: 'NÂ°', get: r => `<a data-link="#/contrat/${r.id}" class="text-primary font-label-mono-sm font-semibold hover:underline">${esc(r.code)}</a>` },
+        { label: 'N°', get: r => `<a data-link="#/contrat/${r.id}" class="text-primary font-label-mono-sm font-semibold hover:underline">${esc(r.code)}</a>` },
         { label: 'Bien', get: r => r.bien_id ? `<a data-link="#/bien/${r.bien_id}" class="hover:underline">${esc(r.bien || '')}</a>` : dash },
-        { label: 'EntrÃ©e', get: r => cell(r.entree) }, { label: 'Sortie', get: r => cell(r.sortie) },
+        { label: 'Entrée', get: r => cell(r.entree) }, { label: 'Sortie', get: r => cell(r.sortie) },
         { label: 'Loyer', right: true, get: r => cellMono(money(r.loyer), 'font-semibold') }
       ], d.contrats, { empty: 'Aucun contrat.' }))}</div>
       <div class="lg:col-span-5 flex flex-col gap-space-lg">
-        ${card(`Ã‰chÃ©ances Ã  venir (${(d.futures || []).length})`, echeancesTable(d.futures))}
-        ${card(`Ã‰chÃ©ances passÃ©es (${(d.passees || []).length})`, echeancesTable(d.passees))}
+        ${card(`Échéances à venir (${(d.futures || []).length})`, echeancesTable(d.futures))}
+        ${card(`Échéances passées (${(d.passees || []).length})`, echeancesTable(d.passees))}
       </div>
     </div>`;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• RÃ‰FÃ‰RENTIELS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ═══════════════════════════ RÉFÉRENTIELS ═══════════════════════════ */
 async function viewReferentiels() {
   const type = state.refs.type;
   const listUrl = '/api/referentiels/' + type + '?q=' + encodeURIComponent(state.q) + (type === 'biens' && state.refs.genre ? '&genre=' + encodeURIComponent(state.refs.genre) : '');
@@ -1014,29 +1036,29 @@ async function viewReferentiels() {
     type === 'biens' ? api('/api/referentiels/biens/genres') : Promise.resolve({ rows: [] }),
   ]);
   const c = counts.counts;
-  const types = [['biens', 'Biens & Patrimoine', 'ARBO', c.biens, 'domain'], ['vehicules', 'VÃ©hicules & Parc Roulant', 'PARC', c.vehicules, 'directions_car'], ['materiel', 'MatÃ©riel & Stocks', 'STOCK', c.materiel, 'inventory_2'], ['tiers', 'Tiers & Fournisseurs', 'FOURNISSEUR', c.tiers, 'storefront'], ['services', 'Services & Structures', 'SERVICE', c.services, 'corporate_fare'], ['groupes', 'Groupes applicatifs', 'GROUPEUTIL', c.groupes, 'folder_shared']];
+  const types = [['biens', 'Biens & Patrimoine', 'ARBO', c.biens, 'domain'], ['vehicules', 'Véhicules & Parc Roulant', 'PARC', c.vehicules, 'directions_car'], ['materiel', 'Matériel & Stocks', 'STOCK', c.materiel, 'inventory_2'], ['tiers', 'Tiers & Fournisseurs', 'FOURNISSEUR', c.tiers, 'storefront'], ['services', 'Services & Structures', 'SERVICE', c.services, 'corporate_fare'], ['groupes', 'Groupes applicatifs', 'GROUPEUTIL', c.groupes, 'folder_shared']];
 
   let cols;
   if (state.refs.type === 'biens') cols = [
     { label: 'Code', get: r => `<span class="font-label-mono-sm font-semibold text-primary">${esc(r.code)}</span>` },
-    { label: 'DÃ©signation', get: r => `<div class="font-title-sm">${esc(r.des || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.adresse || '')}</div>` },
-    { label: 'Genre', get: r => cell(r.genre) }, { label: 'CatÃ©gorie', get: r => cell(r.categorie) }, { label: 'Service', get: r => cell(r.service) }
+    { label: 'Désignation', get: r => `<div class="font-title-sm">${esc(r.des || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.adresse || '')}</div>` },
+    { label: 'Genre', get: r => cell(r.genre) }, { label: 'Catégorie', get: r => cell(r.categorie) }, { label: 'Service', get: r => cell(r.service) }
   ];
   else if (state.refs.type === 'vehicules') cols = [
-    { label: 'DÃ©signation', get: r => `<div class="font-title-sm">${esc(r.des || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.immat || '')}</div>` },
-    { label: 'Marque', get: r => cell(r.marque) }, { label: 'ModÃ¨le', get: r => cell(r.modele) },
-    { label: 'AnnÃ©e', get: r => cell(r.annee) }, { label: 'Compteur', right: true, get: r => r.compteur != null ? num(r.compteur) : dash }, { label: 'Service', get: r => cell(r.service) }
+    { label: 'Désignation', get: r => `<div class="font-title-sm">${esc(r.des || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.immat || '')}</div>` },
+    { label: 'Marque', get: r => cell(r.marque) }, { label: 'Modèle', get: r => cell(r.modele) },
+    { label: 'Année', get: r => cell(r.annee) }, { label: 'Compteur', right: true, get: r => r.compteur != null ? num(r.compteur) : dash }, { label: 'Service', get: r => cell(r.service) }
   ];
   else if (state.refs.type === 'materiel') cols = [
-    { label: 'RÃ©f.', get: r => `<span class="font-label-mono-sm font-semibold text-primary">${esc(r.code)}</span>` },
-    { label: 'DÃ©signation', get: r => `<div class="font-title-sm">${esc(r.des || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.fam || '')}/${esc(r.soufam || '')}</div>` },
-    { label: 'UnitÃ©', get: r => cell(r.unit) }, { label: 'Stock', right: true, get: r => cellMono(num(r.qte), 'font-semibold') },
+    { label: 'Réf.', get: r => `<span class="font-label-mono-sm font-semibold text-primary">${esc(r.code)}</span>` },
+    { label: 'Désignation', get: r => `<div class="font-title-sm">${esc(r.des || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.fam || '')}/${esc(r.soufam || '')}</div>` },
+    { label: 'Unité', get: r => cell(r.unit) }, { label: 'Stock', right: true, get: r => cellMono(num(r.qte), 'font-semibold') },
     { label: 'Min/Max', right: true, get: r => cellMono((num(r.qte_min) || '0') + ' / ' + (num(r.qte_max) || '0'), 'text-secondary') },
     { label: 'PMP', right: true, get: r => money(r.pamp) }
   ];
   else if (state.refs.type === 'tiers') cols = [
     { label: 'Code', get: r => cellMono(r.code) }, { label: 'Nom', get: r => `<span class="font-title-sm">${esc(r.nom || '')}</span>` },
-    { label: 'Ville', get: r => cell(r.ville) }, { label: 'SIRET', get: r => cellMono(r.siret) }, { label: 'TÃ©l.', get: r => cell(r.tel) }, { label: 'Email', get: r => cell(r.email) },
+    { label: 'Ville', get: r => cell(r.ville) }, { label: 'SIRET', get: r => cellMono(r.siret) }, { label: 'Tél.', get: r => cell(r.tel) }, { label: 'Email', get: r => cell(r.email) },
     { label: 'Actif', center: true, get: r => r.actif === 'O' ? badge('Actif', 'green') : badge('Inactif', 'slate') }
   ];
   else if (state.refs.type === 'services') cols = [
@@ -1044,33 +1066,33 @@ async function viewReferentiels() {
     { label: 'Nom long', get: r => cell(r.nom_long) }, { label: 'Actif', center: true, get: r => r.actif === 'O' ? badge('Actif', 'green') : badge('Inactif', 'slate') }
   ];
   else cols = [
-    { label: 'Code', get: r => cellMono(r.code, 'text-secondary') }, { label: 'LibellÃ©', get: r => `<span class="font-title-sm">${esc(r.des || '')}</span>` },
+    { label: 'Code', get: r => cellMono(r.code, 'text-secondary') }, { label: 'Libellé', get: r => `<span class="font-title-sm">${esc(r.des || '')}</span>` },
     { label: 'Membres', right: true, get: r => cellMono(num(r.nb_membres), 'font-semibold') }
   ];
 
   view.innerHTML = `
-    ${breadcrumb([{ label: 'Accueil' }, { label: 'RÃ©fÃ©rentiels' }])}
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Référentiels' }])}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-space-md">
-      <div><h1 class="font-headline-lg text-on-surface tracking-tight">Gestion des RÃ©fÃ©rentiels Transverses</h1>
-        <p class="font-body-md text-on-surface-variant">Exploration des catalogues patrimoine, parc roulant et chaÃ®ne d'approvisionnement (schÃ©ma ASTECHIVR).</p></div>
+      <div><h1 class="font-headline-lg text-on-surface tracking-tight">Gestion des Référentiels Transverses</h1>
+        <p class="font-body-md text-on-surface-variant">Exploration des catalogues patrimoine, parc roulant et chaîne d'approvisionnement (schéma ASTECHIVR).</p></div>
     </div>
     <nav class="flex items-center gap-space-xs overflow-x-auto p-1 bg-surface-container-low rounded-xl mb-space-md shadow-sm">
       ${types.map(([k, label, tbl, n, icon]) => `<button data-act="refType:${k}" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg font-title-md whitespace-nowrap transition-all ${type === k ? 'bg-surface-container-lowest text-primary shadow-sm' : 'text-secondary hover:text-on-surface hover:bg-surface-container'}"><span class="material-symbols-outlined text-[18px]">${icon}</span>${label}<span class="px-1.5 py-0.2 rounded-full ${type === k ? 'bg-primary-fixed text-on-primary-fixed' : 'bg-surface-container text-secondary'} font-label-mono-sm text-label-mono-sm">${num(n)}</span></button>`).join('')}
     </nav>
     ${type === 'biens' ? `<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm mb-space-md">
-      <div class="flex items-center gap-space-sm mb-2"><span class="material-symbols-outlined text-secondary text-[18px]">category</span><span class="font-title-sm text-secondary uppercase tracking-wider">RÃ©fÃ©rentiels par genre (PATRIGENE)</span></div>
+      <div class="flex items-center gap-space-sm mb-2"><span class="material-symbols-outlined text-secondary text-[18px]">category</span><span class="font-title-sm text-secondary uppercase tracking-wider">Référentiels par genre (PATRIGENE)</span></div>
       <div class="flex flex-wrap gap-1.5">
         <button data-act="refGenre:" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-title-sm transition-all ${!state.refs.genre ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container text-on-surface hover:bg-surface-container-high'}"><span class="material-symbols-outlined text-[16px]">apps</span>Tous les genres<span class="px-1.5 py-0.2 rounded-full ${!state.refs.genre ? 'bg-on-primary/20' : 'bg-surface-container-high text-secondary'} font-label-mono-sm">${num(c.biens)}</span></button>
-        ${(genres.rows || []).map(g => `<button data-act="refGenre:${esc(g.code)}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-title-sm transition-all ${state.refs.genre === g.code ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container text-on-surface hover:bg-surface-container-high'}"><span class="material-symbols-outlined text-[16px]">apartment</span>${esc(g.genre || '(non classÃ©)')}<span class="px-1.5 py-0.2 rounded-full ${state.refs.genre === g.code ? 'bg-on-primary/20' : 'bg-surface-container-high text-secondary'} font-label-mono-sm">${num(g.n)}</span></button>`).join('')}
+        ${(genres.rows || []).map(g => `<button data-act="refGenre:${esc(g.code)}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-title-sm transition-all ${state.refs.genre === g.code ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container text-on-surface hover:bg-surface-container-high'}"><span class="material-symbols-outlined text-[16px]">apartment</span>${esc(g.genre || '(non classé)')}<span class="px-1.5 py-0.2 rounded-full ${state.refs.genre === g.code ? 'bg-on-primary/20' : 'bg-surface-container-high text-secondary'} font-label-mono-sm">${num(g.n)}</span></button>`).join('')}
       </div>
     </div>` : ''}
     <div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm mb-space-lg flex flex-wrap items-center gap-space-sm">
       <div class="relative flex-1 min-w-[240px]"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-[18px]">search</span>
-        <input id="refQ" value="${esc(state.q)}" class="w-full h-9 pl-9 pr-24 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher code, libellÃ©, immatriculationâ€¦" />
+        <input id="refQ" value="${esc(state.q)}" class="w-full h-9 pl-9 pr-24 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher code, libellé, immatriculation…" />
         <span class="absolute right-2.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded bg-surface-container-high text-primary font-label-mono-sm">SQL LIKE</span></div>
-      <span class="font-label-mono-sm text-label-mono-sm text-secondary"><span class="font-semibold text-on-surface">${num(data.rows.length)}</span> lignes affichÃ©es</span>
+      <span class="font-label-mono-sm text-label-mono-sm text-secondary"><span class="font-semibold text-on-surface">${num(data.rows.length)}</span> lignes affichées</span>
     </div>
-    <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">${dataTable(cols, data.rows, { rowLink: r => '#/referentiel/' + type + '/' + encodeURIComponent(r.id ?? r.code), empty: 'Aucune entrÃ©e.', key: 'refs_' + type + '_' + (state.refs.genre || 'all') })}</div>`;
+    <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">${dataTable(cols, data.rows, { rowLink: r => '#/referentiel/' + type + '/' + encodeURIComponent(r.id ?? r.code), empty: 'Aucune entrée.', key: 'refs_' + type + '_' + (state.refs.genre || 'all') })}</div>`;
   bindSearch('#refQ');
 }
 async function viewMagasins(arg) {
@@ -1085,11 +1107,11 @@ async function viewMagasins(arg) {
     : { rows: [], total: 0 };
 
   const cols = [
-    { label: 'RÃ©f.', get: r => `<span class="font-label-mono-sm font-semibold text-primary">${esc(r.code)}</span>` },
-    { label: 'DÃ©signation', get: r => `<div class="font-title-sm">${esc(r.des || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.fam || '')}${r.soufam ? '/' + esc(r.soufam) : ''}${r.marque ? ' Â· ' + esc(r.marque) : ''}</div>` },
+    { label: 'Réf.', get: r => `<span class="font-label-mono-sm font-semibold text-primary">${esc(r.code)}</span>` },
+    { label: 'Désignation', get: r => `<div class="font-title-sm">${esc(r.des || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.fam || '')}${r.soufam ? '/' + esc(r.soufam) : ''}${r.marque ? ' · ' + esc(r.marque) : ''}</div>` },
     { label: 'Emplacement', get: r => { const p = [r.allee, r.travee, r.casier, r.pos].filter(v => v !== null && v !== undefined && v !== ''); return p.length ? cellMono(p.join(' / '), 'text-secondary') : dash; } },
-    { label: 'UnitÃ©', center: true, get: r => cell(r.unit) },
-    { label: 'QtÃ©', right: true, get: r => cellMono(num(r.qte), 'font-semibold') },
+    { label: 'Unité', center: true, get: r => cell(r.unit) },
+    { label: 'Qté', right: true, get: r => cellMono(num(r.qte), 'font-semibold') },
     { label: 'PMP', right: true, get: r => money(r.pamp) },
     { label: 'Valeur', right: true, get: r => (r.pamp && r.qte) ? cellMono(money(Number(r.pamp) * Number(r.qte)), 'text-secondary') : dash },
   ];
@@ -1098,7 +1120,7 @@ async function viewMagasins(arg) {
     return `<button data-act="magasinSel:${esc(String(r.code))}" class="text-left p-space-md rounded-xl shadow-sm transition-all ${on ? 'bg-primary text-on-primary' : 'bg-surface-container-lowest hover:bg-surface-container'}">
       <div class="flex items-center justify-between gap-2"><span class="font-label-mono-sm ${on ? 'text-on-primary/80' : 'text-secondary'}">${esc(r.code)}</span><span class="font-label-mono-sm ${on ? 'text-on-primary/80' : 'text-secondary'}">${num(r.nb_articles)} art.</span></div>
       <div class="font-title-md mt-1">${esc(r.nom || '')}</div>
-      <div class="font-label-mono-sm mt-1 ${on ? 'text-on-primary/80' : 'text-secondary'}">${num(r.nb_en_stock)} en stock Â· ${num(r.qte)} u.</div>
+      <div class="font-label-mono-sm mt-1 ${on ? 'text-on-primary/80' : 'text-secondary'}">${num(r.nb_en_stock)} en stock · ${num(r.qte)} u.</div>
     </button>`;
   }).join('');
 
@@ -1118,11 +1140,11 @@ async function viewMagasins(arg) {
     ${selected ? `
       <div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm mb-space-md flex flex-wrap items-center gap-space-sm">
         <div class="relative flex-1 min-w-[240px]"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-[18px]">search</span>
-          <input id="magQ" value="${esc(state.q)}" class="w-full h-9 pl-9 pr-24 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher un article (rÃ©f., dÃ©signation, marque)â€¦" />
+          <input id="magQ" value="${esc(state.q)}" class="w-full h-9 pl-9 pr-24 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher un article (réf., désignation, marque)…" />
           <span class="absolute right-2.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded bg-surface-container-high text-primary font-label-mono-sm">SQL LIKE</span></div>
         <span class="font-label-mono-sm text-label-mono-sm text-secondary"><span class="font-semibold text-on-surface">${num(data.total)}</span> article(s)${mg.enStock ? ' en stock' : ''}</span>
       </div>
-      ${card(selected.code + ' â€” ' + (selected.nom || ''), dataTable(cols, data.rows, { empty: 'Aucun article.', key: 'mag_' + selected.code }), `<span class="font-label-mono-sm text-secondary">${num(selected.nb_articles)} art. Â· ${num(selected.nb_en_stock)} en stock Â· ${num(selected.qte)} u.</span>`)}`
+      ${card(selected.code + ' — ' + (selected.nom || ''), dataTable(cols, data.rows, { empty: 'Aucun article.', key: 'mag_' + selected.code }), `<span class="font-label-mono-sm text-secondary">${num(selected.nb_articles)} art. · ${num(selected.nb_en_stock)} en stock · ${num(selected.qte)} u.</span>`)}`
       : '<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-xl text-center text-on-surface-variant">Aucun magasin.</div>'}`;
   bindSearch('#magQ');
 }
@@ -1135,13 +1157,13 @@ async function viewReferentiel(arg) {
   const entries = Object.entries(row).filter(([, v]) => v != null && v !== '');
   openDrawer(`
     <div class="sticky top-0 bg-surface-container-lowest p-space-lg border-b border-surface-container flex items-center justify-between">
-      <div><h2 class="font-headline-sm font-bold text-on-surface">${esc(row.des || row.nom || id)}</h2><span class="font-label-mono-sm text-secondary">${esc(type)} â€¢ ${esc(id)}</span></div>
+      <div><h2 class="font-headline-sm font-bold text-on-surface">${esc(row.des || row.nom || id)}</h2><span class="font-label-mono-sm text-secondary">${esc(type)} • ${esc(id)}</span></div>
       <button onclick="closeDrawer()" class="p-1 rounded hover:bg-surface-container"><span class="material-symbols-outlined">close</span></button>
     </div>
     <div class="p-space-lg"><dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 font-body-sm">${entries.map(([k, v]) => `<dt class="text-secondary font-label-mono-sm uppercase">${esc(k)}</dt><dd class="text-on-surface">${esc(v)}</dd>`).join('')}</dl></div>`);
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• INTERVENTIONS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ═══════════════════════════ INTERVENTIONS ═══════════════════════════ */
 function periodeToDu(p) {
   const d = new Date();
   if (p === 'mois') return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10);
@@ -1160,35 +1182,35 @@ async function viewInterventions() {
   const [stats, res] = await Promise.all([api('/api/interventions/stats'), api('/api/interventions?' + params.toString())]);
   const totalPages = Math.max(1, Math.ceil(res.total / res.pageSize));
   const cols = [
-    { label: 'RÃ©f.', get: r => `<span class="font-label-mono-sm font-semibold text-primary">${esc(r.num)}</span><div class="font-label-mono-sm text-secondary">${esc(r.numdem || '')}</div>` },
+    { label: 'Réf.', get: r => `<span class="font-label-mono-sm font-semibold text-primary">${esc(r.num)}</span><div class="font-label-mono-sm text-secondary">${esc(r.numdem || '')}</div>` },
     { label: 'Date', get: r => cellMono(r.dat, 'text-secondary') },
     { label: 'Type', center: true, get: r => badge(INTERV_TYPES[r.typ] || r.typ || '?', 'slate') },
-    { label: 'Objet & dÃ©signation', get: r => `<div class="font-title-sm clamp1" style="max-width:360px">${esc(r.ndt || '')}</div><div class="font-label-mono-sm text-secondary clamp1" style="max-width:360px">${esc(r.libelle || '')}</div>` },
+    { label: 'Objet & désignation', get: r => `<div class="font-title-sm clamp1" style="max-width:360px">${esc(r.ndt || '')}</div><div class="font-label-mono-sm text-secondary clamp1" style="max-width:360px">${esc(r.libelle || '')}</div>` },
     { label: 'Localisation', get: r => `${cell(r.code_bien)}<div class="font-label-mono-sm text-secondary">${esc(r.bien || '')}</div>` },
     { label: 'Service', get: r => cell(r.service) },
-    { label: 'Ã‰tat', center: true, get: r => intervBadge(r.etat) }
+    { label: 'État', center: true, get: r => intervBadge(r.etat) }
   ];
   view.innerHTML = `
     ${breadcrumb([{ label: 'Accueil' }, { label: 'Interventions' }, { label: 'GMAO' }])}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-space-lg">
-      <div><span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-high text-primary font-label-mono-sm"><span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>Tables : INTERVENTIONS â€¢ INTERVENTIONSTERMINEES â€¢ DEMANDES</span>
+      <div><span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-high text-primary font-label-mono-sm"><span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>Tables : INTERVENTIONS • INTERVENTIONSTERMINEES • DEMANDES</span>
         <h1 class="font-headline-lg text-on-surface tracking-tight mt-1">Gestion des Interventions &amp; GMAO</h1></div>
       <button data-act="demandeOpen" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title-md shadow-md transition-all"><span class="material-symbols-outlined text-[20px]">add_task</span>Demande d'intervention</button>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md mb-space-lg">
       ${kpi('Interventions en cours', num(stats.en_cours), 'Table INTERVENTIONS', 'engineering', 'primary')}
       ${kpi('Demandes (DI)', num(stats.demandes), 'Table DEMANDES', 'assignment_late', 'tertiary')}
-      ${kpi('Bons clÃ´turÃ©s', num(stats.cloturees), 'Table INTERVENTIONSTERMINEES', 'task_alt', 'plain')}
-      ${kpi('Types actifs', num(stats.par_type.length), 'RÃ©partition par type', 'category', 'plain')}
+      ${kpi('Bons clôturés', num(stats.cloturees), 'Table INTERVENTIONSTERMINEES', 'task_alt', 'plain')}
+      ${kpi('Types actifs', num(stats.par_type.length), 'Répartition par type', 'category', 'plain')}
     </div>
     <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm mb-space-lg flex flex-wrap gap-space-sm items-center">
       <div class="relative flex-1 min-w-[240px]"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">manage_search</span>
-        <input id="interQ" value="${esc(state.q)}" class="w-full h-10 pl-10 pr-24 rounded bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher nÂ° DI/BT, objet, bien, demandeurâ€¦" /></div>
+        <input id="interQ" value="${esc(state.q)}" class="w-full h-10 pl-10 pr-24 rounded bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher n° DI/BT, objet, bien, demandeur…" /></div>
       <select data-act="interPeriod" class="h-9 px-3 rounded-lg bg-surface-container-low font-body-sm">
         ${[['mois', 'Mois en cours'], ['trimestre', '3 derniers mois'], ['annee', '12 derniers mois'], ['tout', 'Tout l\'historique']].map(([v, l]) => `<option value="${v}" ${st.period === v ? 'selected' : ''}>${l}</option>`).join('')}
       </select>
       <select data-act="interEtat" class="h-9 px-3 rounded-lg bg-surface-container-low font-body-sm">
-        <option value="">Tous les Ã©tats</option><option value="encours" ${st.etat === 'encours' ? 'selected' : ''}>En cours</option><option value="cloturee" ${st.etat === 'cloturee' ? 'selected' : ''}>ClÃ´turÃ©es</option>
+        <option value="">Tous les états</option><option value="encours" ${st.etat === 'encours' ? 'selected' : ''}>En cours</option><option value="cloturee" ${st.etat === 'cloturee' ? 'selected' : ''}>Clôturées</option>
       </select>
       <select data-act="interType" class="h-9 px-3 rounded-lg bg-surface-container-low font-body-sm">
         <option value="">Tous les types</option>${stats.par_type.map(t => `<option value="${esc(t.typ)}" ${st.type === t.typ ? 'selected' : ''}>${esc(INTERV_TYPES[t.typ] || t.typ)} (${num(t.n)})</option>`).join('')}
@@ -1203,35 +1225,35 @@ async function viewInterventions() {
           <button data-act="interPage:next" class="w-7 h-7 bg-surface-container-lowest rounded-r flex items-center justify-center disabled:opacity-40" ${st.page >= totalPages ? 'disabled' : ''}><span class="material-symbols-outlined text-[16px]">chevron_right</span></button>
         </div>
       </div>
-      ${dataTable(cols, res.rows, { rowLink: r => '#/intervention/' + encodeURIComponent(r.num), empty: 'Aucune intervention sur la pÃ©riode.' })}
+      ${dataTable(cols, res.rows, { rowLink: r => '#/intervention/' + encodeURIComponent(r.num), empty: 'Aucune intervention sur la période.' })}
     </div>`;
   bindSearch('#interQ');
 }
 async function viewInterventionFiche(num) {
   const d = await api('/api/intervention/' + encodeURIComponent(num));
   const i = d.intervention;
-  const infos = [['NumÃ©ro', i.num], ['Type', INTERV_TYPES[i.typ] || i.typ], ['Ã‰tat', i.etat], ['Date', i.dat], ['Objet', i.ndt],
-    ['Bien', i.code_bien], ['DÃ©signation bien', i.bien], ['Service', i.service], ['PÃ©riode dÃ©but', i.deb], ['PÃ©riode fin', i.fin],
-    ['Demandeur', i.coddem], ['NÂ° demande', i.numdem], ['Affectation', i.aff], ['TerminÃ©', i.term]];
+  const infos = [['Numéro', i.num], ['Type', INTERV_TYPES[i.typ] || i.typ], ['État', i.etat], ['Date', i.dat], ['Objet', i.ndt],
+    ['Bien', i.code_bien], ['Désignation bien', i.bien], ['Service', i.service], ['Période début', i.deb], ['Période fin', i.fin],
+    ['Demandeur', i.coddem], ['N° demande', i.numdem], ['Affectation', i.aff], ['Terminé', i.term]];
   view.innerHTML = `
     ${breadcrumb([{ label: 'Accueil' }, { label: 'Interventions', link: '#/interventions' }, { label: i.num }])}
     <div class="flex items-center gap-3 mb-space-lg">
       <h1 class="font-headline-lg text-on-surface tracking-tight">Fiche intervention ${esc(i.num)}</h1>${intervBadge(i.etat)}
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
-      <div class="lg:col-span-7">${card('DÃ©tails techniques', `<dl class="px-space-lg pb-space-lg grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 font-body-sm">${infos.map(([k, v]) => `<dt class="text-secondary">${esc(k)}</dt><dd class="text-on-surface">${cell(v)}</dd>`).join('')}</dl>`)}</div>
-      <div class="lg:col-span-5">${card(`Demandes rattachÃ©es (${d.demandes.length})`, dataTable([
-        { label: 'NÂ°', get: r => cellMono(r.num) }, { label: 'Date', get: r => cell(r.dat) },
+      <div class="lg:col-span-7">${card('Détails techniques', `<dl class="px-space-lg pb-space-lg grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 font-body-sm">${infos.map(([k, v]) => `<dt class="text-secondary">${esc(k)}</dt><dd class="text-on-surface">${cell(v)}</dd>`).join('')}</dl>`)}</div>
+      <div class="lg:col-span-5">${card(`Demandes rattachées (${d.demandes.length})`, dataTable([
+        { label: 'N°', get: r => cellMono(r.num) }, { label: 'Date', get: r => cell(r.dat) },
         { label: 'Objet', get: r => `<div class="clamp1" style="max-width:240px">${esc(r.ndt || r.libelle || '')}</div>` },
         { label: 'Urgent', center: true, get: r => r.urgent === 'O' ? badge('Urgent', 'red') : badge('Normal', 'slate') }
-      ], d.demandes, { empty: 'Aucune demande rattachÃ©e.' }))}</div>
+      ], d.demandes, { empty: 'Aucune demande rattachée.' }))}</div>
     </div>`;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• INDICES â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ═══════════════════════════ INDICES ═══════════════════════════ */
 function verifStatutBadge(st) {
-  if (st === 'ok') return badge('Ã€ jour', 'green', 'check_circle');
-  if (st === 'ecart') return badge('Ã‰cart', 'amber', 'warning');
+  if (st === 'ok') return badge('À jour', 'green', 'check_circle');
+  if (st === 'ecart') return badge('Écart', 'amber', 'warning');
   if (st === 'manquant') return badge('Manquant ASTECH', 'primary', 'add_circle');
   return badge('Source absente', 'slate');
 }
@@ -1241,25 +1263,25 @@ function verifSection(v) {
   const errs = v.errors || [];
   return `
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-space-md mb-space-lg">
-      <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm"><div class="font-title-sm text-secondary uppercase">Ã€ jour</div><div class="font-headline-md font-bold text-emerald-600 tabular">${num(s.ok)}</div></div>
-      <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm"><div class="font-title-sm text-secondary uppercase">Ã‰carts</div><div class="font-headline-md font-bold text-amber-600 tabular">${num(s.ecart)}</div></div>
+      <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm"><div class="font-title-sm text-secondary uppercase">À jour</div><div class="font-headline-md font-bold text-emerald-600 tabular">${num(s.ok)}</div></div>
+      <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm"><div class="font-title-sm text-secondary uppercase">Écarts</div><div class="font-headline-md font-bold text-amber-600 tabular">${num(s.ecart)}</div></div>
       <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm"><div class="font-title-sm text-secondary uppercase">Manquants ASTECH</div><div class="font-headline-md font-bold text-primary tabular">${num(s.manquant)}</div></div>
-      <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm"><div class="font-title-sm text-secondary uppercase">Source : ${esc(v.source || '')}</div><div class="font-label-mono-sm text-secondary mt-1">MÃ J ${esc(new Date(v.at).toLocaleString('fr-FR'))}${v.cached ? ' (cache)' : ''}</div></div>
+      <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm"><div class="font-title-sm text-secondary uppercase">Source : ${esc(v.source || '')}</div><div class="font-label-mono-sm text-secondary mt-1">MàJ ${esc(new Date(v.at).toLocaleString('fr-FR'))}${v.cached ? ' (cache)' : ''}</div></div>
     </div>
-    ${errs.length ? `<div class="bg-amber-50 border border-amber-200 text-amber-800 p-space-md rounded-xl font-body-sm mb-space-lg">${errs.map(e => `SÃ©rie ${esc(e.label)} : ${esc(e.error)}`).join('<br>')}</div>` : ''}
+    ${errs.length ? `<div class="bg-amber-50 border border-amber-200 text-amber-800 p-space-md rounded-xl font-body-sm mb-space-lg">${errs.map(e => `Série ${esc(e.label)} : ${esc(e.error)}`).join('<br>')}</div>` : ''}
     <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden mb-space-lg">
       <div class="p-space-lg flex flex-wrap items-center justify-between gap-space-sm bg-surface-container-low/50">
-        <div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-primary text-[22px]">compare_arrows</span><h2 class="font-headline-sm text-on-surface">Confrontation ASTECH â†” INSEE officielle</h2><span class="font-label-mono-sm text-secondary bg-surface-container px-2 py-0.5 rounded">${num(rows.length)} sÃ©ries analysÃ©es</span></div>
+        <div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-primary text-[22px]">compare_arrows</span><h2 class="font-headline-sm text-on-surface">Confrontation ASTECH ↔ INSEE officielle</h2><span class="font-label-mono-sm text-secondary bg-surface-container px-2 py-0.5 rounded">${num(rows.length)} séries analysées</span></div>
       </div>
       ${dataTable([
         { label: 'Type', get: r => indiceBadge(r.typ) },
-        { label: 'Code ASTECH', get: r => cellMono(r.cod || 'â€”', 'text-on-surface') },
-        { label: 'PÃ©riode', get: r => `<span class="font-title-sm">${esc(r.an)} - T${esc(r.trim)}</span>` },
-        { label: 'ASTECH (insee_taux)', right: true, get: r => r.astech !== null ? cellMono(num(r.astech), 'font-bold') : '<span class="text-outline italic">non renseignÃ©</span>' },
+        { label: 'Code ASTECH', get: r => cellMono(r.cod || '—', 'text-on-surface') },
+        { label: 'Période', get: r => `<span class="font-title-sm">${esc(r.an)} - T${esc(r.trim)}</span>` },
+        { label: 'ASTECH (insee_taux)', right: true, get: r => r.astech !== null ? cellMono(num(r.astech), 'font-bold') : '<span class="text-outline italic">non renseigné</span>' },
         { label: 'Source INSEE', right: true, get: r => r.source !== null ? cellMono(num(r.source), 'font-semibold text-primary') : dash },
-        { label: 'Ã‰cart', right: true, get: r => r.ecart === null ? dash : `<span class="font-semibold ${r.ecart === 0 ? 'text-emerald-600' : 'text-amber-700'}">${r.ecart > 0 ? '+' : ''}${Number(r.ecart).toFixed(2)}</span>` },
+        { label: 'Écart', right: true, get: r => r.ecart === null ? dash : `<span class="font-semibold ${r.ecart === 0 ? 'text-emerald-600' : 'text-amber-700'}">${r.ecart > 0 ? '+' : ''}${Number(r.ecart).toFixed(2)}</span>` },
         { label: 'Statut', center: true, get: r => verifStatutBadge(r.statut) }
-      ], rows, { empty: 'Aucune donnÃ©e Ã  confronter.', key: 'verif_indices' })}
+      ], rows, { empty: 'Aucune donnée à confronter.', key: 'verif_indices' })}
       ${pushControls()}
     </div>`;
 }
@@ -1268,15 +1290,15 @@ function pushControls() {
   const plan = s.plan, res = s.pushResult;
   const scopeSel = `<select data-act="pushScope" class="h-9 px-3 rounded-lg bg-surface-container-low font-body-sm">
       <option value="manquants" ${s.pushScope === 'manquants' ? 'selected' : ''}>Indices manquants uniquement</option>
-      <option value="ecarts" ${s.pushScope === 'ecarts' ? 'selected' : ''}>Ã‰carts uniquement</option>
-      <option value="les_deux" ${s.pushScope === 'les_deux' ? 'selected' : ''}>Manquants + Ã©carts</option>
+      <option value="ecarts" ${s.pushScope === 'ecarts' ? 'selected' : ''}>Écarts uniquement</option>
+      <option value="les_deux" ${s.pushScope === 'les_deux' ? 'selected' : ''}>Manquants + écarts</option>
     </select>`;
   const btn = s.pushing
-    ? `<button disabled class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-wait"><span class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>Traitementâ€¦</button>`
-    : `<button data-act="pushDryRun" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-tertiary-container text-on-tertiary-container hover:bg-tertiary font-title-md shadow-md transition-all"><span class="material-symbols-outlined text-[20px]">upload</span>Pousser dans ASTECH (aperÃ§u)</button>`;
+    ? `<button disabled class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-wait"><span class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>Traitement…</button>`
+    : `<button data-act="pushDryRun" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-tertiary-container text-on-tertiary-container hover:bg-tertiary font-title-md shadow-md transition-all"><span class="material-symbols-outlined text-[20px]">upload</span>Pousser dans ASTECH (aperçu)</button>`;
   const writeNote = APP.writeEnabled
-    ? `<span class="inline-flex items-center gap-1 font-label-mono-sm text-amber-700"><span class="material-symbols-outlined text-[16px]">edit</span>Ã‰criture activÃ©e sur <b>${esc((DB_ENV_SEL || APP.active || '').toUpperCase())}</b></span>`
-    : `<span class="inline-flex items-center gap-1 font-label-mono-sm text-secondary"><span class="material-symbols-outlined text-[16px]">lock</span>Ã‰criture dÃ©sactivÃ©e (ASTECH_ALLOW_WRITES=1 cÃ´tÃ© serveur)</span>`;
+    ? `<span class="inline-flex items-center gap-1 font-label-mono-sm text-amber-700"><span class="material-symbols-outlined text-[16px]">edit</span>Écriture activée sur <b>${esc((DB_ENV_SEL || APP.active || '').toUpperCase())}</b></span>`
+    : `<span class="inline-flex items-center gap-1 font-label-mono-sm text-secondary"><span class="material-symbols-outlined text-[16px]">lock</span>Écriture désactivée (ASTECH_ALLOW_WRITES=1 côté serveur)</span>`;
   let panel = '';
   if (plan) {
     const warn = (plan.warnings || []).length ? `<div class="bg-amber-50 border border-amber-200 text-amber-800 p-space-sm rounded font-body-sm mb-2">${plan.warnings.map(esc).join('<br>')}</div>` : '';
@@ -1289,18 +1311,18 @@ function pushControls() {
         <td class="p-2 text-right font-label-mono-sm font-semibold text-primary">${num(p.new)}</td>
       </tr>`).join('');
     panel = `<div class="mt-space-lg border-t border-surface-container pt-space-lg">
-      <div class="flex flex-wrap items-center justify-between gap-space-sm mb-2"><h3 class="font-title-md text-on-surface">AperÃ§u â€” ${plan.requested} modification(s) proposÃ©e(s)</h3>
-        ${plan.requested ? `<button data-act="pushConfirm" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-error text-on-error hover:opacity-90 font-title-md shadow-md"><span class="material-symbols-outlined text-[20px]">warning</span>Confirmer l'Ã©criture (${plan.requested})</button>` : ''}</div>
+      <div class="flex flex-wrap items-center justify-between gap-space-sm mb-2"><h3 class="font-title-md text-on-surface">Aperçu — ${plan.requested} modification(s) proposée(s)</h3>
+        ${plan.requested ? `<button data-act="pushConfirm" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-error text-on-error hover:opacity-90 font-title-md shadow-md"><span class="material-symbols-outlined text-[20px]">warning</span>Confirmer l'écriture (${plan.requested})</button>` : ''}</div>
       ${warn}
-      ${plan.requested ? `<div class="overflow-x-auto"><table class="w-full text-left text-body-sm border-collapse"><thead><tr class="bg-surface-container font-label-mono-sm uppercase tracking-wider text-secondary"><th class="p-2">Action</th><th class="p-2">Type</th><th class="p-2">PÃ©riode</th><th class="p-2">Code</th><th class="p-2 text-right">ASTECH</th><th class="p-2 text-right">INSEE</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>` : '<div class="font-body-sm text-on-surface-variant">Rien Ã  pousser pour ce pÃ©rimÃ¨tre.</div>'}
+      ${plan.requested ? `<div class="overflow-x-auto"><table class="w-full text-left text-body-sm border-collapse"><thead><tr class="bg-surface-container font-label-mono-sm uppercase tracking-wider text-secondary"><th class="p-2">Action</th><th class="p-2">Type</th><th class="p-2">Période</th><th class="p-2">Code</th><th class="p-2 text-right">ASTECH</th><th class="p-2 text-right">INSEE</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>` : '<div class="font-body-sm text-on-surface-variant">Rien à pousser pour ce périmètre.</div>'}
     </div>`;
   }
   if (res) {
     const errs = res.errors || [];
     panel += `<div class="mt-space-lg border-t border-surface-container pt-space-lg">
-      <h3 class="font-title-md ${errs.length ? 'text-amber-700' : 'text-emerald-700'}">${res.applied} Ã©criture(s) appliquÃ©e(s)${errs.length ? ' â€” ' + errs.length + ' erreur(s)' : ''} sur <b>${esc((res.env || '').toUpperCase())}</b></h3>
+      <h3 class="font-title-md ${errs.length ? 'text-amber-700' : 'text-emerald-700'}">${res.applied} écriture(s) appliquée(s)${errs.length ? ' — ' + errs.length + ' erreur(s)' : ''} sur <b>${esc((res.env || '').toUpperCase())}</b></h3>
       ${errs.length ? `<div class="bg-error-container/40 border border-error/30 text-on-error-container p-space-sm rounded font-body-sm mt-2">${errs.map(e => esc(e.an + ' T' + e.trim + ' : ' + e.error)).join('<br>')}</div>` : ''}
-      <div class="font-label-mono-sm text-secondary mt-1">Journal : ${esc(res.journalFile || '(mÃ©moire)')}</div>
+      <div class="font-label-mono-sm text-secondary mt-1">Journal : ${esc(res.journalFile || '(mémoire)')}</div>
     </div>`;
   }
   return `<div class="p-space-lg border-t border-surface-container bg-surface-container-low/40">
@@ -1323,19 +1345,19 @@ async function viewIndices() {
       <div class="flex items-center justify-between pb-2"><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-primary"></span><span class="font-title-sm text-secondary uppercase tracking-wider">${esc(INDICE_TYPES[r.typ] || ('Type ' + r.typ))}</span></div>
         <span class="font-label-mono-sm bg-secondary-container text-on-secondary-fixed px-2 py-0.5 rounded font-semibold">T${esc(r.trim)} ${r.an}</span></div>
       <div class="py-1"><div class="font-headline-xl font-bold tracking-tight tabular">${num(r.taux)}</div><div class="font-body-sm text-secondary">${esc(r.des)}</div></div>
-      <div class="pt-3 flex items-center justify-between font-label-mono-sm"><span class="inline-flex items-center gap-1 text-emerald-600 font-medium"><span class="material-symbols-outlined text-[16px]">check_circle</span>RÃ©fÃ©rencÃ© ASTECH</span><span class="text-secondary">${esc(r.datp || '')}</span></div>
+      <div class="pt-3 flex items-center justify-between font-label-mono-sm"><span class="inline-flex items-center gap-1 text-emerald-600 font-medium"><span class="material-symbols-outlined text-[16px]">check_circle</span>Référencé ASTECH</span><span class="text-secondary">${esc(r.datp || '')}</span></div>
     </div>`).join('');
   const verifBtn = s.loading
-    ? `<button disabled class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-wait"><span class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>Interrogation INSEE en coursâ€¦</button>`
-    : `<button data-act="indicesVerif" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title-md shadow-md transition-all"><span class="material-symbols-outlined text-[20px]">cloud_download</span>RÃ©cupÃ©rer les indices (INSEE BDM)</button>`;
+    ? `<button disabled class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-dim text-on-surface-variant font-title-md cursor-wait"><span class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>Interrogation INSEE en cours…</button>`
+    : `<button data-act="indicesVerif" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title-md shadow-md transition-all"><span class="material-symbols-outlined text-[20px]">cloud_download</span>Récupérer les indices (INSEE BDM)</button>`;
   view.innerHTML = `
     ${breadcrumb([{ label: 'Accueil' }, { label: 'Indices' }, { label: 'INDICEINSEE' }])}
     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md bg-surface-container-lowest p-space-lg rounded-xl shadow-sm mb-space-lg">
       <div class="space-y-1">
         <div class="flex items-center gap-space-sm"><span class="px-2 py-0.5 rounded bg-surface-container font-label-mono-sm text-primary font-semibold">TABLE: ASTECHIVR.INDICEINSEE</span>
-          <span class="inline-flex items-center gap-1 font-label-mono-sm text-secondary"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Source : INSEE BDM (bdm.insee.fr, accÃ¨s libre)</span></div>
+          <span class="inline-flex items-center gap-1 font-label-mono-sm text-secondary"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Source : INSEE BDM (bdm.insee.fr, accès libre)</span></div>
         <h1 class="font-headline-lg text-on-surface tracking-tight">Indices INSEE &amp; Indexations Locatives</h1>
-        <p class="font-body-md text-on-surface-variant max-w-3xl">SÃ©ries officielles (IRL, ILAT, ICC, ILC) du rÃ©fÃ©rentiel Oracle ASTECH, confrontÃ©es aux derniÃ¨res publications INSEE. ${APP.writeEnabled ? "Le bouton Â« Pousser dans ASTECH Â» prÃ©pare un aperÃ§u, puis Ã©crit en base aprÃ¨s confirmation explicite." : "Application en lecture seule : les propositions ne sont pas Ã©crites en base."}</p>
+        <p class="font-body-md text-on-surface-variant max-w-3xl">Séries officielles (IRL, ILAT, ICC, ILC) du référentiel Oracle ASTECH, confrontées aux dernières publications INSEE. ${APP.writeEnabled ? "Le bouton « Pousser dans ASTECH » prépare un aperçu, puis écrit en base après confirmation explicite." : "Application en lecture seule : les propositions ne sont pas écrites en base."}</p>
       </div>
       ${verifBtn}
     </div>
@@ -1344,17 +1366,17 @@ async function viewIndices() {
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md mb-space-lg">${cards || '<div class="text-on-surface-variant font-body-sm">Aucun indice.</div>'}</div>
     <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
       <div class="p-space-lg flex flex-wrap items-center justify-between gap-space-sm bg-surface-container-low/50">
-        <div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-primary text-[22px]">list_alt</span><h2 class="font-headline-sm text-on-surface">RÃ©fÃ©rentiel des indices</h2><span class="font-label-mono-sm text-secondary bg-surface-container px-2 py-0.5 rounded">${num(d.rows.length)} lignes</span></div>
+        <div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-primary text-[22px]">list_alt</span><h2 class="font-headline-sm text-on-surface">Référentiel des indices</h2><span class="font-label-mono-sm text-secondary bg-surface-container px-2 py-0.5 rounded">${num(d.rows.length)} lignes</span></div>
         <div class="flex items-center gap-space-sm">
           <select data-act="indType" class="h-9 px-3 rounded-lg bg-surface-container-low font-body-sm"><option value="">Tous les types</option>${[1, 2, 5, 6].map(t => `<option value="${t}" ${String(s.type) === String(t) ? 'selected' : ''}>${INDICE_TYPES[t]}</option>`).join('')}</select>
-          <select data-act="indAnnee" class="h-9 px-3 rounded-lg bg-surface-container-low font-body-sm"><option value="">Toutes les annÃ©es</option>${annees.map(a => `<option value="${a}" ${String(s.annee) === String(a) ? 'selected' : ''}>${a}</option>`).join('')}</select>
+          <select data-act="indAnnee" class="h-9 px-3 rounded-lg bg-surface-container-low font-body-sm"><option value="">Toutes les années</option>${annees.map(a => `<option value="${a}" ${String(s.annee) === String(a) ? 'selected' : ''}>${a}</option>`).join('')}</select>
         </div>
       </div>
       ${dataTable([
         { label: 'Type', get: r => indiceBadge(r.typ) },
         { label: 'Code', get: r => cellMono(r.cod, 'text-on-surface') },
-        { label: 'LibellÃ©', get: r => `<div class="font-title-sm">${esc(r.des || '')}</div>` },
-        { label: 'AnnÃ©e', get: r => cell(r.an) },
+        { label: 'Libellé', get: r => `<div class="font-title-sm">${esc(r.des || '')}</div>` },
+        { label: 'Année', get: r => cell(r.an) },
         { label: 'Trim.', center: true, get: r => cell(r.trim) },
         { label: 'Publication', get: r => cellMono(r.datp, 'text-secondary') },
         { label: 'ASTECH (insee_taux)', right: true, get: r => cellMono(num(r.taux), 'font-bold') },
@@ -1375,7 +1397,7 @@ async function runPush(confirmProd) {
   s.error = null;
   const env = DB_ENV_SEL || APP.active;
   if (confirmProd && env === 'prod') {
-    if (!window.confirm('Ã‰CRIRE DANS LA BASE DE PRODUCTION ?\n\nCette action modifie le rÃ©fÃ©rentiel INDICEINSEE en production. Confirmer ?')) return;
+    if (!window.confirm('ÉCRIRE DANS LA BASE DE PRODUCTION ?\n\nCette action modifie le référentiel INDICEINSEE en production. Confirmer ?')) return;
   }
   s.pushing = true; await viewIndices();
   try {
@@ -1389,12 +1411,13 @@ async function runPush(confirmProd) {
 }
 
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• DEMANDE D'INTERVENTION â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ═══════════════════════════ DEMANDE D'INTERVENTION ═══════════════════════════ */
 /* ═══════════════════════════ PROCÉDURES STOCKÉES ═══════════════════════════ */
 function procTypeBadge(t) {
   if (t === 'FUNCTION') return badge('FONCTION', 'purple');
   if (t === 'PACKAGE') return badge('PACKAGE', 'primary');
   if (t === 'PACKAGE BODY') return badge('PKG BODY', 'slate');
+  if (t === 'TRIGGER') return badge('TRIGGER', 'amber');
   return badge('PROCÉDURE', 'blue');
 }
 async function viewProcedures() {
@@ -1404,11 +1427,14 @@ async function viewProcedures() {
   if (s.type) params.set('type', s.type);
   if (s.group) params.set('group', s.group);
   const d = await api('/api/procedures?' + params.toString());
-  const rows = s.group ? d.rows.filter((r) => r.group === s.group) : d.rows;
+  let rows = s.group ? d.rows.filter((r) => r.group === s.group) : d.rows;
+  if (s.status === 'valide') rows = rows.filter((r) => r.status === 'VALID');
+  else if (s.status === 'invalide') rows = rows.filter((r) => r.status !== 'VALID');
+  const nbValides = d.rows.filter((r) => r.status === 'VALID').length;
   const cols = [
-    { label: 'Nom', get: r => `<span class="font-label-mono-sm font-semibold text-primary">${esc(r.name)}</span>` },
+    { label: 'Nom', get: r => `<span class="font-label-mono-sm font-semibold text-primary">${esc(r.name)}</span>${r.table ? `<div class="font-label-mono-sm text-secondary">${esc(r.table)}</div>` : ''}` },
     { label: 'Type', center: true, get: r => procTypeBadge(r.type) },
-    { label: 'Description (déduite)', get: r => `<div class="font-body-sm clamp1" style="max-width:520px">${esc(r.description || '')}</div>` },
+    { label: 'Description (déduite)', get: r => `<div class="font-body-sm clamp1" style="max-width:560px">${esc(r.description || '')}</div>` },
     { label: 'Statut', center: true, get: r => r.status === 'VALID' ? badge('VALIDE', 'green') : badge('INVALIDE', 'red') },
     { label: 'Lignes', right: true, get: r => cellMono(num(r.lignes), 'text-secondary') },
     { label: 'Dernière MAJ', get: r => cellMono(r.maj, 'text-secondary') }
@@ -1437,8 +1463,13 @@ async function viewProcedures() {
         <input id="procQ" value="${esc(state.q)}" class="w-full h-10 pl-10 pr-3 rounded bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher une procédure, fonction, package…" /></div>
       <select data-act="procType" class="h-9 px-3 rounded-lg bg-surface-container-low font-body-sm">
         <option value="">Tous les types</option>
-        ${['PROCEDURE', 'FUNCTION', 'PACKAGE', 'PACKAGE BODY'].map(t => `<option value="${t}" ${s.type === t ? 'selected' : ''}>${t}</option>`).join('')}
+        ${['PROCEDURE', 'FUNCTION', 'PACKAGE', 'PACKAGE BODY', 'TRIGGER'].map(t => `<option value="${t}" ${s.type === t ? 'selected' : ''}>${t}</option>`).join('')}
       </select>
+      <div class="flex items-center gap-1 bg-surface-container-low p-1 rounded-lg font-label-mono-sm">
+        <button data-act="procStatus:" class="px-2.5 py-1.5 rounded ${!s.status ? 'bg-primary text-on-primary' : 'text-on-surface hover:bg-surface-container-high'}">Tous</button>
+        <button data-act="procStatus:valide" class="px-2.5 py-1.5 rounded ${s.status === 'valide' ? 'bg-emerald-600 text-white' : 'text-emerald-700 hover:bg-surface-container-high'}">Valides (${num(nbValides)})</button>
+        <button data-act="procStatus:invalide" class="px-2.5 py-1.5 rounded ${s.status === 'invalide' ? 'bg-error text-on-error' : 'text-error hover:bg-surface-container-high'}">Invalides (${num(invalides)})</button>
+      </div>
       <span class="ml-auto font-label-mono-sm text-on-surface-variant">${num(rows.length)} affichée(s)</span>
     </div>
     ${groupChips}
@@ -1454,7 +1485,7 @@ async function viewProcedure(arg) {
     ${breadcrumb([{ label: 'Accueil' }, { label: 'Procédures stockées', link: '#/procedures' }, { label: d.name }])}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-space-lg">
       <div>
-        <div class="flex items-center gap-2">${procTypeBadge(d.type)}<span class="font-label-mono-sm text-secondary">${esc(d.group)}</span></div>
+        <div class="flex items-center gap-2">${procTypeBadge(d.type)}<span class="font-label-mono-sm text-secondary">${esc(d.group)}</span>${d.table ? `<span class="font-label-mono-sm text-secondary">• ${esc(d.table)} • ${esc(d.event || '')}</span>` : ''}</div>
         <h1 class="font-headline-lg text-on-surface tracking-tight mt-1 font-label-mono-md">${esc(d.name)}</h1>
         <p class="font-body-md text-on-surface-variant">${esc(d.description || '')}</p>
       </div>
@@ -1464,6 +1495,97 @@ async function viewProcedure(arg) {
       <div class="p-space-lg bg-surface-container-low/50 flex items-center gap-2"><span class="material-symbols-outlined text-primary">code</span><h2 class="font-headline-sm text-on-surface">Code source</h2></div>
       <pre class="p-space-lg overflow-x-auto font-label-mono-sm text-[12px] leading-relaxed bg-[#0f172a] text-[#cbd5e1] max-h-[70vh]">${esc(d.source || '(source indisponible)')}</pre>
     </div>`;
+}
+
+/* ═══════════════════════════ DOCUMENTS ASSOCIÉS (GED) ═══════════════════════════ */
+async function viewDocuments() {
+  const s = state.docs;
+  const d = await api('/api/documents');
+  const mods = d.modules || [];
+  const modById = Object.fromEntries(mods.map((m) => [m.key, m]));
+  const themeById = Object.fromEntries((d.themes || []).map((t) => [t.id, t]));
+  const tabs = [['modules', 'Modules & thèmes', 'category'], ['tables', 'Tables & champs', 'table_view'], ['chemins', 'Chemins de stockage', 'folder'], ['transversal', 'Transversal', 'hub']];
+  const tabBar = `<nav class="flex items-center gap-space-xs overflow-x-auto p-1 bg-surface-container-low rounded-xl mb-space-md shadow-sm">
+    ${tabs.map(([k, label, icon]) => `<button data-act="docTab:${k}" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg font-title-md whitespace-nowrap transition-all ${s.tab === k ? 'bg-surface-container-lowest text-primary shadow-sm' : 'text-secondary hover:text-on-surface hover:bg-surface-container'}"><span class="material-symbols-outlined text-[18px]">${icon}</span>${label}</button>`).join('')}
+  </nav>`;
+
+  let body = '';
+  if (s.tab === 'modules') {
+    const themeRows = (d.themes || []).filter((t) => Number(t.n) > 0);
+    const themeCards = themeRows.map((t) => `<div class="p-space-md rounded-xl bg-surface-container-low shadow-sm">
+      <div class="flex items-center justify-between gap-2"><span class="font-title-sm text-on-surface">${esc(t.nom)}</span><span class="px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-mono-sm font-semibold">${num(t.n)}</span></div>
+      <div class="font-label-mono-sm text-secondary mt-1">${esc(t.cod)}${t.actif !== 'O' ? ' · inactif' : ''}</div></div>`).join('');
+    const modCards = mods.filter((m) => m.nb_champs > 0).map((m) => `<button data-act="docModule:${m.key}" class="text-left p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex items-start gap-3 hover:bg-surface-container transition-colors">
+      <div class="p-2 rounded-lg bg-surface-container text-primary"><span class="material-symbols-outlined">${m.icon}</span></div>
+      <div><div class="font-title-sm text-on-surface">${esc(m.label)}</div>
+      <div class="font-label-mono-sm text-secondary mt-0.5">${num(m.nb_tables)} table(s) · ${num(m.nb_champs)} champ(s)${m.nb_chemins ? ` · ${num(m.nb_chemins)} chemin(s)` : ''}</div></div></button>`).join('');
+    body = `${card('Classification GED — thèmes documentaires (DOC_THEME)', `<div class="p-space-lg grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-space-sm">${themeCards || '<div class="text-secondary font-body-sm">Aucun document.</div>'}</div>`, null, `${num(d.resume.themes)} thèmes porteurs · ${num(d.resume.docs)} documents`)}
+      <div class="mt-space-lg">${card('Modules porteurs de documents', `<div class="p-space-lg grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-space-sm">${modCards}</div>`, null, 'Un même document peut être porté par la GED centrale (DOC) et/ou un champ dédié du module.')}</div>
+      <div class="mt-space-lg">${card('Derniers documents (GED)', dataTable([
+        { label: 'Réf.', get: (r) => `<span class="font-label-mono-sm text-primary font-semibold">${esc(r.ref)}</span>` },
+        { label: 'Titre / fichier', get: (r) => `<div class="font-title-sm clamp1" style="max-width:380px">${esc(r.titre || '')}</div><div class="font-label-mono-sm text-secondary clamp1" style="max-width:380px">${esc(r.fichier || '')}</div>` },
+        { label: 'Thème', get: (r) => { const t = themeById[r.theme]; return t ? badge(t.cod, 'slate') : dash; } },
+        { label: 'Type', center: true, get: (r) => badge(r.typ || '?', 'slate') },
+        { label: 'Stockage', center: true, get: (r) => badge(r.stockg || '?', 'purple') },
+        { label: 'Date', get: (r) => cellMono(r.date_doc, 'text-secondary') },
+      ], d.derniers, { empty: 'Aucun document.', key: 'doc_derniers' }))}</div>`;
+  } else if (s.tab === 'tables') {
+    const chips = `<div class="flex flex-wrap gap-2 mb-space-md">
+      <button data-act="docModule:" class="px-3 py-1.5 rounded-lg font-label-mono-sm ${!s.module ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface hover:bg-surface-container-high'}">Tous <span class="opacity-70">(${num(d.fields.length)})</span></button>
+      ${mods.filter((m) => m.nb_champs > 0).map((m) => `<button data-act="docModule:${m.key}" class="px-3 py-1.5 rounded-lg font-label-mono-sm ${s.module === m.key ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface hover:bg-surface-container-high'}"><span class="material-symbols-outlined text-[14px] align-middle">${m.icon}</span> ${esc(m.label)} <span class="opacity-70">(${num(m.nb_champs)})</span></button>`).join('')}
+    </div>`;
+    const rows = s.module ? d.fields.filter((f) => f.module === s.module) : d.fields;
+    const cols = [
+      { label: 'Module', get: (r) => { const m = modById[r.module]; return badge(m ? m.label : r.module, 'slate'); } },
+      { label: 'Table', get: (r) => `<span class="font-label-mono-sm font-semibold text-primary">${esc(r.table)}</span>` },
+      { label: 'Champ', get: (r) => `<span class="font-label-mono-sm">${esc(r.col)}</span>` },
+      { label: 'Rôle', nowrap: false, get: (r) => `<span class="font-body-sm">${esc(r.role)}</span>` },
+      { label: 'Chemin', center: true, get: (r) => r.path ? badge('Oui', 'green', 'folder') : dash },
+      { label: 'Lignes', right: true, get: (r) => r.nb != null ? cellMono(num(r.nb), 'text-secondary') : dash },
+    ];
+    body = `${chips}${card('Tables &amp; champs document (' + num(rows.length) + ')', dataTable(cols, rows, { empty: 'Aucun champ.', key: 'doc_tables_' + (s.module || 'all') }), null, 'Colonnes du schéma ASTECHIVR qui stockent un document, un chemin ou une pièce jointe (relevé ALL_TAB_COLUMNS).')}`;
+  } else if (s.tab === 'chemins') {
+    const q = (state.q || '').toLowerCase();
+    const rows = q ? d.chemins.filter((c) => c.chemin.toLowerCase().includes(q)) : d.chemins;
+    const cols = [
+      { label: 'Chemin de stockage', nowrap: false, get: (r) => `<span class="font-label-mono-sm break-all">${esc(r.chemin)}</span>` },
+      { label: 'Docs', right: true, get: (r) => cellMono(num(r.n), 'font-semibold') },
+      { label: 'Thèmes', get: (r) => r.themes.length ? r.themes.map((t) => badge(t, 'slate')).join(' ') : dash },
+      { label: 'Type', center: true, get: (r) => r.type ? badge(r.type, 'blue') : dash },
+      { label: 'Stockage', center: true, get: (r) => r.stockage ? badge(r.stockage, 'purple') : dash },
+    ];
+    body = `${card('Chemins de stockage des documents (' + num(d.chemins.length) + ')', `<div class="p-space-md border-b border-surface-container flex flex-wrap items-center gap-space-sm">
+        <div class="relative flex-1 min-w-[240px]"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-[18px]">search</span>
+          <input id="docQ" value="${esc(state.q)}" class="w-full h-9 pl-9 pr-4 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" placeholder="Filtrer un dossier, par ex. « PARC AUTO », « AMIANTE »…" /></div>
+        <span class="font-label-mono-sm text-secondary"><span class="font-semibold text-on-surface">${num(rows.length)}</span> chemin(s)</span>
+      </div>${dataTable(cols, rows, { empty: 'Aucun chemin.', key: 'doc_chemins', pageSize: 50 })}`, null, 'Dossiers distincts (DOC.DOC_FOLDER) où sont physiquement rangés les fichiers, avec la volumétrie et le thème dominant.')}`;
+  } else {
+    const cards = (d.transversal || []).map((g) => `<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+      <div class="flex items-start justify-between gap-2"><div class="p-2 rounded-lg bg-surface-container text-primary"><span class="material-symbols-outlined">${g.icon}</span></div>${g.n != null ? `<span class="font-headline-sm font-bold tabular text-on-surface">${num(g.n)}</span>` : ''}</div>
+      <div class="mt-space-sm"><div class="font-title-md text-on-surface">${esc(g.label)}</div>
+      <div class="font-body-sm text-on-surface-variant mt-0.5">${esc(g.note || '')}</div>
+      <div class="font-label-mono-sm text-secondary mt-2 break-all">${g.table ? esc(g.table) + '.' + esc(g.col) : ''}${g.themes.length ? (g.table ? '<br>' : '') + 'GED : ' + esc(g.themes.join(', ')) : ''}</div></div></div>`).join('');
+    body = `${card('Regroupement transversal par entité', `<div class="p-space-lg grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">${cards}</div>`, null, 'Un même type d’entité (agent, bien, contrat, véhicule…) peut avoir des documents dans la GED centrale et/ou dans un champ dédié de son module.')}`;
+  }
+
+  view.innerHTML = `
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Docs associés' }])}
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md mb-space-md">
+      <div>
+        <span class="px-2 py-0.5 rounded bg-surface-container font-label-mono-sm text-primary font-semibold">GED · DICTIONNAIRE : DOC · ALL_TAB_COLUMNS (schéma ASTECHIVR)</span>
+        <h1 class="font-headline-lg text-on-surface tracking-tight mt-1">Documents associés</h1>
+        <p class="font-body-md text-on-surface-variant">Tables et champs qui stockent un document, classés par module, avec les chemins de stockage et un regroupement transversal par entité.</p>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-space-md mb-space-lg">
+      ${kpi('Documents (GED)', '<span>' + num(d.resume.docs) + '</span>', 'table DOC + satellites', 'description', 'primary')}
+      ${kpi('Chemins de stockage', '<span>' + num(d.resume.chemins) + '</span>', 'dossiers distincts (DOC_FOLDER)', 'folder', 'tertiary')}
+      ${kpi('Tables porteuses', '<span>' + num(d.resume.tables) + '</span>', 'champs document identifiés', 'table_view', 'plain')}
+      ${kpi('Champs document', '<span>' + num(d.resume.champs) + '</span>', 'chemin / fichier / pièce jointe', 'attachment', 'plain')}
+    </div>
+    ${tabBar}
+    ${body}`;
+  if (s.tab === 'chemins') bindSearch('#docQ');
 }
 
 /* ═══════════════════════════ PARC AUTOMOBILE ═══════════════════════════ */
@@ -1602,10 +1724,10 @@ async function viewParcVehicule(arg) {
 }
 
 // Champs de DEMANDES (lecture seule) + formulaire de saisie. Les listes
-// dÃ©roulantes proviennent de /api/demandes/options (tables de rÃ©fÃ©rence ASTECH).
+// déroulantes proviennent de /api/demandes/options (tables de référence ASTECH).
 const DEMANDE_NATURES = { 1: 'IRL', 2: 'ICC', 5: 'ILC', 6: 'ILAT' };
 function dRows(list, sel, ph) {
-  return `<option value="">${esc(ph || 'â€”')}</option>` + (list || []).map(o =>
+  return `<option value="">${esc(ph || '—')}</option>` + (list || []).map(o =>
     `<option value="${esc(o.code)}" ${String(sel) === String(o.code) ? 'selected' : ''}>${esc(o.des || o.nom)}</option>`).join('');
 }
 function dField(label, inner, req) {
@@ -1641,49 +1763,49 @@ function renderDemande() {
         </div>
         <div class="p-space-lg space-y-space-lg">
           ${s.error ? `<div class="bg-error-container/40 border border-error/30 text-on-error-container p-space-sm rounded font-body-sm">${esc(s.error)}</div>` : ''}
-          ${s.submitted ? `<div class="p-space-sm rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 font-body-sm flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">check_circle</span>Demande renseignÃ©e pour <b>${esc(s.form.ndt || '')}</b>. L'enregistrement en base sera activÃ© une fois les Ã©critures validÃ©es (test d'abord).</div>` : ''}
-          <div class="p-space-sm rounded-lg bg-surface-container-low flex items-center gap-2 font-label-mono-sm text-secondary"><span class="material-symbols-outlined text-[16px]">info</span>AperÃ§u en lecture seule. La crÃ©ation effective nÃ©cessite l'activation des Ã©critures (ASTECH_ALLOW_WRITES) et sera confirmÃ©e avant tout enregistrement.</div>
+          ${s.submitted ? `<div class="p-space-sm rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 font-body-sm flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">check_circle</span>Demande renseignée pour <b>${esc(s.form.ndt || '')}</b>. L'enregistrement en base sera activé une fois les écritures validées (test d'abord).</div>` : ''}
+          <div class="p-space-sm rounded-lg bg-surface-container-low flex items-center gap-2 font-label-mono-sm text-secondary"><span class="material-symbols-outlined text-[16px]">info</span>Aperçu en lecture seule. La création effective nécessite l'activation des écritures (ASTECH_ALLOW_WRITES) et sera confirmée avant tout enregistrement.</div>
 
           <fieldset class="space-y-space-md">
             <legend class="font-title-md text-primary font-bold">Objet de la demande</legend>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
-              ${dField('Nature', dSelect('nature', dRows(o.natures, f.nature, 'SÃ©lectionner la nature')), true)}
+              ${dField('Nature', dSelect('nature', dRows(o.natures, f.nature, 'Sélectionner la nature')), true)}
               ${dField('Type de demande', dSelect('tydem', dRows(o.types_demande, f.tydem, 'Standard')))}
-              ${dField('DegrÃ© / prioritÃ©', dSelect('degre', dRows(o.degres, f.degre, 'Non dÃ©terminÃ©')))}
+              ${dField('Degré / priorité', dSelect('degre', dRows(o.degres, f.degre, 'Non déterminé')))}
               ${dField('Urgent', dSelect('urgent', `<option value="N" ${f.urgent === 'N' ? 'selected' : ''}>Non</option><option value="O" ${f.urgent === 'O' ? 'selected' : ''}>Oui (urgent)</option>`))}
               ${dField('Date de la demande', dInput('dat', f.dat, 'type="date"'), true)}
-              ${dField('Date souhaitÃ©e', dInput('datdesir', f.datdesir, 'type="date"'))}
+              ${dField('Date souhaitée', dInput('datdesir', f.datdesir, 'type="date"'))}
             </div>
-            ${dField('Objet / dÃ©signation', dInput('ndt', f.ndt, 'maxlength="100" placeholder="RÃ©sumÃ© de la demande"'), true)}
-            ${dField('Description dÃ©taillÃ©e', `<textarea data-dem="libelle" rows="3" class="px-3 py-2 rounded-lg bg-surface-container-low border border-surface-container-high focus:outline-none focus:border-primary font-body-sm">${esc(f.libelle || '')}</textarea>`)}
+            ${dField('Objet / désignation', dInput('ndt', f.ndt, 'maxlength="100" placeholder="Résumé de la demande"'), true)}
+            ${dField('Description détaillée', `<textarea data-dem="libelle" rows="3" class="px-3 py-2 rounded-lg bg-surface-container-low border border-surface-container-high focus:outline-none focus:border-primary font-body-sm">${esc(f.libelle || '')}</textarea>`)}
           </fieldset>
 
           <fieldset class="space-y-space-md">
             <legend class="font-title-md text-primary font-bold">Localisation & rattachement</legend>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
-              ${dField('Bien concernÃ© (ARBO)', `<div class="relative">
-                <input id="demandeBien" data-dem="bien" value="${esc(f.bien || '')}" placeholder="Rechercher un bien (code, dÃ©signation, adresse)â€¦" class="w-full h-9 px-3 rounded-lg bg-surface-container-low border border-surface-container-high focus:outline-none focus:border-primary font-body-sm"/>
+              ${dField('Bien concerné (ARBO)', `<div class="relative">
+                <input id="demandeBien" data-dem="bien" value="${esc(f.bien || '')}" placeholder="Rechercher un bien (code, désignation, adresse)…" class="w-full h-9 px-3 rounded-lg bg-surface-container-low border border-surface-container-high focus:outline-none focus:border-primary font-body-sm"/>
                 <input type="hidden" data-dem="arbo" value="${esc(f.arbo || '')}"/>
-                ${rows.length ? `<div class="absolute z-20 mt-1 w-full bg-surface-container-lowest border border-surface-container-high rounded-lg shadow-lg max-h-56 overflow-y-auto">${rows.map(r => `<button type="button" data-act="demandeBienPick:${esc(String(r.id))}" class="w-full text-left px-3 py-2 hover:bg-surface-container font-body-sm border-b border-surface-container last:border-0"><div class="font-title-sm">${esc(r.des || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.code || '')} â€” ${esc(r.adresse || '')}</div></button>`).join('')}</div>` : ''}
+                ${rows.length ? `<div class="absolute z-20 mt-1 w-full bg-surface-container-lowest border border-surface-container-high rounded-lg shadow-lg max-h-56 overflow-y-auto">${rows.map(r => `<button type="button" data-act="demandeBienPick:${esc(String(r.id))}" class="w-full text-left px-3 py-2 hover:bg-surface-container font-body-sm border-b border-surface-container last:border-0"><div class="font-title-sm">${esc(r.des || '')}</div><div class="font-label-mono-sm text-secondary">${esc(r.code || '')} — ${esc(r.adresse || '')}</div></button>`).join('')}</div>` : ''}
               </div>`)}
-              ${dField('Service demandeur (SOUSSERVICE)', dSelect('sserv', dRows((o.services || []).filter(x => x.actif !== 'N'), f.sserv, 'SÃ©lectionner le service')))}
-              ${dField('CatÃ©gorie', dSelect('cat', dRows(o.categories, f.cat, 'SÃ©lectionner la catÃ©gorie')))}
-              ${dField('Sous-catÃ©gorie', dSelect('scat', dRows(o.sous_categories, f.scat, 'SÃ©lectionner la sous-catÃ©gorie')))}
+              ${dField('Service demandeur (SOUSSERVICE)', dSelect('sserv', dRows((o.services || []).filter(x => x.actif !== 'N'), f.sserv, 'Sélectionner le service')))}
+              ${dField('Catégorie', dSelect('cat', dRows(o.categories, f.cat, 'Sélectionner la catégorie')))}
+              ${dField('Sous-catégorie', dSelect('scat', dRows(o.sous_categories, f.scat, 'Sélectionner la sous-catégorie')))}
             </div>
           </fieldset>
 
           <fieldset class="space-y-space-md">
-            <legend class="font-title-md text-primary font-bold">Demandeur / complÃ©ment</legend>
+            <legend class="font-title-md text-primary font-bold">Demandeur / complément</legend>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
               ${dField('Matricule demandeur', dInput('dem', f.dem, 'placeholder="Code DEMANDEUR (ex. 0000117)"'))}
-              ${dField('Nom du complÃ©ment', dInput('cplnom', f.cplnom))}
+              ${dField('Nom du complément', dInput('cplnom', f.cplnom))}
               ${dField('Email', dInput('cplemail', f.cplemail, 'type="email"'))}
-              ${dField('TÃ©lÃ©phone 1', dInput('cpltel1', f.cpltel1))}
-              ${dField('TÃ©lÃ©phone 2', dInput('cpltel2', f.cpltel2))}
+              ${dField('Téléphone 1', dInput('cpltel1', f.cpltel1))}
+              ${dField('Téléphone 2', dInput('cpltel2', f.cpltel2))}
               ${dField('Courrier', dSelect('courrier', `<option value="N" ${f.courrier === 'N' ? 'selected' : ''}>Non</option><option value="O" ${f.courrier === 'O' ? 'selected' : ''}>Oui</option>`))}
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
-              ${dField('Adresse (complÃ©ment)', dInput('cpladr1', f.cpladr1))}
+              ${dField('Adresse (complément)', dInput('cpladr1', f.cpladr1))}
               ${dField('Adresse 2', dInput('cpladr2', f.cpladr2))}
               ${dField('Adresse 3', dInput('cpladr3', f.cpladr3))}
             </div>
@@ -1692,20 +1814,20 @@ function renderDemande() {
           <fieldset class="space-y-space-md">
             <legend class="font-title-md text-primary font-bold">Suivi / montants (optionnel)</legend>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
-              ${dField('Date d\'enlÃ¨vement souhaitÃ©e', dInput('datenlev', f.datenlev, 'type="date"'))}
-              ${dField('Budget estimÃ© HT', dInput('mtht', f.mtht, 'type="number" step="0.01"'))}
-              ${dField('Budget estimÃ© TTC', dInput('mttc', f.mttc, 'type="number" step="0.01"'))}
+              ${dField('Date d\'enlèvement souhaitée', dInput('datenlev', f.datenlev, 'type="date"'))}
+              ${dField('Budget estimé HT', dInput('mtht', f.mtht, 'type="number" step="0.01"'))}
+              ${dField('Budget estimé TTC', dInput('mttc', f.mttc, 'type="number" step="0.01"'))}
               ${dField('Observation', dInput('obs', f.obs))}
               ${dField('Reprise mail', dSelect('repmail', `<option value="N" ${f.repmail === 'N' ? 'selected' : ''}>Non</option><option value="O" ${f.repmail === 'O' ? 'selected' : ''}>Oui</option>`))}
-              ${dField('Moment', dSelect('moment', dRows(o.moments, f.moment, 'IndiffÃ©rent')))}
+              ${dField('Moment', dSelect('moment', dRows(o.moments, f.moment, 'Indifférent')))}
             </div>
           </fieldset>
         </div>
         <div class="flex items-center justify-between gap-space-sm px-space-lg py-space-md border-t border-surface-container sticky bottom-0 bg-surface-container-lowest rounded-b-2xl">
-          <span class="font-label-mono-sm text-secondary">Champs marquÃ©s <span class="text-error">*</span> obligatoires (NOT NULL en base)</span>
+          <span class="font-label-mono-sm text-secondary">Champs marqués <span class="text-error">*</span> obligatoires (NOT NULL en base)</span>
           <div class="flex items-center gap-space-sm">
-            <button data-act="demandeReset" class="px-3 py-2 rounded-lg bg-surface-container font-title-sm hover:bg-surface-container-high">RÃ©initialiser</button>
-            <button data-act="demandeSubmit" ${APP.writeEnabled ? '' : 'disabled'} title="${APP.writeEnabled ? '' : 'Ã‰criture dÃ©sactivÃ©e (ASTECH_ALLOW_WRITES=1 requis)'}" class="px-4 py-2 rounded-lg ${APP.writeEnabled ? 'bg-primary text-on-primary hover:bg-primary/90 shadow-md' : 'bg-surface-dim text-on-surface-variant cursor-not-allowed'} font-title-md"><span class="material-symbols-outlined text-[18px] align-middle mr-1">save</span>CrÃ©er la demande</button>
+            <button data-act="demandeReset" class="px-3 py-2 rounded-lg bg-surface-container font-title-sm hover:bg-surface-container-high">Réinitialiser</button>
+            <button data-act="demandeSubmit" ${APP.writeEnabled ? '' : 'disabled'} title="${APP.writeEnabled ? '' : 'Écriture désactivée (ASTECH_ALLOW_WRITES=1 requis)'}" class="px-4 py-2 rounded-lg ${APP.writeEnabled ? 'bg-primary text-on-primary hover:bg-primary/90 shadow-md' : 'bg-surface-dim text-on-surface-variant cursor-not-allowed'} font-title-md"><span class="material-symbols-outlined text-[18px] align-middle mr-1">save</span>Créer la demande</button>
           </div>
         </div>
       </div>
@@ -1728,7 +1850,7 @@ function demandeBienInput(el) {
 }
 function demandeBienPick(id) {
   const r = (state.demande.bienRows || []).find(x => String(x.id) === id);
-  if (r) { state.demande.form.arbo = r.id; state.demande.form.bien = (r.code ? r.code + ' â€” ' : '') + (r.des || ''); }
+  if (r) { state.demande.form.arbo = r.id; state.demande.form.bien = (r.code ? r.code + ' — ' : '') + (r.des || ''); }
   state.demande.bienRows = [];
   renderDemande();
 }
@@ -1736,26 +1858,26 @@ function demandeSubmit() {
   const f = state.demande.form;
   const manques = [];
   if (!f.nature) manques.push('Nature');
-  if (!f.ndt) manques.push('Objet / dÃ©signation');
+  if (!f.ndt) manques.push('Objet / désignation');
   if (!f.dat) manques.push('Date de la demande');
   if (manques.length) { state.demande.error = 'Champs obligatoires manquants : ' + manques.join(', ') + '.'; renderDemande(); return; }
   state.demande.error = null;
   // L'enregistrement effectif (INSERT DEMANDES + trigger INS_DEMANDES_ID) sera
-  // branchÃ© via POST /api/demandes lorsque les Ã©critures seront validÃ©es.
+  // branché via POST /api/demandes lorsque les écritures seront validées.
   state.demande.submitted = true;
   renderDemande();
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• CLÃ‰S API â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ═══════════════════════════ CLÉS API ═══════════════════════════ */
 const API_SCOPES = [
-  { id: 'referentiels', label: 'RÃ©fÃ©rentiels â€” API v1 (lecture)' },
+  { id: 'referentiels', label: 'Référentiels — API v1 (lecture)' },
   { id: '*', label: 'Tous les droits' },
 ];
 const API_GETTING_STARTED = (origin) => [
-  ['Authentification', 'En-tÃªte Â« X-API-Key: <clÃ©> Â» ou Â« Authorization: Bearer <clÃ©> Â»'],
-  ['DÃ©couverte', `GET ${origin}/api/v1`],
-  ['Lister les rÃ©fÃ©rentiels', `GET ${origin}/api/v1/referentiels`],
-  ['DonnÃ©es d\u2019un rÃ©fÃ©rentiel', `GET ${origin}/api/v1/referentiels/biens?q=&limit=100&offset=0&total=1`],
+  ['Authentification', 'En-tête « X-API-Key: <clé> » ou « Authorization: Bearer <clé> »'],
+  ['Découverte', `GET ${origin}/api/v1`],
+  ['Lister les référentiels', `GET ${origin}/api/v1/referentiels`],
+  ['Données d\u2019un référentiel', `GET ${origin}/api/v1/referentiels/biens?q=&limit=100&offset=0&total=1`],
   ['Fiche', `GET ${origin}/api/v1/referentiels/biens/:id`],
 ];
 async function viewApiKeys() {
@@ -1772,39 +1894,39 @@ async function viewApiKeys() {
 
   const cols = [
     { label: 'Nom', get: r => `<div class="font-title-sm text-on-surface">${esc(r.name)}</div><div class="font-label-mono-sm text-secondary">${esc(r.id)}</div>` },
-    { label: 'ClÃ©', get: r => cellMono(r.prefix, 'text-secondary') },
+    { label: 'Clé', get: r => cellMono(r.prefix, 'text-secondary') },
     { label: 'Droits', get: r => (r.scopes || []).map(sc => badge(sc, sc === '*' ? 'purple' : 'blue')).join(' ') },
     { label: 'Source', center: true, get: r => badge(r.source === 'env' ? '.env' : 'fichier', r.source === 'env' ? 'amber' : 'slate') },
-    { label: 'CrÃ©Ã©e', get: r => r.createdAt ? cellMono(r.createdAt.slice(0, 16).replace('T', ' '), 'text-secondary') : dash },
+    { label: 'Créée', get: r => r.createdAt ? cellMono(r.createdAt.slice(0, 16).replace('T', ' '), 'text-secondary') : dash },
     { label: 'Dernier usage', get: r => r.lastUsedAt ? cellMono(r.lastUsedAt.slice(0, 16).replace('T', ' '), 'text-secondary') : dash },
-    { label: 'Statut', center: true, get: r => r.revokedAt ? badge('rÃ©voquÃ©e', 'red') : badge('active', 'green') },
-    { label: 'Action', center: true, get: r => (r.revokedAt || r.source === 'env') ? dash : `<button data-act="apikeysRevoke:${esc(r.id)}" class="px-2.5 py-1 rounded bg-error-container text-on-error-container font-label-mono-sm hover:bg-error hover:text-on-error">RÃ©voquer</button>` },
+    { label: 'Statut', center: true, get: r => r.revokedAt ? badge('révoquée', 'red') : badge('active', 'green') },
+    { label: 'Action', center: true, get: r => (r.revokedAt || r.source === 'env') ? dash : `<button data-act="apikeysRevoke:${esc(r.id)}" class="px-2.5 py-1 rounded bg-error-container text-on-error-container font-label-mono-sm hover:bg-error hover:text-on-error">Révoquer</button>` },
   ];
   const scopeChecks = API_SCOPES.map(sc => `<label class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-container-low cursor-pointer font-label-mono-sm"><input type="checkbox" data-scope="${esc(sc.id)}" class="w-4 h-4 accent-[#2563eb]" ${sc.id === 'referentiels' ? 'checked' : ''}/>${esc(sc.label)}</label>`).join('');
   const createForm = `
     <div class="p-space-lg flex flex-col gap-space-md">
       <div>
         <label class="font-label-mono-sm text-secondary uppercase">Nom</label>
-        <input id="apikeysName" type="text" placeholder="Studio-RH, partenaireâ€¦" class="mt-1 w-full h-10 px-3 rounded-lg bg-surface-container-low focus:outline-none" />
+        <input id="apikeysName" type="text" placeholder="Studio-RH, partenaire…" class="mt-1 w-full h-10 px-3 rounded-lg bg-surface-container-low focus:outline-none" />
       </div>
       <div>
         <label class="font-label-mono-sm text-secondary uppercase">Droits (lecture)</label>
         <div class="mt-1 flex flex-col gap-2">${scopeChecks}</div>
       </div>
-      <button data-act="apikeysCreate" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary font-title-md hover:bg-primary shadow-md"><span class="material-symbols-outlined text-[18px]">add</span>CrÃ©er la clÃ©</button>
+      <button data-act="apikeysCreate" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary font-title-md hover:bg-primary shadow-md"><span class="material-symbols-outlined text-[18px]">add</span>Créer la clé</button>
     </div>`;
   const createdBox = created ? `
     <div class="p-space-lg rounded-xl bg-emerald-50 border border-emerald-200 mb-space-lg">
       <div class="flex items-start justify-between gap-space-md">
         <div>
-          <div class="font-title-md font-bold text-emerald-900">ClÃ© crÃ©Ã©e â€” copiez-la maintenant</div>
-          <p class="font-body-sm text-emerald-800 mt-0.5">La valeur en clair n'est affichÃ©e qu'une seule fois.</p>
+          <div class="font-title-md font-bold text-emerald-900">Clé créée — copiez-la maintenant</div>
+          <p class="font-body-sm text-emerald-800 mt-0.5">La valeur en clair n'est affichée qu'une seule fois.</p>
         </div>
         <button data-act="apikeysDismiss" class="px-2.5 py-1 rounded bg-white/70 border border-emerald-200 text-emerald-900 font-label-mono-sm hover:bg-white">Fermer</button>
       </div>
       <div class="mt-space-md flex flex-wrap items-center gap-2">
         <code class="flex-1 min-w-[260px] px-3 py-2 rounded bg-white border border-emerald-200 font-label-mono-sm break-all">${esc(created.key)}</code>
-        <button data-act="apikeysCopy" class="px-3 py-2 rounded-lg bg-emerald-600 text-white font-title-md hover:bg-emerald-700">${s.copied ? 'CopiÃ© âœ“' : 'Copier'}</button>
+        <button data-act="apikeysCopy" class="px-3 py-2 rounded-lg bg-emerald-600 text-white font-title-md hover:bg-emerald-700">${s.copied ? 'Copié ✓' : 'Copier'}</button>
       </div>
       <p class="font-label-mono-sm text-emerald-800 mt-2 break-all">Exemple : <span class="font-mono">curl -H "X-API-Key: ${esc(created.key)}" ${esc(location.origin)}/api/v1/referentiels</span></p>
     </div>` : '';
@@ -1812,22 +1934,22 @@ async function viewApiKeys() {
     .map(([k, v]) => `<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 py-1.5 border-b border-surface-container-low last:border-0"><span class="font-label-mono-sm text-secondary uppercase">${esc(k)}</span><span class="font-label-mono-sm text-on-surface break-all">${esc(v)}</span></div>`).join('');
 
   view.innerHTML = `
-    ${breadcrumb([{ label: 'Accueil' }, { label: 'ClÃ©s API' }])}
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Clés API' }])}
     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md mb-space-lg">
       <div>
-        <span class="font-label-mono-sm px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-semibold uppercase tracking-wider">AccÃ¨s API en lecture</span>
-        <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight mt-1">ClÃ©s API</h1>
-        <p class="font-body-md text-body-md text-secondary">CrÃ©ez, consultez et rÃ©voquez les clÃ©s donnant accÃ¨s en lecture aux donnÃ©es (API <span class="font-mono">/api/v1</span>).</p>
+        <span class="font-label-mono-sm px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-semibold uppercase tracking-wider">Accès API en lecture</span>
+        <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight mt-1">Clés API</h1>
+        <p class="font-body-md text-body-md text-secondary">Créez, consultez et révoquez les clés donnant accès en lecture aux données (API <span class="font-mono">/api/v1</span>).</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
-        <button data-act="apikeysRefresh" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-container-lowest shadow-sm font-title-md hover:bg-surface-container"><span class="material-symbols-outlined text-[18px]">refresh</span>RafraÃ®chir</button>
+        <button data-act="apikeysRefresh" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-container-lowest shadow-sm font-title-md hover:bg-surface-container"><span class="material-symbols-outlined text-[18px]">refresh</span>Rafraîchir</button>
       </div>
     </div>
     ${createdBox}
     ${s.error ? `<div class="p-space-md rounded-xl bg-error-container/40 border border-error/30 text-on-error-container font-body-sm mb-space-lg">${esc(s.error)}</div>` : ''}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-space-lg">
-      <div class="lg:col-span-2">${card('ClÃ©s existantes (' + num(keys.length) + ')', dataTable(cols, keys, { empty: 'Aucune clÃ©.' }))}</div>
-      <div>${card('Nouvelle clÃ©', createForm, null, 'ClÃ© en lecture seule â€” la valeur n\u2019est affichÃ©e qu\u2019une fois.')}</div>
+      <div class="lg:col-span-2">${card('Clés existantes (' + num(keys.length) + ')', dataTable(cols, keys, { empty: 'Aucune clé.' }))}</div>
+      <div>${card('Nouvelle clé', createForm, null, 'Clé en lecture seule — la valeur n\u2019est affichée qu\u2019une fois.')}</div>
     </div>
     <div class="mt-space-lg">${card('Utiliser l\u2019API', `<div class="p-space-lg">${guide}</div>`)}</div>`;
 }
@@ -1835,9 +1957,9 @@ async function runCreateKey() {
   const s = state.apikeys;
   const nameEl = document.getElementById('apikeysName');
   const name = nameEl ? nameEl.value.trim() : '';
-  if (!name) { s.error = 'Le nom de la clÃ© est obligatoire.'; return viewApiKeys(); }
+  if (!name) { s.error = 'Le nom de la clé est obligatoire.'; return viewApiKeys(); }
   const scopes = Array.from(document.querySelectorAll('input[data-scope]:checked')).map((el) => el.getAttribute('data-scope'));
-  if (!scopes.length) { s.error = 'SÃ©lectionnez au moins un droit.'; return viewApiKeys(); }
+  if (!scopes.length) { s.error = 'Sélectionnez au moins un droit.'; return viewApiKeys(); }
   s.error = null; s.created = null; s.copied = false;
   try {
     const r = await api('/api/admin/keys', { method: 'POST', body: { name, scopes } });
@@ -1847,7 +1969,7 @@ async function runCreateKey() {
 }
 async function runRevokeKey(id) {
   if (!id) return;
-  if (!window.confirm('RÃ©voquer dÃ©finitivement la clÃ© Â« ' + id + ' Â» ?\n\nLes clients qui l\'utilisent perdront l\'accÃ¨s.')) return;
+  if (!window.confirm('Révoquer définitivement la clé « ' + id + ' » ?\n\nLes clients qui l\'utilisent perdront l\'accès.')) return;
   const s = state.apikeys;
   s.error = null;
   try { await api('/api/admin/keys/' + encodeURIComponent(id), { method: 'DELETE' }); s.keys = null; }
@@ -1855,7 +1977,7 @@ async function runRevokeKey(id) {
   await viewApiKeys();
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• Drawer & events â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ═══════════════════════════ Drawer & events ═══════════════════════════ */
 function openDrawer(html) { drawerPanel.innerHTML = html; drawer.classList.remove('hidden'); }
 function closeDrawer() { drawer.classList.add('hidden'); drawerPanel.innerHTML = ''; }
 
@@ -1864,7 +1986,7 @@ document.addEventListener('click', (e) => {
   if (link) { if (e.target.closest('a[href]') && !link.hasAttribute('data-link')) return; e.preventDefault(); go(link.getAttribute('data-link')); return; }
   const act = e.target.closest('[data-act]');
   if (!act) return;
-  if (act.matches('input[type=checkbox]')) return; // gÃ©rÃ© par l'Ã©vÃ©nement change
+  if (act.matches('input[type=checkbox]')) return; // géré par l'événement change
   const [action, value] = act.getAttribute('data-act').split(':');
   handleAction(action, value, act);
 });
@@ -1884,6 +2006,9 @@ function handleAction(action, value, el) {
     case 'agentPage': a.page = value === 'next' ? a.page + 1 : Math.max(1, a.page - 1); viewAgents(); break;
     case 'agentService': a.service = el.value; a.page = 1; viewAgents(); break;
     case 'agentRole': a.role = el.value; a.page = 1; viewAgents(); break;
+    case 'agentActif': a.actif = value || ''; a.page = 1; viewAgents(); break;
+    case 'agentPageSize': a.pageSize = Number(el.value); a.page = 1; viewAgents(); break;
+    case 'pageSize': { state.pageSizes = state.pageSizes || {}; state.pageSizes[el.getAttribute('data-pkey')] = Number(el.value); state.pages = state.pages || {}; state.pages[el.getAttribute('data-pkey')] = 1; render(); break; }
     case 'syncRun': runSyncRh(); break;
     case 'syncScope': state.synchro.scope = el.value; state.synchro.result = null; state.synchro.selected = null; state.synchro.desact = { plan: null, result: null, busy: false, error: null }; viewSynchro(); break;
     case 'syncTab': state.synchro.tab = value; viewSynchro(); break;
@@ -1927,6 +2052,9 @@ function handleAction(action, value, el) {
     case 'parcPage': state.parc.page = value === 'next' ? state.parc.page + 1 : Math.max(1, state.parc.page - 1); viewParc(); break;
     case 'procGroup': state.procs.group = value || ''; viewProcedures(); break;
     case 'procType': state.procs.type = el.value; viewProcedures(); break;
+    case 'procStatus': state.procs.status = value || ''; viewProcedures(); break;
+    case 'docTab': state.docs.tab = value; state.pages = {}; state.q = ''; viewDocuments(); break;
+    case 'docModule': state.docs.module = value || ''; state.docs.tab = 'tables'; state.pages = {}; viewDocuments(); break;
     case 'magasinEnStock': state.magasins.enStock = el.checked; viewMagasins(); break;
     case 'interPeriod': it.period = el.value; it.page = 1; viewInterventions(); break;
     case 'interEtat': it.etat = el.value; it.page = 1; viewInterventions(); break;
@@ -1975,7 +2103,7 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawe
 function wireGlobalSearch() {
   const s = $('#globalSearch');
   let t;
-  s.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { state.q = s.value.trim(); const r = parseHash().route; if (['agents', 'locatif', 'referentiels', 'interventions', 'magasins', 'magasin', 'parc', 'vehicule', 'procedures'].includes(r)) { if (r === 'agents') state.agents.page = 1; if (r === 'interventions') state.inter.page = 1; pendingFocus = '#globalSearch'; render(); } }, 450); });
+  s.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { state.q = s.value.trim(); const r = parseHash().route; if (['agents', 'locatif', 'referentiels', 'interventions', 'magasins', 'magasin', 'parc', 'vehicule', 'procedures', 'documents'].includes(r)) { if (r === 'agents') state.agents.page = 1; if (r === 'interventions') state.inter.page = 1; pendingFocus = '#globalSearch'; render(); } }, 450); });
   s.addEventListener('keydown', (e) => { if (e.key === 'Enter') { state.q = s.value.trim(); pendingFocus = '#globalSearch'; render(); } });
 }
 

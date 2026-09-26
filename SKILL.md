@@ -667,15 +667,40 @@ https://github.com/Crapoto94/astech), port **8099** :
   (prêt véhicule) ; `TOURNEES`/`PLANNINGAGENT` existent mais **vides**.
   Contrôle technique : pas de table dédiée (rubriques dans `PATRI_FORM`).
   Endpoints : `/api/parc` (+`stats`, `/permis`, `/vehicule/:id`) ; UI route `#/parc`.
-- **Procédures stockées** : `ALL_OBJECTS`/`ALL_SOURCE` du schéma `ASTECHIVR`
-  (1212 `PROCEDURE`, 294 `FUNCTION`, 2 `PACKAGE` + 1 body ; **705 en `RPT*`** =
-  rapports). Classement par groupe déduit du préfixe du nom (`PROC_GROUPS`) :
-  rapports, arbo, interventions, contrats, comptabilité, agents, stock, parc,
-  fluides, système, calculs, API/triggers, divers. Description heuristique
-  (`procVerb` + préfixe). Endpoints `/api/procedures` (+ `?q&type&group`),
-  `/api/procedure/:name?type=` (source). UI route `#/procedures`.
+- **Procédures stockées & triggers** : `ALL_OBJECTS`/`ALL_SOURCE` du schéma
+  `ASTECHIVR` (1212 `PROCEDURE`, 294 `FUNCTION`, 2 `PACKAGE` + 1 body,
+  **335 `TRIGGER`**). Familles notables : `RPT*` = rapports (705),
+  `BO_*` = Business Objects (96, surtout `BO_LIB_*`), `OP_*` = opérations
+  métier, `F_*` = fonctions, `P_*`/`SP_*` = API/transactions.
+  Classement par groupe (`PROC_GROUPS`) : rapports, bo, operations, fonctions,
+  api, transactions, arbo, interventions, contrats, comptabilité, agents,
+  stock, parc, fluides, vérifications, calculs, système, divers. Les triggers
+  sont classés par **table cible** (`triggerGroup`) et décrits (avant/après,
+  événement, row/statement/compound). Description des procédures heuristique
+  (`procVerb` + préfixe). Endpoints `/api/procedures` (+ `?q&type&group`,
+  `type=TRIGGER`) et `/api/procedure/:name?type=` (source). UI `#/procedures`
+  (filtres type **et statut valide/invalide**, groupes, sélecteur de lignes).
+- **Documents associés (GED)** : inventaire des champs qui stockent un document.
+  Cœur documentaire = table **`DOC`** (9413 lignes, `DOC_FOLDER` = chemin,
+  `DOC_FILE` = fichier, `DOC_THEME`/`DOC_TYPE`/`DOC_STOCKG`) + satellites
+  `DOC_ANNEX.DANX_FILE`, `DOC_DEMAT.DEMAT_FILE`, `DOC_HISTO`, liens `DOC_AFFECT`
+  (`DAFF_FRM`/`DAFF_ENTID`), `DOC_KEYW`, `DOC_CARACT`, `TOPIC_DOC` ; vues
+  `V_DOC`, `V_DOCTYPE` (BUREAUTIQUE/IMAGE/VIDEO/PLAN/URL), `V_DOCSTOCKG`
+  (EXTERN/INTERN/BASE). Thèmes `DOC_THEME` = modules fonctionnels (PHDI, PHFAC,
+  PLAN, CTAMIANT, FPV, PHSIT, PHART, PERMIS…). Autres champs porteurs :
+  `CONTRAT_LOCATIF.CONTL_PJ1..PJ15`, `DEMANDEUR.SDEM_REPDOC`, `BIMMAQ_IE.MIE_FILE`,
+  `PATRIGENE.SGEN_PHOTO`/`CATEGORIE.SCAT_PHOTO`/`SOUSCATEGORIE.SSCAT_PHOTO`,
+  `*_ENGRATTACH` (contrats/compta), `OP_*`/`GFI_INT_LIQR`/`SIG*`/`DF_FORM_ENDPOINT`
+  (export, API, SIG). Endpoint `/api/documents` (`DOC_MODULES`/`DOC_FIELDS`/
+  `DOC_TRANSVERSAL` : 9 modules, ~47 champs, 354 chemins) ; UI route
+  `#/documents` (onglets Modules & thèmes, Tables & champs, Chemins de stockage,
+  Transversal agents/biens/contrats/véhicules/interventions/permis/amiante/articles).
 - **Docker Linux** : `Dockerfile` (base Oracle Linux 8 + `oracle-instantclient-basic`
   + Node 20) et `docker-compose.yml` ; voir README/DEPLOIEMENT pour les variables d'env.
+- **Pagination** : `dataTable()` (front, client-side) propose un sélecteur de
+  lignes **25/50/100/500/2000/Tous** via `state.pageSizes`. Liste Agents
+  (paginée serveur, `pageSize` jusqu'à 3000) : filtre **Tous/Actifs/Inactifs**
+  (`?actif=`) + taille de page.
 - Recherche via `UPPER(...) LIKE :q` (bind), `FETCH FIRST n ROWS ONLY`,
   `rownum <= :lim`. Les colonnes Oracle reviennent en MAJUSCULES → **normaliser
   les clés en minuscules** côté serveur avant de les renvoyer au front.

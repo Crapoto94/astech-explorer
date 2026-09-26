@@ -370,7 +370,7 @@ function agentWhere(f, binds) {
 async function listAgents(f) {
   const binds = {};
   const where = agentWhere(f, binds);
-  const pageSize = int(f.pageSize, 25, 100);
+  const pageSize = int(f.pageSize, 25, 3000);
   const page = int(f.page, 1, 100000);
   const offset = (page - 1) * pageSize;
   const rows = await exec(`SELECT * FROM (${AGENT_BASE}) ${where}
@@ -974,17 +974,22 @@ async function listPermis() {
 // rarement renseignés). Lecture seule : ALL_OBJECTS / ALL_SOURCE.
 const PROC_GROUPS = [
   { key: 'rapports', label: 'Rapports & éditions', re: /^(RPT|RAPPORT|ETAT|IMP)/i, desc: "Rapport / édition (génération d'état imprimable ou export)." },
-  { key: 'triggers_api', label: 'API & triggers applicatifs', re: /^(TRIGGERS_API|API_)/i, desc: 'API applicative (package) ou déclencheur associé.' },
-  { key: 'arbo', label: 'Patrimoine (ARBO)', re: /^(ARBO|BIEN|PATRI|IMMO|LOC)/i, desc: "Traitement sur le patrimoine / les biens (ARBO)." },
-  { key: 'interventions', label: 'Interventions & GMAO', re: /^(INTERV|AFFECTERINTERV|CREATIONINTERV|SP_.*INTERV|DEMANDE)/i, desc: "Traitement sur les interventions / demandes (GMAO)." },
-  { key: 'contrats', label: 'Contrats & locatif', re: /^(CONTR|CONT|LOYER|QUITT|REVIS|LOCATIF|CLOT)/i, desc: 'Traitement contractuel ou locatif (contrats, loyers, quittances, révisions).' },
-  { key: 'comptabilite', label: 'Comptabilité & facturation', re: /^(FACT|COMPTA|OPCOMPTA|BUDGET|BUDG|L_FACT|RECAP|TRESOR|MANDAT)/i, desc: 'Traitement comptable ou de facturation.' },
-  { key: 'agents', label: 'Agents, droits & RH', re: /^(UTIL|AGENT|DEMANDEUR|DROIT|ROLE|GROUPE|MAJ_UTIL|SP_VERIF)/i, desc: 'Gestion des agents, des droits ou des groupes.' },
-  { key: 'stock', label: 'Stocks & magasins', re: /^(STOCK|STO|MAGASIN|SORTIE|ENTREE|INVENTAIRE)/i, desc: 'Traitement de stock / magasin.' },
-  { key: 'parc', label: 'Parc automobile', re: /^(VEH|PARC|CARBUR|NRJ_|SINISTRE|REMPLACVEH)/i, desc: 'Traitement sur le parc automobile.' },
-  { key: 'fluides', label: 'Fluides & énergie', re: /^(FLUID|NRJ|RELEVE|CONSO|ENERGIE)/i, desc: 'Traitement sur les fluides / relevés de compteurs.' },
-  { key: 'systeme', label: 'Système, outils & BDD', re: /^(BDD|MAJ_|MAJDATATYPES|GETNEXTVALUE|GETPARAMETER|ADDTIMETODATE|ARCHIV|TRACAB|EXPORT|EXP_)/i, desc: 'Utilitaire technique ou maintenance de base.' },
-  { key: 'calculs', label: 'Calculs & contrôles', re: /^(CALC|CAL|VERIF|VER|CONTROLE|CTRL|ANO_)/i, desc: 'Calcul métier ou contrôle de cohérence.' },
+  { key: 'bo', label: 'Business Objects (BO_)', re: /^BO/i, desc: 'Business Object : vue ou fonction de restitution (souvent BO_LIB_* = libellés/mapping pour le décisionnel).' },
+  { key: 'operations', label: 'Opérations métier (OP_)', re: /^OP/i, desc: "Opération métier (traitement applicatif 'operation', souvent appelée par l'UI ou des triggers)." },
+  { key: 'fonctions', label: 'Fonctions (F_)', re: /^F_/i, desc: 'Fonction PL/SQL (calcul ou accès paramétré).' },
+  { key: 'api', label: 'API & triggers applicatifs', re: /^(TRIGGERS_API|API_|P_)/i, desc: 'API applicative (package, procédure P_*) ou déclencheur associé.' },
+  { key: 'transactions', label: 'Transactions (SP_, TR_)', re: /^(SP_|TR_|TRANS)/i, desc: 'Procédure transactionnelle (unité de traitement atomique).' },
+  { key: 'arbo', label: 'Patrimoine (ARBO)', re: /^(ARBO|BIEN|PATRI|IMMO|LOC_|LOCATIF)/i, desc: "Traitement sur le patrimoine / les biens (ARBO)." },
+  { key: 'interventions', label: 'Interventions & GMAO', re: /^(INTERV|AFFECTERINTERV|CREATIONINTERV|DEMANDE|GMAO)/i, desc: 'Traitement sur les interventions / demandes (GMAO).' },
+  { key: 'contrats', label: 'Contrats & locatif', re: /^(CONTR|CONT|LOYER|QUITT|REVIS|CLOT)/i, desc: 'Traitement contractuel ou locatif (contrats, loyers, quittances, révisions).' },
+  { key: 'comptabilite', label: 'Comptabilité & facturation', re: /^(FACT|COMPTA|BUDGET|BUDG|L_FACT|RECAP|TRESOR|MANDAT|GDA)/i, desc: 'Traitement comptable ou de facturation.' },
+  { key: 'agents', label: 'Agents, droits & RH', re: /^(UTIL|AGENT|DEMANDEUR|DROIT|ROLE|GROUPE|MAJ_UTIL|HEU)/i, desc: 'Gestion des agents, des droits ou des groupes.' },
+  { key: 'stock', label: 'Stocks, magasins & achats', re: /^(STOCK|STO|MAGASIN|SORTIE|ENTREE|INVENTAIRE|CMD|COMMAND|APPRO|CMDE|BONLIV|BL_)/i, desc: 'Traitement de stock, magasin, commande ou livraison.' },
+  { key: 'parc', label: 'Parc automobile', re: /^(VEH|PARC|CARBUR|SINISTRE|REMPLACVEH|PNEU)/i, desc: 'Traitement sur le parc automobile (véhicules, pneus, carburant).' },
+  { key: 'fluides', label: 'Fluides & énergie', re: /^(FLUID|NRJ|RELEVE|CONSO|ENERGIE|MESURE)/i, desc: 'Traitement sur les fluides / relevés de compteurs.' },
+  { key: 'verifications', label: 'Vérifications & contrôles', re: /^(VERIF|VER|CONTROLE|CTRL|ANO_)/i, desc: 'Vérification / contrôle de cohérence (souvent bloquant ou avertissement).' },
+  { key: 'calculs', label: 'Calculs métier', re: /^(CALC|CAL)/i, desc: 'Calcul métier.' },
+  { key: 'systeme', label: 'Système, outils & BDD', re: /^(BDD|MAJ_|GETNEXTVALUE|GETPARAMETER|ADDTIMETODATE|ARCHIV|TRACAB|EXPORT|EXP_|DUPLI|DUP)/i, desc: 'Utilitaire technique ou maintenance de base.' },
   { key: 'divers', label: 'Autres', re: /./, desc: 'Traitement métier (regroupement générique).' },
 ];
 // Verbes de description à partir du préfixe du nom.
@@ -1012,13 +1017,67 @@ function procDescribe(name, type, group) {
   const kind = type === 'FUNCTION' ? 'Fonction' : type === 'PACKAGE' || type === 'PACKAGE BODY' ? 'Package' : 'Procédure';
   return `${kind}. ${verb ? verb + ' — ' : ''}${g.desc}`;
 }
+// Groupes spécifiques aux triggers (par table cible), en plus des groupes de préfixe.
+function triggerGroup(table) {
+  const t = (table || '').toUpperCase();
+  if (/^(API_)/.test(t)) return 'triggers_api';
+  if (/^(ARBO|PATRI|IMMO|BIEN)/.test(t)) return 'arbo';
+  if (/^(DEMANDE|INTERV|AFFECTATION|OPERATION|TACHE|EQUIPE|SAISIE_)/.test(t)) return 'interventions';
+  if (/^(CONTRAT|CONTR|LOYER|QUITT)/.test(t)) return 'contrats';
+  if (/^(FACTURE|COMPTA|ACHAT|BUDGET|FACT)/.test(t)) return 'comptabilite';
+  if (/^(STOCK|COMM|FOURN|MAGASIN|SORTIE|ENTREE|COMMNONLIV)/.test(t)) return 'stock';
+  if (/^(VEH|PARC|CARBUR|GESTIONCARB|PNEU|SINISTRE)/.test(t)) return 'parc';
+  if (/^(SBCG|DEMANDEUR|GROUPE|PROFIL|MENU|UTIL)/.test(t)) return 'agents';
+  return 'triggers_divers';
+}
+function triggerDescribe(table, event, type, whenClause) {
+  const t = (table || '?').replace(/\s+$/, '');
+  const ev = (event || '').replace(/\s+OR\s+/gi, ' / ');
+  const before = /BEFORE/i.test(type) ? 'Avant' : /COMPOUND/i.test(type) ? 'Composé' : 'Après';
+  const kind = /COMPOUND/i.test(type) ? 'Trigger composé' : /STATEMENT/i.test(type) ? 'Trigger ligne d\'ordre (statement)' : 'Trigger ligne (row)';
+  return `${kind}. ${before} ${ev} sur ${t} — déclenche un traitement automatique (intégrité, dénormalisation, journalisation ou propagation).`;
+}
 async function listProcedures(f = {}) {
   const typeFilter = (f.type || '').toUpperCase();
   const binds = {};
+  const OBJ_TYPES = ['PROCEDURE', 'FUNCTION', 'PACKAGE', 'PACKAGE BODY'];
+  const withTriggers = (typeFilter === 'TRIGGER');
+  if (withTriggers || (!typeFilter)) {
+    // objets = objets PL/SQL + triggers (table, événement, type, statut)
+    const w = [`o.owner='ASTECHIVR'`];
+    if (withTriggers) { w.push(`o.object_type = 'TRIGGER'`); }
+    else { w.push(`o.object_type IN ('PROCEDURE','FUNCTION','PACKAGE','PACKAGE BODY','TRIGGER')`); }
+    if (f.q) { binds.q = '%' + f.q.toUpperCase() + '%'; w.push('UPPER(o.object_name) LIKE :q'); }
+    const rows = await exec(`SELECT o.object_name AS name, o.object_type AS type, o.status, TO_CHAR(o.last_ddl_time,'DD/MM/YYYY') AS maj,
+        NVL((SELECT COUNT(*) FROM all_source s WHERE s.owner=o.owner AND s.name=o.object_name AND s.type=o.object_type),0) AS lignes,
+        t.table_name AS tbl, t.triggering_event AS event, t.trigger_type AS ttype, t.status AS tstatus
+      FROM all_objects o
+      LEFT JOIN all_triggers t ON t.owner=o.owner AND t.trigger_name=o.object_name AND o.object_type='TRIGGER'
+      WHERE ${w.join(' AND ')} ORDER BY o.object_name FETCH FIRST 4100 ROWS ONLY`, binds, 4100);
+    const items = [];
+    for (const r of rows) {
+      if (r.type === 'TRIGGER') {
+        const group = triggerGroup(r.tbl);
+        const statut = (r.tstatus || r.status || '').toUpperCase();
+        items.push({ name: r.name, type: 'TRIGGER', status: statut === 'ENABLED' ? 'VALID' : 'INVALID', maj: r.maj, lignes: Number(r.lignes), group, table: (r.tbl || '').trim(), event: r.event, description: triggerDescribe(r.tbl, r.event, r.ttype, null) });
+      } else {
+        const group = procGroup(r.name, r.type);
+        items.push({ name: r.name, type: r.type, status: r.status, maj: r.maj, lignes: Number(r.lignes), group, description: procDescribe(r.name, r.type, group) });
+      }
+    }
+    let out = items;
+    if (f.group && f.group !== 'all') out = out.filter((it) => it.group === f.group);
+    const byGroup = {};
+    for (const it of items) byGroup[it.group] = (byGroup[it.group] || 0) + 1;
+    const allGroups = PROC_GROUPS.concat([{ key: 'triggers_divers', label: 'Triggers (autres tables)', desc: 'Déclencheurs sur les autres tables.' }]);
+    const groups = allGroups.map((g) => ({ key: g.key, label: g.label, desc: g.desc, count: byGroup[g.key] || 0 })).filter((g) => g.count > 0);
+    return { total: items.length, nbObjets: items.length - (byGroup.triggers_divers || 0), groups, rows: out };
+  }
+  // Filtre sur un type d'objet PL/SQL précis
+  if (typeFilter && OBJ_TYPES.includes(typeFilter)) { binds.typ = typeFilter; }
   const w = [`o.owner='ASTECHIVR'`, `o.object_type IN ('PROCEDURE','FUNCTION','PACKAGE','PACKAGE BODY')`];
-  if (typeFilter && ['PROCEDURE', 'FUNCTION', 'PACKAGE', 'PACKAGE BODY'].includes(typeFilter)) { w.push('o.object_type = :typ'); binds.typ = typeFilter; }
+  if (binds.typ) w.push('o.object_type = :typ');
   if (f.q) { binds.q = '%' + f.q.toUpperCase() + '%'; w.push('UPPER(o.object_name) LIKE :q'); }
-  if (f.group) { w.push(`(CASE ${PROC_GROUPS.map((g, i) => `WHEN REGEXP_LIKE(o.object_name, '${g.re.source.replace(/^\^/, '^')}', 'i') THEN '${g.key}'`).join(' ')} ELSE 'divers' END) = :grp`); binds.grp = f.group; }
   const rows = await exec(`SELECT o.object_name AS name, o.object_type AS type, o.status, TO_CHAR(o.last_ddl_time,'DD/MM/YYYY') AS maj,
       NVL((SELECT COUNT(*) FROM all_source s WHERE s.owner=o.owner AND s.name=o.object_name AND s.type=o.object_type),0) AS lignes
     FROM all_objects o WHERE ${w.join(' AND ')} ORDER BY o.object_name FETCH FIRST 4100 ROWS ONLY`, binds, 4100);
@@ -1035,8 +1094,196 @@ async function getProcedureSource(name, type) {
   const t = (type || 'PROCEDURE').toUpperCase();
   const rows = await exec(`SELECT line, text FROM all_source WHERE owner='ASTECHIVR' AND name=:name AND type=:type ORDER BY type, line FETCH FIRST 4000 ROWS ONLY`, { name: String(name), type: t }, 4000);
   const src = rows.map((r) => r.text).join('');
+  if (t === 'TRIGGER') {
+    const [tr] = await exec(`SELECT table_name, triggering_event, trigger_type, status, when_clause FROM all_triggers WHERE owner='ASTECHIVR' AND trigger_name=:name`, { name: String(name) }, 1);
+    const group = triggerGroup(tr && tr.table_name);
+    return { name, type: t, group, table: tr && tr.table_name, event: tr && tr.triggering_event, trigType: tr && tr.trigger_type, description: triggerDescribe(tr && tr.table_name, tr && tr.triggering_event, tr && tr.trigger_type, tr && tr.when_clause), lines: rows.length, source: src };
+  }
   const group = procGroup(name, t);
   return { name, type: t, group, description: procDescribe(name, t, group), lines: rows.length, source: src };
+}
+
+// ─── Documents associés (GED) ────────────────────────────────────────────────
+// Inventaire des champs du schéma ASTECHIVR qui stockent un document (chemin,
+// fichier ou pièce jointe), regroupés par module, complété par le référentiel
+// documentaire central. Liste relevée par exploration du dictionnaire Oracle
+// (ALL_TAB_COLUMNS) sur les colonnes texte dont le nom évoque un document /
+// chemin / pièce jointe ; seuls les champs réellement porteurs sont conservés.
+const DOC_MODULES = [
+  { key: 'ged', label: 'GED & documents', icon: 'folder_copy' },
+  { key: 'patrimoine', label: 'Patrimoine (biens)', icon: 'apartment' },
+  { key: 'locatif', label: 'Gestion locative', icon: 'gavel' },
+  { key: 'agents', label: 'Agents', icon: 'badge' },
+  { key: 'parc', label: 'Parc automobile', icon: 'directions_car' },
+  { key: 'interventions', label: 'Interventions & demandes', icon: 'build' },
+  { key: 'stock', label: 'Stocks & magasins', icon: 'inventory_2' },
+  { key: 'comptabilite', label: 'Comptabilité & marchés', icon: 'receipt_long' },
+  { key: 'systeme', label: 'Système, API & SIG', icon: 'settings' },
+];
+const DOC_FIELDS = [
+  // GED centrale (table DOC et satellites).
+  { table: 'DOC', col: 'DOC_FOLDER', role: 'Chemin de stockage du fichier', path: true, module: 'ged' },
+  { table: 'DOC', col: 'DOC_FILE', role: 'Nom du fichier', path: false, module: 'ged' },
+  { table: 'DOC', col: 'DOC_EXT', role: 'Format / extension (DOCEXTFLD)', path: false, module: 'ged' },
+  { table: 'DOC', col: 'DOC_TITRE', role: 'Titre du document', path: false, module: 'ged' },
+  { table: 'DOC', col: 'DOC_KEYW', role: 'Mots-clés', path: false, module: 'ged' },
+  { table: 'DOC', col: 'DOC_REF', role: 'Référence document', path: false, module: 'ged' },
+  { table: 'DOC', col: 'DOC_THEME', role: 'Thème / module GED (DOC_THEME)', path: false, module: 'ged' },
+  { table: 'DOC', col: 'DOC_TYPE', role: 'Type (V_DOCTYPE)', path: false, module: 'ged' },
+  { table: 'DOC', col: 'DOC_STOCKG', role: 'Mode de stockage (V_DOCSTOCKG)', path: false, module: 'ged' },
+  { table: 'DOC_ANNEX', col: 'DANX_FILE', role: 'Fichier annexe', path: false, module: 'ged' },
+  { table: 'DOC_DEMAT', col: 'DEMAT_FILE', role: 'Fichier dématérialisé', path: false, module: 'ged' },
+  { table: 'DOC_HISTO', col: 'DOCH_FOLDER', role: 'Chemin (version historique)', path: true, module: 'ged' },
+  { table: 'DOC_HISTO', col: 'DOCH_FILE', role: 'Fichier (version historique)', path: false, module: 'ged' },
+  { table: 'DOC_AFFECT', col: 'DAFF_DOCID', role: 'Lien document ↔ entité', path: false, module: 'ged' },
+  { table: 'DOC_KEYW', col: 'DKW_DOCID', role: 'Lien mot-clé ↔ document', path: false, module: 'ged' },
+  { table: 'DOC_CARACT', col: 'DCT_DOCID', role: 'Lien caractéristique ↔ document', path: false, module: 'ged' },
+  { table: 'TOPIC_DOC', col: 'TPF_DOCID', role: 'Lien thème ↔ document', path: false, module: 'ged' },
+  // Patrimoine.
+  { table: 'BIMMAQ_IE', col: 'MIE_FILE', role: 'Fichier image / fiche de bien', path: false, module: 'patrimoine' },
+  { table: 'PATRIGENE', col: 'SGEN_PHOTO', role: 'Référence photo du genre', path: false, module: 'patrimoine' },
+  { table: 'CATEGORIE', col: 'SCAT_PHOTO', role: 'Référence photo de catégorie', path: false, module: 'patrimoine' },
+  { table: 'SOUSCATEGORIE', col: 'SSCAT_PHOTO', role: 'Référence photo de sous-catégorie', path: false, module: 'patrimoine' },
+  // Gestion locative.
+  { table: 'CONTRAT_LOCATIF', col: 'CONTL_PJ1 … CONTL_PJ15', role: 'Pièces jointes du bail (15 emplacements)', path: true, module: 'locatif' },
+  // Agents.
+  { table: 'DEMANDEUR', col: 'SDEM_REPDOC', role: 'Dossier de documents de l’agent', path: true, module: 'agents' },
+  // Parc automobile (photos / fiches véhicule).
+  { table: 'BIMMAQ_IE', col: 'MIE_FILE (véhicules)', role: 'Fichier image / fiche véhicule', path: false, module: 'parc' },
+  // Interventions & demandes.
+  { table: 'CONTRAT_ECHLIGNE', col: 'CONTEL_ENGRATTACH', role: 'Pièce jointe d’engagement', path: false, module: 'interventions' },
+  { table: 'CONTRAT_RUB', col: 'CONTRU_ENGRATTACH', role: 'Pièce jointe de rubrique', path: false, module: 'interventions' },
+  // Stocks & magasins.
+  { table: 'STOCK', col: 'photos via thème GED PHART', role: 'Photos d’articles (GED centrale)', path: false, module: 'stock' },
+  // Comptabilité & marchés.
+  { table: 'OP_RET_FACT_GF', col: 'FICHIER_FACT', role: 'Fichier de facture', path: false, module: 'comptabilite' },
+  { table: 'OP_RET_FACT_GF', col: 'URL', role: 'Lien vers la facture', path: true, module: 'comptabilite' },
+  { table: 'OP_GEN_AVIS_GF', col: 'GEN_FICHIER', role: 'Fichier d’avis', path: false, module: 'comptabilite' },
+  { table: 'OP_COMPTA', col: 'CPTA_ENTENGRATTACH', role: 'Pièce jointe d’engagement', path: false, module: 'comptabilite' },
+  { table: 'OP_JOB', col: 'JOB_PATH', role: 'Chemin de traitement', path: true, module: 'comptabilite' },
+  { table: 'OP_LOG', col: 'LOG_LIEN', role: 'Lien de journal', path: true, module: 'comptabilite' },
+  { table: 'GFI_INT_LIQR', col: 'CLE_LIQ_PJ', role: 'Clé de pièce jointe', path: false, module: 'comptabilite' },
+  { table: 'GFI_INT_LIQR', col: 'NUM_PJDO', role: 'N° pièce jointe', path: false, module: 'comptabilite' },
+  { table: 'LOCATION_MATERIEL', col: 'SLM_PJ', role: 'Pièce jointe de location', path: false, module: 'comptabilite' },
+  { table: 'EXPMACRO', col: 'EXPMAC_DOC', role: 'Document d’export', path: false, module: 'comptabilite' },
+  { table: 'MACRO', col: 'XLSFILE', role: 'Fichier tableur d’export', path: false, module: 'comptabilite' },
+  { table: 'MACRO', col: 'IMAGEFOND', role: 'Image de fond', path: false, module: 'comptabilite' },
+  // Système, API & SIG.
+  { table: 'API_ENDPOINT', col: 'AE_URL', role: 'URL d’endpoint API', path: true, module: 'systeme' },
+  { table: 'API_PARAM', col: 'AP_ENDPOINT_PATH', role: 'Chemin d’endpoint API', path: true, module: 'systeme' },
+  { table: 'DF_FORM_ENDPOINT', col: 'FE_PATH', role: 'Chemin de formulaire dynamique', path: true, module: 'systeme' },
+  { table: 'DF_FORM_ENDPOINT', col: 'FE_PATH_VALID', role: 'Chemin de formulaire (validé)', path: true, module: 'systeme' },
+  { table: 'SIG', col: 'SIG_URL', role: 'URL de couche SIG', path: true, module: 'systeme' },
+  { table: 'SIG_LAYER', col: 'SIGL_URL', role: 'URL de couche SIG', path: true, module: 'systeme' },
+  { table: 'TYPECOURRIER', col: 'STYPCOUR_DOC', role: 'Document de type courrier', path: false, module: 'systeme' },
+  { table: 'TABLES', col: 'TAB_FICHIER', role: 'Fichier de table système', path: false, module: 'systeme' },
+];
+// Regroupement transversal : un même type d’entité peut porter des documents
+// dans la GED centrale (thèmes DOC_THEME) et/ou dans un champ dédié (table.col).
+const DOC_TRANSVERSAL = [
+  { key: 'agents', label: 'Agents', icon: 'badge', table: 'DEMANDEUR', col: 'SDEM_REPDOC', themes: ['REQEM'], note: 'Dossier de documents personnel de l’agent.' },
+  { key: 'biens', label: 'Biens & patrimoine', icon: 'apartment', themes: ['PHFAC', 'PHSIT', 'PLAN', 'DIAG ACCESS', 'ATTEST ACCESS'], note: 'Photos de façades, sites, plans, diagnostics.' },
+  { key: 'contrats', label: 'Contrats locatifs', icon: 'gavel', table: 'CONTRAT_LOCATIF', col: 'CONTL_PJ1..PJ15', themes: ['CONT LOC'], note: 'Pièces jointes du bail.' },
+  { key: 'vehicules', label: 'Véhicules', icon: 'directions_car', table: 'BIMMAQ_IE', col: 'MIE_FILE', themes: ['PHVEH', 'FPV', 'SINISTRE'], note: 'Photos véhicules, fiches pièces.' },
+  { key: 'interventions', label: 'Interventions & demandes', icon: 'build', themes: ['PHDI', 'PHINT', 'PVSECU'], note: 'Photos de demandes (DI) et d’interventions.' },
+  { key: 'permis', label: 'Permis de conduire', icon: 'id_card', themes: ['PERMIS'], note: 'Scans des permis de conduire.' },
+  { key: 'amiante', label: 'Contrôle amiante', icon: 'warning', themes: ['CTAMIANT'], note: 'Dossiers techniques amiante (DTA).' },
+  { key: 'articles', label: 'Articles / stock', icon: 'inventory_2', themes: ['PHART'], note: 'Photos d’articles.' },
+];
+
+async function listDocuments() {
+  const [themes, types, stockages, foldersRaw, countsRow, agentsRow, derniers] = await Promise.all([
+    exec(`SELECT T.THM_ID AS id, T.THM_COD AS cod, T.THM_NOM AS nom, NVL(T.THM_ACTIF,'N') AS actif,
+        COUNT(d.DOC_ID) AS n
+      FROM DOC_THEME T LEFT JOIN DOC d ON d.DOC_THEME = T.THM_ID
+      GROUP BY T.THM_ID, T.THM_COD, T.THM_NOM, T.THM_ACTIF ORDER BY n DESC, T.THM_NOM`, {}, 100),
+    exec(`SELECT ID AS id, MNEMO AS mnemo, ACTIF AS actif FROM V_DOCTYPE ORDER BY ID`, {}, 20),
+    exec(`SELECT ID AS id, MNEMO AS mnemo, ACTIF AS actif FROM V_DOCSTOCKG ORDER BY ID`, {}, 20),
+    exec(`SELECT DOC_FOLDER AS folder, DOC_THEME AS theme, DOC_TYPE AS type, DOC_STOCKG AS stockg, COUNT(*) AS n
+      FROM DOC WHERE DOC_FOLDER IS NOT NULL
+      GROUP BY DOC_FOLDER, DOC_THEME, DOC_TYPE, DOC_STOCKG`, {}, 5000),
+    one(`SELECT
+        (SELECT COUNT(*) FROM DOC) AS doc,
+        (SELECT COUNT(*) FROM DOC_ANNEX) AS doc_annex,
+        (SELECT COUNT(*) FROM DOC_DEMAT) AS doc_demat,
+        (SELECT COUNT(*) FROM DOC_HISTO) AS doc_histo,
+        (SELECT COUNT(*) FROM CONTRAT_LOCATIF
+          WHERE CONTL_PJ1 IS NOT NULL OR CONTL_PJ2 IS NOT NULL OR CONTL_PJ3 IS NOT NULL
+             OR CONTL_PJ4 IS NOT NULL OR CONTL_PJ5 IS NOT NULL OR CONTL_PJ6 IS NOT NULL
+             OR CONTL_PJ7 IS NOT NULL OR CONTL_PJ8 IS NOT NULL OR CONTL_PJ9 IS NOT NULL
+             OR CONTL_PJ10 IS NOT NULL OR CONTL_PJ11 IS NOT NULL OR CONTL_PJ12 IS NOT NULL
+             OR CONTL_PJ13 IS NOT NULL OR CONTL_PJ14 IS NOT NULL OR CONTL_PJ15 IS NOT NULL) AS contrats_pj
+      FROM DUAL`),
+    one(`SELECT COUNT(*) AS n FROM DEMANDEUR WHERE SDEM_REPDOC IS NOT NULL`),
+    exec(`SELECT ID AS id, REF AS ref, TITRE AS titre, THMID AS theme, TYP AS typ, FICHIER AS fichier,
+        FOLDER AS folder, TO_CHAR(DOC_DATE,'DD/MM/YYYY') AS date_doc, TAILLE AS taille, STOCKG AS stockg
+      FROM V_DOC ORDER BY ID DESC FETCH FIRST 20 ROWS ONLY`, {}, 20),
+  ]);
+
+  const themeById = {}; for (const t of themes) themeById[t.id] = t;
+  const typeById = {}; for (const t of types) typeById[t.id] = t;
+  const stockById = {}; for (const t of stockages) stockById[t.id] = t;
+
+  // Agrégation des dossiers de stockage (DOC_FOLDER) : volumétrie, thèmes, type.
+  const byFolder = new Map();
+  for (const r of foldersRaw) {
+    let e = byFolder.get(r.folder);
+    if (!e) { e = { folder: r.folder, n: 0, themes: [], types: {}, stockg: {} }; byFolder.set(r.folder, e); }
+    const n = Number(r.n) || 0;
+    e.n += n;
+    if (r.theme != null && e.themes.indexOf(r.theme) < 0) e.themes.push(r.theme);
+    const tc = (typeById[r.type] && typeById[r.type].mnemo) || ('TYPE ' + r.type);
+    e.types[tc] = (e.types[tc] || 0) + n;
+    const sc = (stockById[r.stockg] && stockById[r.stockg].mnemo) || ('STOCK ' + r.stockg);
+    e.stockg[sc] = (e.stockg[sc] || 0) + n;
+  }
+  const chemins = [...byFolder.values()].map((e) => {
+    const dominantType = Object.entries(e.types).sort((a, b) => b[1] - a[1])[0];
+    const dominantStock = Object.entries(e.stockg).sort((a, b) => b[1] - a[1])[0];
+    return {
+      chemin: e.folder, n: e.n,
+      themes: e.themes.map((id) => (themeById[id] || {}).cod).filter(Boolean),
+      type: dominantType ? dominantType[0] : '',
+      stockage: dominantStock ? dominantStock[0] : '',
+    };
+  }).sort((a, b) => b.n - a.n);
+
+  // Nombre de lignes connues par table porteuse.
+  const countByTable = {
+    DOC: countsRow && countsRow.doc,
+    DOC_ANNEX: countsRow && countsRow.doc_annex,
+    DOC_DEMAT: countsRow && countsRow.doc_demat,
+    DOC_HISTO: countsRow && countsRow.doc_histo,
+    DEMANDEUR: agentsRow && agentsRow.n,
+    CONTRAT_LOCATIF: countsRow && countsRow.contrats_pj,
+  };
+  const fields = DOC_FIELDS.map((f) => ({ ...f, nb: countByTable[f.table] != null ? Number(countByTable[f.table]) : null }));
+  const tables = [...new Set(DOC_FIELDS.map((f) => f.table))].sort();
+  const modules = DOC_MODULES.map((m) => {
+    const fs = DOC_FIELDS.filter((f) => f.module === m.key);
+    const tset = [...new Set(fs.map((f) => f.table))];
+    return { ...m, nb_tables: tset.length, nb_champs: fs.length, nb_chemins: fs.filter((f) => f.path).length };
+  });
+
+  const themeCount = {}; for (const t of themes) themeCount[t.cod] = Number(t.n) || 0;
+  const sumThemes = (codes) => codes.reduce((a, c) => a + (themeCount[c] || 0), 0);
+  const transversal = DOC_TRANSVERSAL.map((g) => {
+    const themeSum = g.themes ? sumThemes(g.themes) : 0;
+    const tableN = (g.table && countByTable[g.table] != null) ? Number(countByTable[g.table]) : 0;
+    const n = (g.themes || g.table) ? Math.max(themeSum, tableN) : null;
+    return { key: g.key, label: g.label, icon: g.icon, table: g.table || null, col: g.col || null, themes: g.themes || [], note: g.note, n };
+  });
+
+  return {
+    resume: {
+      docs: countsRow ? Number(countsRow.doc) : 0,
+      chemins: chemins.length,
+      tables: tables.length,
+      champs: DOC_FIELDS.length,
+      themes: themes.filter((t) => Number(t.n) > 0).length,
+    },
+    modules, fields, tables, themes, types, stockages, chemins, transversal, derniers: derniers || [],
+  };
 }
 
 // ─── Magasins & stock ────────────────────────────────────────────────────────
@@ -1585,6 +1832,9 @@ async function handleRequest(req, res, p, sp) {
       const row = await refById(m[1], decodeURIComponent(m[2]));
       return row ? sendJson(res, 200, { type: m[1], row }) : sendJson(res, 404, { error: 'Entrée introuvable' });
     }
+
+    // Documents associés (GED)
+    if (p === '/api/documents') return sendJson(res, 200, await listDocuments());
 
     // Procédures stockées
     if (p === '/api/procedures') return sendJson(res, 200, await listProcedures({ q: term, type: sp.get('type') || '', group: sp.get('group') || '' }));
