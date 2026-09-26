@@ -912,6 +912,43 @@ async function refCounts() {
   return r;
 }
 
+// ─── Demandes NEOCITY (interface) ────────────────────────────────────────────
+// NEOCITY est un demandeur technique (DEMANDEUR.SDEM_COD='NEOCITY') utilisé par
+// l'interface logicielle : les demandes qu'il porte (SGESDEM_ORIG=4, TYPMVT='I')
+// proviennent du terrain (voirie / mobilier) et donnent des interventions.
+const NEOCITY_CODE = 'NEOCITY';
+async function listDemandesNeocity(f = {}) {
+  const binds = { d: NEOCITY_CODE };
+  const w = ['UPPER(NVL(D.SGESDEM_DEM,\' \')) LIKE \'%\'||:d||\'%\''];
+  if (f.q) { binds.q = '%' + f.q.toUpperCase() + '%'; w.push("UPPER(NVL(D.SGESDEM_NDT,' ')||' '||NVL(D.SGESDEM_NUM,' ')) LIKE :q"); }
+  const pageSize = int(f.pageSize, 50, 500);
+  const page = int(f.page, 1, 100000);
+  const offset = (page - 1) * pageSize;
+  const where = 'WHERE ' + w.join(' AND ');
+  const rows = await exec(`SELECT D.SGESDEM_NUM AS num, TO_CHAR(D.SGESDEM_DAT,'DD/MM/YYYY') AS dat,
+      D.SGESDEM_NDT AS ndt, D.SGESDEM_NUMSIG AS num_sig, D.SGESDEM_LIBELLE AS libelle,
+      TO_CHAR(D.SGESDEM_DATFIN,'DD/MM/YYYY') AS dat_fin, D.SGESDEM_SSERV AS sserv, D.SGESDEM_URGENT AS urgent,
+      D.SGESDEM_ORIG AS orig, I.SSIG_NUM AS inter_num, TO_CHAR(I.SSIG_DAT,'DD/MM/YYYY') AS inter_dat,
+      I.SSIG_TYP AS inter_typ, I.SSIG_SSERV AS inter_sserv
+    FROM DEMANDES D
+    LEFT JOIN INTERVENTIONS I ON I.SSIG_NUMDEM = D.SGESDEM_NUM
+    ${where} ORDER BY D.SGESDEM_DAT DESC NULLS LAST OFFSET ${offset} ROWS FETCH NEXT ${pageSize} ROWS ONLY`, binds, pageSize);
+  const [tot] = await exec(`SELECT COUNT(*) AS total FROM DEMANDES D ${where}`, binds, 1);
+  const [stats] = await exec(`SELECT COUNT(*) AS total,
+      SUM(CASE WHEN D.SGESDEM_NUMSIG IS NOT NULL THEN 1 ELSE 0 END) AS avec_sig,
+      MIN(TO_CHAR(D.SGESDEM_DAT,'YYYY')) AS an_min, MAX(TO_CHAR(D.SGESDEM_DAT,'YYYY')) AS an_max
+    FROM DEMANDES D WHERE UPPER(NVL(D.SGESDEM_DEM,' ')) LIKE '%'||:d||'%'`, binds, 1);
+  const [interv] = await exec(`SELECT COUNT(*) AS interventions FROM INTERVENTIONS I2
+    WHERE EXISTS (SELECT 1 FROM DEMANDES D2 WHERE UPPER(NVL(D2.SGESDEM_DEM,' ')) LIKE '%'||:d||'%' AND I2.SSIG_NUMDEM = D2.SGESDEM_NUM)`, binds, 1);
+  const par_an = await exec(`SELECT TO_CHAR(D.SGESDEM_DAT,'YYYY') AS an, COUNT(*) AS n FROM DEMANDES D
+    WHERE UPPER(NVL(D.SGESDEM_DEM,' ')) LIKE '%'||:d||'%' GROUP BY TO_CHAR(D.SGESDEM_DAT,'YYYY') ORDER BY an`, binds, 50);
+  return {
+    total: Number(tot.total), page, pageSize,
+    stats: { total: Number(stats.total), avec_sig: Number(stats.avec_sig || 0), interventions: Number(interv.interventions || 0), an_min: stats.an_min, an_max: stats.an_max },
+    par_an, rows,
+  };
+}
+
 // ─── Parc automobile ─────────────────────────────────────────────────────────
 // Les véhicules sont des ARBO de genre GVEH (immatriculation = ARB_REF,
 // n° de série = ARB_SERIE). Données d'atelier, états, certificat, CT et
@@ -2161,6 +2198,7 @@ async function handleRequest(req, res, p, sp) {
 
     // Demandes d'intervention
     if (p === '/api/demandes/options') return sendJson(res, 200, await demandesOptions());
+    if (p === '/api/demandes/neocity') return sendJson(res, 200, await listDemandesNeocity({ q: term, page: sp.get('page'), pageSize: sp.get('pageSize') }));
 
     // Interventions
     if (p === '/api/interventions') return sendJson(res, 200, await listInterventions({ q: term, type: sp.get('type') || '', etat: sp.get('etat') || '', du: sp.get('du') || '', au: sp.get('au') || '', tout: sp.get('tout') === '1', page: sp.get('page'), pageSize: sp.get('pageSize') }));

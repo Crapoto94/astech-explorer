@@ -378,7 +378,8 @@ const state = {
   docs: { tab: 'modules', module: '', cheminsView: 'tree', excludePoste: false },
   locatif: { tab: 'echeances', mode: 'futures', num: '' },
   refs: { type: 'biens', genre: '' },
-  inter: { etat: '', type: '', period: '12m', page: 1 },
+  inter: { tab: 'interventions', etat: '', type: '', period: '12m', page: 1 },
+  neocity: { page: 1 },
   indices: { type: '', annee: '', verif: null, loading: false, error: null, pushScope: 'manquants', plan: null, pushResult: null, pushing: false },
   demande: { open: false, options: null, error: null, submitted: false, bienRows: [], form: {} },
   pages: {}
@@ -1271,8 +1272,13 @@ async function viewInterventions() {
   if (st.etat) params.set('etat', st.etat);
   if (st.period === 'tout') params.set('tout', '1'); else params.set('du', periodeToDu(st.period));
   params.set('page', st.page); params.set('pageSize', 50);
+  if (st.tab === 'neocity') return viewNeocity();
   const [stats, res] = await Promise.all([api('/api/interventions/stats'), api('/api/interventions?' + params.toString())]);
   const totalPages = Math.max(1, Math.ceil(res.total / res.pageSize));
+  const interTabs = `<div class="flex items-center gap-1 bg-surface-container-low p-1 rounded-lg mb-space-md">
+    <button data-act="interTab:interventions" class="px-3 py-1.5 rounded font-title-md ${st.tab === 'interventions' ? 'bg-surface-container-lowest text-on-surface shadow-sm font-semibold' : 'text-secondary hover:text-on-surface'}">Interventions</button>
+    <button data-act="interTab:neocity" class="px-3 py-1.5 rounded font-title-md ${st.tab === 'neocity' ? 'bg-surface-container-lowest text-on-surface shadow-sm font-semibold' : 'text-secondary hover:text-on-surface'}"><span class="material-symbols-outlined text-[16px] align-middle">hub</span> Demandes NEOCITY</button>
+  </div>`;
   const cols = [
     { label: 'Réf.', get: r => `<span class="font-label-mono-sm font-semibold text-primary">${esc(r.num)}</span><div class="font-label-mono-sm text-secondary">${esc(r.numdem || '')}</div>` },
     { label: 'Date', get: r => cellMono(r.dat, 'text-secondary') },
@@ -1289,6 +1295,7 @@ async function viewInterventions() {
         <h1 class="font-headline-lg text-on-surface tracking-tight mt-1">Gestion des Interventions &amp; GMAO</h1></div>
       <button data-act="demandeOpen" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title-md shadow-md transition-all"><span class="material-symbols-outlined text-[20px]">add_task</span>Demande d'intervention</button>
     </div>
+    ${interTabs}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md mb-space-lg">
       ${kpi('Interventions en cours', num(stats.en_cours), 'Table INTERVENTIONS', 'engineering', 'primary')}
       ${kpi('Demandes (DI)', num(stats.demandes), 'Table DEMANDES', 'assignment_late', 'tertiary')}
@@ -1320,6 +1327,59 @@ async function viewInterventions() {
       ${dataTable(cols, res.rows, { rowLink: r => '#/intervention/' + encodeURIComponent(r.num), empty: 'Aucune intervention sur la période.' })}
     </div>`;
   bindSearch('#interQ');
+}
+async function viewNeocity() {
+  const n = state.neocity;
+  const d = await api('/api/demandes/neocity?q=' + encodeURIComponent(state.q) + '&page=' + n.page + '&pageSize=50');
+  const totalPages = Math.max(1, Math.ceil(d.total / d.pageSize));
+  const cols = [
+    { label: 'N° demande', get: r => `<span class="font-label-mono-sm font-semibold text-primary">${esc(r.num)}</span>` },
+    { label: 'Date', get: r => cellMono(r.dat, 'text-secondary') },
+    { label: 'Objet', get: r => `<div class="font-title-sm clamp1" style="max-width:420px">${esc(r.ndt || '')}</div>` },
+    { label: 'N° signalement', get: r => cellMono(r.num_sig, 'text-secondary') },
+    { label: 'Intervention créée', get: r => r.inter_num ? `<a data-link="#/intervention/${encodeURIComponent(r.inter_num)}" class="font-label-mono-sm text-primary hover:underline">${esc(r.inter_num)}</a><div class="font-label-mono-sm text-secondary">${esc(r.inter_dat || '')}${r.inter_typ ? ' · ' + esc(INTERV_TYPES[r.inter_typ] || r.inter_typ) : ''}</div>` : badge('aucune', 'slate') },
+  ];
+  const s = d.stats;
+  view.innerHTML = `
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Interventions', link: '#/interventions' }, { label: 'Demandes NEOCITY' }])}
+    <div class="flex items-center gap-1 bg-surface-container-low p-1 rounded-lg mb-space-md">
+      <button data-act="interTab:interventions" class="px-3 py-1.5 rounded font-title-md text-secondary hover:text-on-surface">Interventions</button>
+      <button data-act="interTab:neocity" class="px-3 py-1.5 rounded font-title-md bg-surface-container-lowest text-on-surface shadow-sm font-semibold"><span class="material-symbols-outlined text-[16px] align-middle">hub</span> Demandes NEOCITY</button>
+    </div>
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-space-lg">
+      <div>
+        <span class="px-2 py-0.5 rounded bg-surface-container font-label-mono-sm text-primary font-semibold">DEMANDEUR.SDEM_COD = 'NEOCITY' · DEMANDES (SGESDEM_ORIG=4)</span>
+        <h1 class="font-headline-lg text-on-surface tracking-tight mt-1">Demandes en provenance de l'interface NEOCITY</h1>
+        <p class="font-body-md text-on-surface-variant max-w-3xl">Demandes créées par l'interface logicielle <span class="font-label-mono-sm">NEOCITY</span> (demandeur technique « INTERFACE NEOCITY ASTECH »), essentiellement voirie / mobilier urbain. Chacune donne en général une intervention.</p>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-space-md mb-space-lg">
+      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="font-title-sm text-secondary uppercase">Demandes NEOCITY</div><div class="font-headline-xl font-bold text-primary tabular">${num(s.total)}</div><div class="font-label-mono-sm text-secondary">${esc(s.an_min || '')} → ${esc(s.an_max || '')}</div></div>
+      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="font-title-sm text-secondary uppercase">Interventions générées</div><div class="font-headline-xl font-bold text-tertiary tabular">${num(s.interventions)}</div><div class="font-label-mono-sm text-secondary">via SSIG_NUMDEM</div></div>
+      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="font-title-sm text-secondary uppercase">Avec n° signalement</div><div class="font-headline-xl font-bold tabular">${num(s.avec_sig)}</div><div class="font-label-mono-sm text-secondary">NUMSIG renseigné</div></div>
+      <div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm"><div class="font-title-sm text-secondary uppercase">Répartition</div><div class="flex flex-wrap gap-1 mt-space-sm">${(d.par_an || []).map(x => badge(x.an + ' : ' + num(x.n), 'slate')).join(' ')}</div></div>
+    </div>
+    <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm mb-space-lg flex flex-wrap gap-space-sm items-center">
+      <div class="relative flex-1 min-w-[240px]"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">manage_search</span>
+        <input id="neocityQ" value="${esc(state.q)}" class="w-full h-10 pl-10 pr-3 rounded bg-surface-container-low font-body-sm focus:outline-none" placeholder="Rechercher un n° de demande, un objet…" /></div>
+      <span class="ml-auto font-label-mono-sm text-on-surface-variant">${num(d.total)} demande(s)</span>
+    </div>
+    <div class="rounded-xl bg-surface-container-lowest shadow-sm overflow-hidden">
+      <div class="p-space-sm bg-surface-container-low flex items-center justify-between font-label-mono-sm text-on-surface-variant">
+        <span>Page ${d.page} / ${totalPages}</span>
+        <div class="inline-flex rounded shadow-sm">
+          <button data-act="neocityPage:prev" class="w-7 h-7 bg-surface-container-lowest rounded-l flex items-center justify-center disabled:opacity-40" ${d.page <= 1 ? 'disabled' : ''}><span class="material-symbols-outlined text-[16px]">chevron_left</span></button>
+          <button data-act="neocityPage:next" class="w-7 h-7 bg-surface-container-lowest rounded-r flex items-center justify-center disabled:opacity-40" ${d.page >= totalPages ? 'disabled' : ''}><span class="material-symbols-outlined text-[16px]">chevron_right</span></button>
+        </div>
+      </div>
+      ${dataTable(cols, d.rows, { empty: 'Aucune demande NEOCITY.' })}
+    </div>
+    <div class="mt-space-lg p-space-md rounded-xl bg-amber-50 border border-amber-200 font-body-sm text-amber-900">
+      <div class="font-title-md font-bold mb-1">À propos des photos PHDI</div>
+      Les photos <span class="font-label-mono-sm">PHDI</span> (PHOTO DEMANDE D'INTERVENTION) <strong>ne proviennent pas de NEOCITY</strong> : elles sont rattachées au formulaire GED
+      <span class="font-label-mono-sm">form_travaux_en_cours</span> (module « Travaux en cours ») via <span class="font-label-mono-sm">DOC_AFFECT.DAFF_FRM = 26</span>, sans lien direct avec le demandeur <span class="font-label-mono-sm">NEOCITY</span>.
+    </div>`;
+  bindSearch('#neocityQ');
 }
 async function viewInterventionFiche(num) {
   const d = await api('/api/intervention/' + encodeURIComponent(num));
@@ -2488,6 +2548,8 @@ function handleAction(action, value, el) {
     case 'docCheminView': state.docs.cheminsView = value === 'list' ? 'list' : 'tree'; viewDocuments(); break;
     case 'docExcludePoste': state.docs.excludePoste = !state.docs.excludePoste; state.pages = {}; viewDocuments(); break;
     case 'magasinEnStock': state.magasins.enStock = el.checked; viewMagasins(); break;
+    case 'interTab': it.tab = value; it.page = 1; state.q = ''; viewInterventions(); break;
+    case 'neocityPage': state.neocity.page = value === 'next' ? state.neocity.page + 1 : Math.max(1, state.neocity.page - 1); viewNeocity(); break;
     case 'interPeriod': it.period = el.value; it.page = 1; viewInterventions(); break;
     case 'interEtat': it.etat = el.value; it.page = 1; viewInterventions(); break;
     case 'interType': it.type = el.value; it.page = 1; viewInterventions(); break;
@@ -2535,7 +2597,7 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawe
 function wireGlobalSearch() {
   const s = $('#globalSearch');
   let t;
-  s.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { state.q = s.value.trim(); const r = parseHash().route; if (['agents', 'locatif', 'referentiels', 'interventions', 'magasins', 'magasin', 'parc', 'vehicule', 'procedures', 'documents'].includes(r)) { if (r === 'agents') state.agents.page = 1; if (r === 'interventions') state.inter.page = 1; pendingFocus = '#globalSearch'; render(); } }, 450); });
+  s.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { state.q = s.value.trim(); const r = parseHash().route; if (['agents', 'locatif', 'referentiels', 'interventions', 'magasins', 'magasin', 'parc', 'vehicule', 'procedures', 'documents'].includes(r)) { if (r === 'agents') state.agents.page = 1; if (r === 'interventions') { state.inter.page = 1; state.neocity.page = 1; } pendingFocus = '#globalSearch'; render(); } }, 450); });
   s.addEventListener('keydown', (e) => { if (e.key === 'Enter') { state.q = s.value.trim(); pendingFocus = '#globalSearch'; render(); } });
 }
 
