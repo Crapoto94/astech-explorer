@@ -101,6 +101,7 @@ tailwind.config = {
       <a data-link="#/parc" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/parc">Parc auto</a>
       <a data-link="#/documents" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/documents">Docs associés</a>
       <a data-link="#/procedures" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/procedures">Procédures</a>
+      <a data-link="#/architecture" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/architecture">Architecture</a>
       <a data-link="#/interventions" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/interventions">Interventions</a>
       <a data-link="#/indices" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/indices">Indices</a>
       <a data-link="#/apikeys" class="navlink text-body-sm font-body-sm text-[#94a3b8] hover:text-white pb-2 transition-colors border-b-2 border-transparent" href="#/apikeys">Clés API</a>
@@ -411,7 +412,7 @@ async function render() {
       referentiels: viewReferentiels, interventions: viewInterventions, indices: viewIndices, apikeys: viewApiKeys,
       magasins: () => viewMagasins(arg), magasin: () => viewMagasins(arg),
       parc: () => viewParc(arg), vehicule: () => viewParcVehicule(arg),
-      procedures: viewProcedures, procedure: () => viewProcedure(arg),
+      procedures: viewProcedures, procedure: () => viewProcedure(arg), architecture: viewArchitecture,
       documents: viewDocuments,
       agent: () => viewAgentFiche(arg), bien: () => viewBien(arg), contrat: () => viewContrat(arg),
       locataire: () => viewLocataire(arg), intervention: () => viewInterventionFiche(arg)
@@ -1503,6 +1504,106 @@ async function runPush(confirmProd) {
 
 
 /* ═══════════════════════════ DEMANDE D'INTERVENTION ═══════════════════════════ */
+/* ═══════════════════════════ ARCHITECTURE AS-TECH ═══════════════════════════ */
+async function viewArchitecture() {
+  const d = await api('/api/architecture');
+  const cc = (titre, inner, icon) => card(titre, `<div class="p-space-lg">${inner}</div>`, icon ? `<span class="material-symbols-outlined text-primary">${icon}</span>` : null);
+  const tbl = (cols, rows) => dataTable(cols, rows, { empty: '—', key: 'arch_' + cols.map(c => c.label).join('') });
+  const badgeLine = (label, val) => `<div class="flex items-start gap-2 py-1"><span class="font-label-mono-sm text-secondary uppercase whitespace-nowrap min-w-[180px]">${esc(label)}</span><span class="font-body-sm text-on-surface">${val}</span></div>`;
+
+  const produits = d.produits.map(p => `<div class="p-space-md rounded-xl bg-surface-container-low">
+      <div class="font-title-md text-on-surface font-bold">${esc(p.nom)}</div>
+      <p class="font-body-sm text-on-surface-variant mt-1">${esc(p.role)}</p>
+      <p class="font-label-mono-sm text-secondary mt-1">${esc(p.techno)}</p></div>`).join('');
+
+  const serveurs = d.serveurs.map(s => `<div class="p-space-md rounded-xl bg-surface-container-low">
+      <div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary">dns</span><span class="font-title-md text-on-surface font-bold">${esc(s.role)}</span>${badge(s.os, 'slate')}</div>
+      <p class="font-body-sm text-on-surface-variant mt-1">${esc(s.detail)}</p>
+      <p class="font-label-mono-sm text-secondary">${esc(s.spec)}</p></div>`).join('');
+
+  const composants = d.composants.map(g => `<div class="p-space-md rounded-xl bg-surface-container-low">
+      <div class="font-title-md text-on-surface font-bold mb-2">${esc(g.groupe)}</div>
+      <div class="space-y-1.5">${g.items.map(it => `<div class="flex items-start gap-2"><span class="material-symbols-outlined text-[16px] text-secondary mt-0.5">chevron_right</span><div><span class="font-label-mono-sm font-semibold text-primary">${esc(it.nom)}</span><div class="font-body-sm text-on-surface-variant">${esc(it.detail)}</div></div></div>`).join('')}</div></div>`).join('');
+
+  const oracleSrv = tbl([
+    { label: 'Serveur', get: r => cellMono(r.nom, 'font-bold text-primary') },
+    { label: 'Environnement', center: true, get: r => badge(r.env, r.env === 'PROD' ? 'red' : 'blue') },
+    { label: 'Adresse IP', get: r => cellMono(r.ip) },
+    { label: 'Service', get: r => cellMono(r.service, 'font-semibold') },
+    { label: 'Schéma', get: r => cellMono(r.schema) },
+  ], d.oracle.serveurs);
+  const oracleDetail = d.oracle.detail.map(x => `<li>${esc(x)}</li>`).join('');
+  const oracleSauv = d.oracle.sauvegardes.map(x => `<li>${esc(x)}</li>`).join('');
+
+  const flux = tbl([
+    { label: 'Source', get: r => esc(r.source) },
+    { label: 'Destination', get: r => esc(r.dest) },
+    { label: 'Proto', center: true, get: r => badge(r.proto, 'purple') },
+    { label: 'Port', center: true, get: r => cellMono(r.port) },
+    { label: 'Rôle', nowrap: false, get: r => `<span class="font-body-sm">${esc(r.role)}</span>` },
+  ], d.flux);
+
+  view.innerHTML = `
+    ${breadcrumb([{ label: 'Accueil' }, { label: 'Architecture' }, { label: 'AS-Tech' }])}
+    <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-space-md mb-space-lg">
+      <div>
+        <span class="px-2 py-0.5 rounded bg-surface-container font-label-mono-sm text-primary font-semibold">DOSSIERS TECHNIQUES AS-TECH · SYNTHÈSE ${esc(d.edition)}</span>
+        <h1 class="font-headline-lg text-on-surface tracking-tight mt-1">Architecture de l'application</h1>
+        <p class="font-body-md text-on-surface-variant max-w-3xl">Comment AS-Tech (AWO / Symphonie) est organisé chez nous : produits, serveurs, composants, flux réseau, base Oracle, interfaces et exploitation.</p>
+      </div>
+      <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm font-label-mono-sm text-secondary">
+        <div>${esc(d.societe.nom)}</div><div>${esc(d.societe.adresse)}</div><div>${esc(d.societe.tel)} · ${esc(d.societe.web)}</div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg mb-space-lg">
+      ${cc('Produits de la suite AS-Tech', `<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">${produits}</div>`, 'apps')}
+      ${cc("Lanceur applicatif", `<div class="p-space-md rounded-xl bg-tertiary-container/20 border border-tertiary/30">
+        <div class="font-title-md font-bold text-on-surface">${esc(d.lanceur.exe)}</div>
+        <p class="font-body-sm text-on-surface-variant mt-1">${esc(d.lanceur.role)}</p>
+        <p class="font-label-mono-sm text-secondary mt-1">Compatibilité : ${esc(d.lanceur.compat)}</p></div>
+        <div class="mt-space-md">${badgeLine('Environnements', d.environnements.map(e => badge(e.nom, e.cle === 'prod' ? 'red' : 'blue')).join(' '))}
+        <p class="font-body-sm text-on-surface-variant mt-2">${esc(d.cloisonnement)}</p></div>`, 'rocket_launch')}
+    </div>
+
+    ${cc('Serveurs à mettre en place (architecture 4 serveurs — hors base de données)', `<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">${serveurs}</div>`, 'lan')}
+
+    <div class="mt-space-lg">${cc(d.nomenclature.titre, `<ul class="font-body-sm text-on-surface-variant list-disc pl-5 space-y-1">${d.nomenclature.points.map(p => `<li>${esc(p)}</li>`).join('')}</ul>`, 'badge')}</div>
+
+    <div class="mt-space-lg">${cc('Composants & services', `<div class="grid grid-cols-1 lg:grid-cols-3 gap-space-md">${composants}</div>`, 'widgets')}</div>
+
+    <div class="mt-space-lg">${cc('Base de données Oracle à Ivry', `${oracleSrv}
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-md mt-space-md">
+        <div class="p-space-md rounded-xl bg-surface-container-low"><div class="font-title-md font-bold mb-1">Caractéristiques</div><ul class="font-body-sm text-on-surface-variant list-disc pl-5 space-y-0.5">${oracleDetail}</ul></div>
+        <div class="p-space-md rounded-xl bg-surface-container-low"><div class="font-title-md font-bold mb-1">Sauvegardes</div><ul class="font-body-sm text-on-surface-variant list-disc pl-5 space-y-0.5">${oracleSauv}</ul></div>
+      </div>
+      <p class="font-label-mono-sm text-secondary mt-space-sm">${esc(d.oracle.bascule)}</p>`, 'database')}</div>
+
+    <div class="mt-space-lg">${cc('Matrice des flux réseau (par environnement)', flux, 'swap_horiz')}</div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg mt-space-lg">
+      ${cc('Interfaces & progiciels tiers', tbl([
+        { label: 'Exécutable', get: r => cellMono(r.nom, 'text-primary') },
+        { label: 'Rôle', get: r => esc(r.role) },
+      ], d.interfaces), 'cable')}
+      ${cc('Exploitation', `<div class="space-y-3">
+        <div><div class="font-label-mono-sm text-secondary uppercase mb-1">Ordre de démarrage</div><ol class="font-body-sm text-on-surface list-decimal pl-5 space-y-0.5">${d.exploitation.demarrage.map(s => `<li>${esc(s)}</li>`).join('')}</ol>
+          <p class="font-label-mono-sm text-secondary mt-1">Arrêt : ${esc(d.exploitation.arret)}</p></div>
+        ${badgeLine('Purge des logs', esc(d.exploitation.purge))}
+        ${badgeLine('Stockage documentaire', esc(d.exploitation.sauvegarde_doc))}
+        ${badgeLine('Cohérence de version', esc(d.exploitation.coherence))}
+      </div>`, 'settings')}
+    </div>
+
+    <div class="mt-space-lg">${cc('POSTE004 — est-ce la Symphonie Box ?', `<div class="p-space-md rounded-xl bg-amber-50 border border-amber-200">
+      <div class="font-title-md font-bold text-amber-800">${esc(d.poste004.question || 'Reconnaissance POSTE004')}</div>
+      <p class="font-body-sm text-on-surface mt-1 font-semibold">${esc(d.poste004.conclusion)}</p>
+      <p class="font-body-sm text-on-surface-variant mt-2">${esc(d.poste004.indice || '')}</p>
+      ${d.poste004.autres ? `<p class="font-body-sm text-on-surface-variant mt-1">${esc(d.poste004.autres)}</p>` : ''}</div>`, 'search')}</div>
+
+    <p class="font-label-mono-sm text-outline mt-space-lg">Documents sources analysés (dossier « DOC TECHNIQUE », non versionné) : ${esc(d.docs_source.join(' · '))}</p>`;
+}
+
 /* ═══════════════════════════ PROCÉDURES STOCKÉES ═══════════════════════════ */
 function procTypeBadge(t) {
   if (t === 'FUNCTION') return badge('FONCTION', 'purple');

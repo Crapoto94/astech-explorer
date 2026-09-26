@@ -12,6 +12,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { AsyncLocalStorage } = require('async_hooks');
 const apikeys = require('./apikeys');
+const { ARCHITECTURE } = require('./architecture');
 
 // Charge .env (local, non commité) avant toute lecture de process.env.
 (function loadDotEnv() {
@@ -2084,6 +2085,9 @@ async function handleRequest(req, res, p, sp) {
     if (p === '/api/admin/keys' || p.startsWith('/api/admin/keys/')) return handleAdminKeys(req, res, p);
     if (p === '/api/dashboard') return sendJson(res, 200, await getDashboard());
     if (p === '/api/referentiels-compteurs') return sendJson(res, 200, { counts: await refCounts() });
+
+    // Architecture (référentiel statique issu des dossiers techniques)
+    if (p === '/api/architecture') return sendJson(res, 200, ARCHITECTURE);
 
     // Magasins & stock
     if (p === '/api/magasins') return sendJson(res, 200, { rows: await listMagasins() });
