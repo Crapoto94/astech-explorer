@@ -31,83 +31,50 @@ function sendArchAudit(res, id) {
   } catch (e) { return sendJson(res, 404, { error: 'Audit indisponible : ' + e.message }); }
 }
 
-// ─── API Explorer : catalogue des routes + cibles externes ───────────────────
-// Catalogue = spec OpenAPI + routes internes non documentées.
-let OPENAPI = null;
-try { OPENAPI = JSON.parse(fs.readFileSync(path.join(__dirname, 'openapi.json'), 'utf8')); } catch { OPENAPI = null; }
-
-const API_UNDOCUMENTED = [
-  { m: 'POST', path: '/api/auth/login', summary: 'Connexion (session HMAC)' },
-  { m: 'GET', path: '/api/auth/whoami', summary: 'Session courante' },
-  { m: 'POST', path: '/api/auth/logout', summary: 'Déconnexion' },
-  { m: 'GET', path: '/api/admin/users', summary: 'Lister les utilisateurs applicatifs' },
-  { m: 'POST', path: '/api/admin/users', summary: 'Créer / mettre à jour un utilisateur' },
-  { m: 'DELETE', path: '/api/admin/users/{login}', summary: 'Supprimer un utilisateur' },
-  { m: 'GET', path: '/api/architecture', summary: 'Référentiel architecture AS-Tech' },
-  { m: 'GET', path: '/api/architecture/docs', summary: 'Documents sources (PDF)' },
-  { m: 'GET', path: '/api/architecture/audits', summary: 'Liste des audits' },
-  { m: 'GET', path: '/api/architecture/audit/{id}', summary: 'Contenu d\'un audit (Markdown)' },
-  { m: 'GET', path: '/api/documents', summary: 'Inventaire GED' },
-  { m: 'GET', path: '/api/documents/fichiers', summary: 'Fichiers GED' },
-  { m: 'GET', path: '/api/documents/dates', summary: 'Dépôts GED par date' },
-  { m: 'GET', path: '/api/documents/jour', summary: 'Dépôts GED d\'un jour' },
-  { m: 'GET', path: '/api/procedures', summary: 'Procédures stockées / triggers' },
-  { m: 'GET', path: '/api/procedure/{nom}', summary: 'Source d\'une procédure' },
-  { m: 'GET', path: '/api/parc', summary: 'Parc automobile' },
-  { m: 'GET', path: '/api/parc/stats', summary: 'Statistiques du parc' },
-  { m: 'GET', path: '/api/parc/permis', summary: 'Permis de conduire' },
-  { m: 'GET', path: '/api/parc/vehicule/{id}', summary: 'Fiche véhicule' },
-  { m: 'GET', path: '/api/magasins', summary: 'Magasins' },
-  { m: 'GET', path: '/api/magasin/{code}', summary: 'Articles d\'un magasin' },
-  { m: 'GET', path: '/api/demandes/options', summary: 'Options des demandes' },
-  { m: 'GET', path: '/api/demandes/neocity', summary: 'Demandes NEOCITY' },
-];
-function apiSurface(p) { return p.startsWith('/api/v1') ? 'public' : p.startsWith('/api/admin') ? 'admin' : 'internal'; }
-function buildApiCatalog() {
-  const out = [], seen = new Set();
-  if (OPENAPI && OPENAPI.paths) {
-    for (const p of Object.keys(OPENAPI.paths)) {
-      for (const m of Object.keys(OPENAPI.paths[p])) {
-        if (!['get', 'post', 'put', 'delete', 'patch'].includes(m)) continue;
-        const op = OPENAPI.paths[p][m];
-        seen.add(m.toUpperCase() + ' ' + p);
-        out.push({ method: m.toUpperCase(), path: p, summary: op.summary || '', tag: (op.tags && op.tags[0]) || 'Divers', surface: apiSurface(p), write: m !== 'get', documented: true });
-      }
-    }
-  }
-  for (const r of API_UNDOCUMENTED) {
-    if (seen.has(r.m + ' ' + r.path)) continue;
-    out.push({ method: r.m, path: r.path, summary: r.summary, tag: 'Interne (non documenté)', surface: apiSurface(r.path), write: r.m !== 'GET', documented: false });
-  }
-  return out.sort((a, b) => a.path.localeCompare(b.path) || a.method.localeCompare(b.method));
-}
-const API_ROUTES = buildApiCatalog();
+// ─── API Explorer : cibles externes (interface OPUS ↔ NEOCITY) ───────────────
+// Deux cibles documentées par le fournisseur : AS-Tech (OPUS / Symphonie) et NEOCITY.
 const EXPLORER_PREFIX = { astech: 'ASTECH_API', neocity: 'NEOCITY_API' };
+const EXPLORER_PRESETS = {
+  astech: [
+    { label: 'Liste des demandes (traitements)', method: 'GET', path: '/api/demande/all' },
+    { label: "Détails d'une demande", method: 'GET', path: '/api/demande/details/{id}' },
+    { label: 'Détail intervention par n°', method: 'GET', path: '/api/intervention/demandes/nr/{num}' },
+    { label: 'Recherche interventions', method: 'GET', path: '/api/intervention/search/' },
+    { label: "Bien d'un demandeur", method: 'GET', path: '/api/arbo/get-bien-demandeur' },
+  ],
+  neocity: [
+    { label: 'Liste des signalements', method: 'GET', path: '/signalements' },
+    { label: 'Signalement par id', method: 'GET', path: '/signalements/{id}' },
+  ],
+};
 const EXPLORER_TARGETS = [
-  { id: 'astech', label: 'AS-Tech OPUS / Symphonie', group: 'Interfaces OPUS / NEOCITY', prefix: 'ASTECH_API', defUrl: 'https://astech.ivry94.fr/app.php', auth: 'session' },
-  { id: 'neocity', label: 'NEOCITY', group: 'Interfaces OPUS / NEOCITY', prefix: 'NEOCITY_API', defUrl: 'https://api.neocity.fr', auth: 'session' },
-  { id: 'internal', label: 'ASTECH Explorer — API interne', group: 'ASTECH Explorer', prefix: null, defUrl: '', auth: 'session' },
-  { id: 'public', label: 'ASTECH Explorer — API publique /api/v1', group: 'ASTECH Explorer', prefix: null, defUrl: '', auth: 'apikey' },
+  { id: 'astech', label: 'AS-Tech OPUS / Symphonie', prefix: 'ASTECH_API', defUrl: 'https://astech.ivry94.fr' },
+  { id: 'neocity', label: 'NEOCITY', prefix: 'NEOCITY_API', defUrl: 'https://api.neocity.fr' },
 ];
 function explorerTargets() {
   return EXPLORER_TARGETS.map((t) => {
-    if (!t.prefix) {
-      const ready = t.id === 'internal' || !!process.env.ASTECH_API_KEYS;
-      return { id: t.id, label: t.label, group: t.group, base: '', auth: t.auth, ready, hasCredentials: ready };
-    }
-    const url = (process.env[t.prefix + '_URL'] || t.defUrl || '').replace(/\/+$/, '');
+    const base = (process.env[t.prefix + '_URL'] || t.defUrl || '').replace(/\/+$/, '');
     const user = process.env[t.prefix + '_USER'] || '';
     const token = process.env[t.prefix + '_TOKEN'] || '';
-    const auth = (process.env[t.prefix + '_AUTH'] || (user ? 'basic' : token ? 'bearer' : 'none')).toLowerCase();
-    return { id: t.id, label: t.label, group: t.group, base: url, auth, ready: !!url, hasCredentials: !!(user || token) };
+    const clientId = process.env[t.prefix + '_CLIENT_ID'] || '';
+    const auth = (process.env[t.prefix + '_AUTH'] || (user ? 'basic' : token ? 'bearer' : clientId ? 'oauth2' : 'none')).toLowerCase();
+    return { id: t.id, label: t.label, base, auth, ready: !!base, hasCredentials: !!(user || token || clientId), presets: EXPLORER_PRESETS[t.id] || [] };
   });
 }
-function firstApiKey() {
-  const seed = (process.env.ASTECH_API_KEYS || '').trim();
-  if (!seed) return '';
-  const first = seed.split(',')[0].trim();
-  const i = first.indexOf(':');
-  return i > 0 ? first.slice(i + 1).trim() : first;
+const OAUTH_CACHE = {};
+async function oauthToken(prefix) {
+  const url = process.env[prefix + '_TOKEN_URL'] || '';
+  const id = process.env[prefix + '_CLIENT_ID'] || '';
+  const secret = process.env[prefix + '_CLIENT_SECRET'] || '';
+  if (!url || !id || !secret) return '';
+  const c = OAUTH_CACHE[prefix];
+  if (c && c.exp > Date.now()) return c.token;
+  const body = new URLSearchParams({ grant_type: 'client_credentials', client_id: id, client_secret: secret }).toString();
+  const r = await httpJson(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', accept: 'application/json' }, body, insecure: process.env[prefix + '_INSECURE_TLS'] !== '0', timeoutMs: 15000 });
+  let j; try { j = JSON.parse(r.body); } catch { return ''; }
+  if (!j.access_token) return '';
+  OAUTH_CACHE[prefix] = { token: j.access_token, exp: Date.now() + (Number(j.expires_in || 3600) - 30) * 1000 };
+  return j.access_token;
 }
 async function explorerRequest(req, res) {
   const role = currentRole(req);
@@ -122,42 +89,31 @@ async function explorerRequest(req, res) {
   if (!p) return sendJson(res, 400, { error: 'Chemin requis.' });
   if (/^https?:\/\//i.test(p) || p.startsWith('//')) return sendJson(res, 400, { error: 'Chemin relatif attendu (sans hôte).' });
   if (!p.startsWith('/')) p = '/' + p;
+  if (!target.base) return sendJson(res, 409, { error: 'Cible non configurée (' + EXPLORER_PREFIX[target.id] + '_URL).' });
   const qs = body.query ? new URLSearchParams(body.query).toString() : '';
-  const headers = {};
-  let url, shownUrl;
-  if (target.id === 'internal' || target.id === 'public') {
-    if (!p.startsWith('/api/')) return sendJson(res, 400, { error: 'Chemin /api/... requis pour cette cible.' });
-    url = 'http://127.0.0.1:' + PORT + p + (qs ? '?' + qs : '');
-    if (target.id === 'internal') {
-      const tok = req.headers['x-astech-token'] || '';
-      if (tok) headers['X-ASTECH-Token'] = String(tok);
-      if (req.headers['x-astech-env']) headers['X-ASTECH-Env'] = String(req.headers['x-astech-env']);
-    } else {
-      const k = firstApiKey();
-      if (!k) return sendJson(res, 409, { error: 'Aucune clé API configurée (ASTECH_API_KEYS).' });
-      headers['X-API-Key'] = k;
-    }
-    shownUrl = p + (qs ? '?' + qs : '');
-  } else {
-    if (!target.base) return sendJson(res, 409, { error: 'Cible non configurée (' + EXPLORER_PREFIX[target.id] + '_URL).' });
-    url = target.base + p + (qs ? '?' + qs : '');
-    shownUrl = url;
-    const prefix = EXPLORER_PREFIX[target.id];
-    const user = process.env[prefix + '_USER'] || '';
-    const pass = process.env[prefix + '_PASSWORD'] || '';
-    const token = process.env[prefix + '_TOKEN'] || '';
-    const auth = (process.env[prefix + '_AUTH'] || (user ? 'basic' : token ? 'bearer' : 'none')).toLowerCase();
-    if (auth === 'basic') { if (!user) return sendJson(res, 409, { error: 'Identifiants non configurés (' + prefix + '_USER).' }); headers['Authorization'] = 'Basic ' + Buffer.from(user + ':' + pass).toString('base64'); }
-    else if (auth === 'bearer') { if (!token) return sendJson(res, 409, { error: 'Jeton non configuré (' + prefix + '_TOKEN).' }); headers['Authorization'] = 'Bearer ' + token; }
+  const url = target.base + p + (qs ? '?' + qs : '');
+  const headers = { accept: 'application/json' };
+  const prefix = EXPLORER_PREFIX[target.id];
+  const user = process.env[prefix + '_USER'] || '';
+  const pass = process.env[prefix + '_PASSWORD'] || '';
+  const token = process.env[prefix + '_TOKEN'] || '';
+  const clientId = process.env[prefix + '_CLIENT_ID'] || '';
+  const auth = (process.env[prefix + '_AUTH'] || (user ? 'basic' : token ? 'bearer' : clientId ? 'oauth2' : 'none')).toLowerCase();
+  if (auth === 'basic') { if (!user) return sendJson(res, 409, { error: 'Identifiants non configurés (' + prefix + '_USER).' }); headers['Authorization'] = 'Basic ' + Buffer.from(user + ':' + pass).toString('base64'); }
+  else if (auth === 'bearer') { if (!token) return sendJson(res, 409, { error: 'Jeton non configuré (' + prefix + '_TOKEN).' }); headers['Authorization'] = 'Bearer ' + token; }
+  else if (auth === 'oauth2') {
+    let t = ''; try { t = await oauthToken(prefix); } catch (e) { return sendJson(res, 502, { error: 'Jeton OAuth2 échoué : ' + e.message }); }
+    if (!t) return sendJson(res, 409, { error: 'OAuth2 non configuré (' + prefix + '_TOKEN_URL / _CLIENT_ID / _CLIENT_SECRET).' });
+    headers['Authorization'] = 'Bearer ' + t;
   }
   const started = Date.now();
   try {
-    const r = await httpJson(url, { method, headers, body: method === 'GET' ? undefined : body.body, insecure: target.id === 'astech' || target.id === 'neocity', timeoutMs: 20000 });
+    const r = await httpJson(url, { method, headers, body: method === 'GET' ? undefined : body.body, insecure: process.env[prefix + '_INSECURE_TLS'] !== '0', timeoutMs: 20000 });
     let parsed, isJson = true;
     try { parsed = JSON.parse(r.body); } catch { parsed = (r.body || '').slice(0, 200000); isJson = false; }
-    return sendJson(res, 200, { ok: r.status >= 200 && r.status < 300, target: target.id, method, url: shownUrl, status: r.status, isJson, body: parsed, duree_ms: Date.now() - started });
+    return sendJson(res, 200, { ok: r.status >= 200 && r.status < 300, target: target.id, method, url, status: r.status, isJson, body: parsed, duree_ms: Date.now() - started });
   } catch (e) {
-    return sendJson(res, 502, { error: 'Appel échoué : ' + e.message, target: target.id, url: shownUrl, duree_ms: Date.now() - started });
+    return sendJson(res, 502, { error: 'Appel échoué : ' + e.message, target: target.id, url, duree_ms: Date.now() - started });
   }
 }
 
@@ -2356,7 +2312,7 @@ async function handleRequest(req, res, p, sp) {
     { const am = p.match(/^\/api\/architecture\/audit\/([a-z0-9-]+)$/); if (am) return sendArchAudit(res, am[1]); }
 
     // API Explorer (catalogue + exécution, réservé aux admins si auth imposée)
-    if (p === '/api/explorer/targets') { const r0 = currentRole(req); return sendJson(res, 200, { targets: explorerTargets(), routes: API_ROUTES, canExecute: !AUTH_ENABLED_REQ || !!(r0 && r0.role === 'admin') }); }
+    if (p === '/api/explorer/targets') { const r0 = currentRole(req); return sendJson(res, 200, { targets: explorerTargets(), canExecute: !AUTH_ENABLED_REQ || !!(r0 && r0.role === 'admin') }); }
     if (p === '/api/explorer/request') {
       if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return sendJson(res, 405, { error: 'Méthode POST requise.' }); }
       return explorerRequest(req, res);

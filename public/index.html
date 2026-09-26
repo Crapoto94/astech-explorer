@@ -1758,20 +1758,15 @@ function apiMethodTone(m) { return m === 'GET' ? 'green' : m === 'POST' ? 'blue'
 async function viewApiExplorer() {
   const s = state.api;
   const d = await api('/api/explorer/targets');
-  s.targets = d.targets || []; s.routes = d.routes || [];
-  if (!s.target || !s.targets.some(t => t.id === s.target)) s.target = (s.targets.find(t => t.ready) || s.targets[0] || {}).id || '';
+  s.targets = d.targets || [];
+  if (!s.target || !s.targets.some(t => t.id === s.target)) s.target = (s.targets[0] || {}).id || '';
   const cur = s.targets.find(t => t.id === s.target) || {};
-  const groups = [...new Set(s.targets.map(t => t.group))];
-  const chips = groups.map(g => `<div class="flex flex-wrap items-center gap-2">
-      <span class="font-label-mono-sm text-secondary uppercase whitespace-nowrap">${esc(g)}</span>
-      ${s.targets.filter(t => t.group === g).map(t => `<button data-act="apiTarget:${esc(t.id)}" class="px-3 py-1.5 rounded-lg font-title-sm ${t.id === s.target ? 'bg-primary-container text-on-primary shadow-md' : 'bg-surface-container-low text-on-surface hover:bg-surface-container'}">${esc(t.label)}${t.ready ? '' : ' <span class="text-[10px] text-error">(à configurer)</span>'}</button>`).join('')}</div>`).join('');
-  const filter = (s.filter || '').toLowerCase();
-  const routes = s.routes.filter(r => !filter || (r.path + ' ' + r.method + ' ' + (r.summary || '')).toLowerCase().includes(filter));
-  const routeList = routes.map(r => `<button data-act="apiRoute:${r.method} ${r.path}" class="w-full text-left flex items-center gap-2 px-2 py-1.5 rounded hover:bg-surface-container">
-      ${badge(r.method, apiMethodTone(r.method))}
-      <span class="font-label-mono-sm text-on-surface truncate">${esc(r.path)}</span>
-      ${r.write ? '<span class="material-symbols-outlined text-[14px] text-error" title="Écriture">edit</span>' : ''}
-      <span class="ml-auto font-body-sm text-secondary truncate max-w-[45%]">${esc(r.summary || '')}</span></button>`).join('');
+  const chips = s.targets.map(t => `<button data-act="apiTarget:${esc(t.id)}" class="px-3 py-1.5 rounded-lg font-title-sm ${t.id === s.target ? 'bg-primary-container text-on-primary shadow-md' : 'bg-surface-container-low text-on-surface hover:bg-surface-container'}">${esc(t.label)}${t.hasCredentials ? '' : ' <span class="text-[10px] text-error">(sans identifiants)</span>'}</button>`).join('');
+  const presets = (cur.presets || []).map(p => `<button data-act="apiRoute:${p.method} ${p.path}" class="w-full text-left flex items-center gap-2 px-2 py-1.5 rounded hover:bg-surface-container">
+      ${badge(p.method, apiMethodTone(p.method))}
+      <span class="font-body-sm text-on-surface truncate">${esc(p.label)}</span>
+      <span class="ml-auto font-label-mono-sm text-secondary truncate max-w-[45%]">${esc(p.path)}</span></button>`).join('');
+  const authLabel = { none: 'aucune', basic: 'Basic (utilisateur / mot de passe)', bearer: 'Bearer (jeton)', oauth2: 'OAuth2 (client credentials)' }[cur.auth] || cur.auth || '—';
   const resultBox = s.error
     ? `<div class="p-space-md rounded-xl bg-error-container/40 border border-error/30 text-on-error-container font-body-sm">${esc(s.error)}</div>`
     : s.result
@@ -1781,33 +1776,41 @@ async function viewApiExplorer() {
   view.innerHTML = `
     ${breadcrumb([{ label: 'Accueil' }, { label: 'API Explorer' }])}
     <div class="mb-space-lg">
-      <span class="px-2 py-0.5 rounded bg-surface-container font-label-mono-sm text-primary font-semibold">REST / JSON · session & clé API</span>
+      <span class="px-2 py-0.5 rounded bg-surface-container font-label-mono-sm text-primary font-semibold">Interfaces OPUS ↔ NEOCITY</span>
       <h1 class="font-headline-lg text-on-surface tracking-tight mt-1">API Explorer</h1>
-      <p class="font-body-md text-on-surface-variant max-w-3xl">Parcourir et exécuter les API : interfaces OPUS ↔ NEOCITY (AS-Tech / NEOCITY) et API d'ASTECH Explorer (interne / publique). Les identifiants restent côté serveur.</p>
+      <p class="font-body-md text-on-surface-variant max-w-3xl">Interroger les deux API documentées par le fournisseur : <strong>AS-Tech OPUS / Symphonie</strong> (traitements des signalements / demandes) et <strong>NEOCITY</strong> (signalements). Les identifiants restent côté serveur.</p>
     </div>
     ${d.canExecute ? '' : '<div class="mb-space-lg p-space-sm rounded-lg bg-error-container/40 border border-error/30 text-on-error-container font-body-sm">Exécution réservée aux administrateurs.</div>'}
-    <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm mb-space-lg space-y-space-sm">${chips}</div>
+    <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm mb-space-lg flex flex-wrap items-center gap-2">${chips}</div>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
       <div class="space-y-space-md">
         <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm">
           <div class="font-title-md font-bold text-on-surface mb-2">Requête → ${esc(cur.label || '')}</div>
           <div class="flex flex-wrap items-center gap-2 mb-2">
             <select id="apiMethod" data-act="apiMethod" class="h-9 px-2 rounded-lg bg-surface-container-low font-label-mono-sm">${['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].map(m => `<option ${m === s.method ? 'selected' : ''}>${m}</option>`).join('')}</select>
-            <span class="font-label-mono-sm text-secondary truncate">${esc(cur.base || (cur.id === 'internal' || cur.id === 'public' ? 'même origine' : 'non configuré'))}</span>
+            <span class="font-label-mono-sm text-secondary truncate">${esc(cur.base || 'non configuré')}</span>
           </div>
-          <input id="apiPath" value="${esc(s.path)}" placeholder="/api/agents  ou  /signalements" class="w-full h-9 px-3 rounded-lg bg-surface-container-low font-label-mono-sm mb-2 focus:outline-none" />
+          <input id="apiPath" value="${esc(s.path)}" placeholder="/signalements  ou  /api/demande/all" class="w-full h-9 px-3 rounded-lg bg-surface-container-low font-label-mono-sm mb-2 focus:outline-none" />
           <input id="apiQuery" value="${esc(s.query)}" placeholder="query string (a=1&b=2)" class="w-full h-9 px-3 rounded-lg bg-surface-container-low font-label-mono-sm mb-2 focus:outline-none" />
           ${s.method !== 'GET' ? `<textarea id="apiBody" rows="5" placeholder='{ "cle": "valeur" }' class="w-full p-3 rounded-lg bg-surface-container-low font-label-mono-sm mb-2 focus:outline-none">${esc(s.body)}</textarea>` : ''}
           <button data-act="apiSend" ${s.running ? 'disabled' : ''} class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary shadow-md font-title-md ${s.running ? 'opacity-60' : ''}"><span class="material-symbols-outlined text-[18px]">${s.running ? 'progress_activity' : 'send'}</span>${s.running ? 'Envoi…' : 'Envoyer'}</button>
         </div>
         <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm"><div class="font-title-md font-bold text-on-surface mb-2">Réponse</div>${resultBox}</div>
       </div>
-      <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm">
-        <div class="flex items-center justify-between gap-2 mb-2">
-          <div class="font-title-md font-bold text-on-surface whitespace-nowrap">Routes (${routes.length})</div>
-          <input id="apiFilter" data-act="apiFilter" value="${esc(s.filter)}" placeholder="filtrer…" class="h-8 px-3 rounded-lg bg-surface-container-low font-body-sm focus:outline-none" />
+      <div class="space-y-space-md">
+        <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm">
+          <div class="font-title-md font-bold text-on-surface mb-2">Opérations documentées</div>
+          <div class="space-y-0.5">${presets || '<p class="font-body-sm text-secondary">Aucune opération prédéfinie.</p>'}</div>
         </div>
-        <div class="space-y-0.5 max-h-[70vh] overflow-auto">${routeList || '<p class="font-body-sm text-secondary">Aucune route.</p>'}</div>
+        <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm">
+          <div class="font-title-md font-bold text-on-surface mb-2">Connexion</div>
+          <div class="font-body-sm text-on-surface-variant space-y-1">
+            <div>Base : <span class="font-label-mono-sm text-on-surface">${esc(cur.base || '—')}</span></div>
+            <div>Authentification : <span class="font-label-mono-sm text-on-surface">${esc(authLabel)}</span></div>
+            <div>Identifiants : ${cur.hasCredentials ? badge('configurés', 'green') : badge('absents', 'red')}</div>
+          </div>
+          <p class="font-label-mono-sm text-secondary mt-2">Variables : ${esc(cur.id === 'neocity' ? 'NEOCITY_API_URL / _USER / _PASSWORD / _AUTH / _TOKEN / _TOKEN_URL / _CLIENT_ID / _CLIENT_SECRET' : 'ASTECH_API_URL / _USER / _PASSWORD / _AUTH / _TOKEN / _TOKEN_URL / _CLIENT_ID / _CLIENT_SECRET')}</p>
+        </div>
       </div>
     </div>`;
 }
