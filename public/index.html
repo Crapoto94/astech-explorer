@@ -56,6 +56,18 @@ tailwind.config = {
   ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
   .tabular { font-variant-numeric: tabular-nums; }
   .clamp1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+  @media print {
+    @page { margin: 12mm; }
+    body { background: #fff !important; }
+    body > *:not(#auditOverlay) { display: none !important; }
+    #auditOverlay { position: static !important; display: block !important; inset: auto !important; height: auto !important; background: #fff !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+    #auditOverlay > div:first-child { display: none !important; }
+    #auditOverlay > div:last-child { overflow: visible !important; padding: 0 !important; }
+    #auditBody { max-width: none !important; box-shadow: none !important; border-radius: 0 !important; padding: 0 !important; background: #fff !important; color: #000 !important; }
+    #auditBody table { width: 100% !important; }
+    #auditBody tr { break-inside: avoid; }
+    #auditBody h1, #auditBody h2, #auditBody h3 { break-after: avoid; }
+  }
 </style>
 </head>
 <body class="bg-surface font-body-md text-on-surface antialiased min-h-screen flex flex-col">
@@ -1722,12 +1734,14 @@ async function openAudit(id) {
       <div class="flex items-center gap-2 min-w-0"><span class="material-symbols-outlined text-primary">fact_check</span>
         <div class="min-w-0"><div id="auditTitle" class="font-title-md text-on-surface truncate">Audit</div>
           <div id="auditFile" class="font-label-mono-sm text-secondary truncate">${esc(id)}</div></div></div>
+      <button id="auditPrint" title="Imprimer" class="p-1 rounded hover:bg-surface-container"><span class="material-symbols-outlined">print</span></button>
       <button id="auditClose" class="p-1 rounded hover:bg-surface-container"><span class="material-symbols-outlined">close</span></button>
     </div>
     <div class="flex-1 overflow-auto p-space-lg"><div id="auditBody" class="max-w-5xl mx-auto bg-surface-container-lowest rounded-xl shadow-sm p-space-lg">
       <div class="text-on-surface-variant font-body-sm"><span class="material-symbols-outlined animate-spin align-middle mr-2">progress_activity</span>Chargement…</div></div></div>`;
   const close = () => el.remove();
   document.getElementById('auditClose').onclick = close;
+  document.getElementById('auditPrint').onclick = () => window.print();
   try {
     const r = await api('/api/architecture/audit/' + encodeURIComponent(id));
     if (r.titre) document.getElementById('auditTitle').textContent = r.titre;
@@ -1740,6 +1754,9 @@ async function openAudit(id) {
 /* ═══════════════════════════ ARCHITECTURE AS-TECH ═══════════════════════════ */
 async function viewArchitecture() {
   const d = await api('/api/architecture');
+  let audits = [];
+  try { audits = (await api('/api/architecture/audits')).audits || []; } catch (e) { audits = []; }
+  const auditIcon = (id) => id === 'documentation' ? 'description' : id === 'technique' ? 'fact_check' : 'article';
   const docByFile = {}; (d.docs || []).forEach(x => { docByFile[x.fichier] = x; });
   const srcBtn = (key) => {
     const s = (d.sources || {})[key];
@@ -1845,16 +1862,12 @@ async function viewArchitecture() {
       ${d.poste004.correctif ? `<p class="font-body-sm text-on-surface-variant mt-1"><span class="font-semibold">Correctif :</span> ${esc(d.poste004.correctif)}</p>` : ''}
       ${d.poste004.autres ? `<p class="font-body-sm text-on-surface-variant mt-1">${esc(d.poste004.autres)}</p>` : ''}</div>`, 'search')}</div>
 
-    <div class="mt-space-lg">${cc('Audits (lecture seule)', `<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
-      <div class="p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-sm">
-        <div><div class="font-title-md text-on-surface font-bold">Audit technique — base Oracle</div>
-          <p class="font-body-sm text-on-surface-variant mt-1">Structures, intégrité, sécurité, dette PL/SQL, adhérence Oracle et trajectoire de migration.</p></div>
-        <button data-act="audit:technique" class="self-start inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary shadow-md font-title-md transition-all"><span class="material-symbols-outlined text-[18px]">fact_check</span>Lire l'audit technique</button></div>
-      <div class="p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-sm">
-        <div><div class="font-title-md text-on-surface font-bold">Audit de la documentation</div>
-          <p class="font-body-sm text-on-surface-variant mt-1">Inventaire documentaire, manques pour comprendre l'application et conformité aux bonnes pratiques.</p></div>
-        <button data-act="audit:documentation" class="self-start inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary shadow-md font-title-md transition-all"><span class="material-symbols-outlined text-[18px]">description</span>Lire l'audit documentation</button></div>
-    </div>`, 'fact_check')}</div>
+    ${audits.length ? `<div class="mt-space-lg">${cc('Audits (lecture seule)', `<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+      ${audits.map(a => `<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-sm">
+        <div><div class="font-title-md text-on-surface font-bold">${esc(a.titre)}</div>
+          <p class="font-body-sm text-on-surface-variant mt-1">${esc(a.role || '')}</p></div>
+        <button data-act="audit:${esc(a.id)}" class="self-start inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary shadow-md font-title-md transition-all"><span class="material-symbols-outlined text-[18px]">${auditIcon(a.id)}</span>Lire</button></div>`).join('')}
+    </div>`, 'fact_check')}</div>` : ''}
 
     <div class="mt-space-lg">${cc('Documents sources (visionneuse PDF)', `<div class="grid grid-cols-1 md:grid-cols-2 gap-space-sm">
       ${(d.docs || []).map(doc => `<button data-act="pdf:${encodeURIComponent(doc.fichier)}||${encodeURIComponent(doc.titre)}" class="text-left p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container flex items-start gap-2">
