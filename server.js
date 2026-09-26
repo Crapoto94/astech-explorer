@@ -911,34 +911,28 @@ async function listParc(f = {}) {
 }
 
 async function getParcVehicule(id) {
-  try {
-    return await getParcVehiculeInner(id);
-  } catch (e) {
-    throw new Error('getParcVehicule(' + id + '): ' + e.message);
-  }
-}
-async function getParcVehiculeInner(id) {
-  const [v] = await exec(`SELECT * FROM ${PARC_TABLE} WHERE ${PARC_FILTER} AND ID_BIEN = :id`, { id: Number(id) }, 1);
+  const nid = Number(id);
+  const [v] = await exec(`SELECT * FROM ${PARC_TABLE} WHERE ${PARC_FILTER} AND ID_BIEN = :id`, { id: nid }, 1);
   if (!v) return null;
   const [arbo] = await exec(`SELECT A.ARB_ID AS id, A.ARB_CODE AS code, A.ARB_DES AS des, A.ARB_REF AS immat,
       A.ARB_SERIE AS no_serie, A.ARB_SCAT AS sous_cat, SS.SSCAT_DES AS sous_cat_des, A.ARB_SSERV AS sserv,
       A.ARB_DAT1 AS date1, A.ARB_REFORME AS reforme
     FROM ARBO A LEFT JOIN SOUSCATEGORIE SS ON SS.SSCAT_COD = A.ARB_SCAT
-    WHERE A.ARB_ID = :id`, { id: Number(id) }, 1);
-  const mate = await exec(`SELECT /*parc:mate*/ M.ARBMA_DATGAR AS date_garantie, M.ARBMA_DISPO AS dispo, M.ARBMA_INDISPODEB AS indispo_deb,
+    WHERE A.ARB_ID = :id`, { id: nid }, 1);
+  const mate = await exec(`SELECT M.ARBMA_DATGAR AS date_garantie, M.ARBMA_DISPO AS dispo, M.ARBMA_INDISPODEB AS indispo_deb,
       M.ARBMA_INDISPOFIN AS indispo_fin, M.ARBMA_ALERTE AS alerte, M.ARBMA_DATALERTE AS date_alerte,
       M.ARBMA_SSERV AS sserv_affect, M.ARBMA_FOURN AS fournisseur
-    FROM ARBO_MATE M WHERE M.ARBMA_ARBID = :id`, { id: Number(id) }, 1);
+    FROM ARBO_MATE M WHERE M.ARBMA_ARBID = :id`, { id: nid }, 1);
   const [nrj] = await exec(`SELECT ARBN_CPTTYP1 AS type1, ARBN_CPTCARB1 AS carburant1, ARBN_CPTACT1 AS compteur1,
       ARBN_CPTDAT1 AS date_releve1, ARBN_CONSO1 AS conso1, ARBN_CPTTYP2 AS type2, ARBN_CPTACT2 AS compteur2,
       ARBN_CPTDAT2 AS date_releve2, ARBN_CONSO2 AS conso2
-    FROM ARBO_NRJ WHERE ARBN_ID = :id`, { id: Number(id) }, 1);
+    FROM ARBO_NRJ WHERE ARBN_ID = :id`, { id: nid }, 1);
   const affectation = await exec(`SELECT AF.ARBFP_SOCCOD AS soc, D.PSOC_DES AS structure, AF.ARBFP_PARC AS parc,
       TO_CHAR(AF.ARBFP_DATDEB,'DD/MM/YYYY') AS depuis
-    FROM ARBO_AFFP AF LEFT JOIN DETAIL D ON D.PSOC_COD = AF.ARBFP_SOCCOD WHERE AF.ARBFP_ID = :id`, { id: Number(id) });
-  const certifs = await exec(`SELECT VCI_RUBID AS rubrique, VCI_VAL AS valeur FROM VEH_CERTIF WHERE VCI_ARBOID = :id AND VCI_VAL IS NOT NULL AND VCI_VAL <> '0' ORDER BY VCI_RUBID`, { id: Number(id) });
-  const interventions = await exec(`SELECT X.num, TO_CHAR(X.dat,'DD/MM/YYYY') AS dat, X.typ, X.ndt, X.etat
-    FROM (${INTERV_UNION}) X WHERE TO_CHAR(X.arbo) = :id ORDER BY X.dat_ts DESC NULLS LAST FETCH FIRST 25 ROWS ONLY`, { id: String(id) });
+    FROM ARBO_AFFP AF LEFT JOIN DETAIL D ON D.PSOC_COD = AF.ARBFP_SOCCOD WHERE AF.ARBFP_ID = :id`, { id: nid });
+  const certifs = await exec(`SELECT VCI_RUBID AS rubrique, VCI_VAL AS valeur FROM VEH_CERTIF WHERE VCI_ARBOID = :id AND VCI_VAL IS NOT NULL AND VCI_VAL <> '0' ORDER BY VCI_RUBID`, { id: nid });
+  const interventions = await exec(`SELECT X.num, X.dat, X.typ, X.ndt, X.etat
+    FROM (${INTERV_UNION}) X WHERE X.arbo = :ids ORDER BY X.dat_ts DESC NULLS LAST FETCH FIRST 25 ROWS ONLY`, { ids: String(nid) });
   return { vehicule: v, arbo: arbo || null, materiel: mate[0] || null, compteurs: nrj || null, affectation, certificats: certifs, interventions };
 }
 
