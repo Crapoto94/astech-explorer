@@ -550,14 +550,10 @@ async function viewAgents() {
   const tabs = [['all', 'Tous', stats.total], ['utilisateur', 'Utilisateurs avec droits', stats.utilisateurs], ['simple', 'Agents simples', stats.agents_simples], ['admin', 'Administrateurs', stats.admins], ['inactif', 'Inactifs', stats.inactifs]];
   const tabsHtml = tabs.map(([k, label, n]) => `<button data-act="agentTab:${k}" class="px-space-md py-1.5 rounded-md font-title-sm text-title-sm transition-all ${a.tab === k ? 'bg-surface-container-lowest text-primary-container shadow-sm font-semibold' : 'text-on-surface-variant hover:text-on-surface font-medium'}">${label} <span class="ml-1 opacity-70 font-label-mono-sm text-label-mono-sm">${num(n)}</span></button>`).join('');
 
-  const agentEtat = (r) => {
-    const actif = r.sign === 'O';
-    const invalide = !!r.datinvalid;
-    if (actif && !invalide) return badge('Actif', 'green');
-    if (!actif && invalide) return badge('Inactif', 'red');
-    if (!actif) return badge('Inactif', 'red');
-    return badge('Actif (invalidé ' + esc(r.datinvalid) + ')', 'amber');
-  };
+  // État = flag métier SDEM_SIGN (Actif/Inactif). La date d'invalidation
+  // (USR_DATINVALID) est un champ technique distinct, affiché à part.
+  const agentEtat = (r) => (r.sign === 'O') ? badge('Actif', 'green', 'check_circle') : badge('Inactif', 'red', 'cancel');
+  const agentInvalid = (r) => r.datinvalid ? badge(r.datinvalid, 'amber', 'event_busy') : dash;
   const cols = [
     { label: 'Matricule', get: r => `<span class="font-label-mono-md text-label-mono-md font-bold ${Number(r.nb) > 0 ? 'text-primary' : 'text-secondary'}">${esc(r.matricule)}</span>` },
     { label: 'Nom & Prénom', get: r => `<div class="font-title-md text-title-md text-on-surface">${esc(r.nom || r.des || '')}</div><div class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">${esc(r.email || '')}</div>` },
@@ -567,6 +563,7 @@ async function viewAgents() {
     { label: 'Droits', get: r => Number(r.nb) > 0 ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container-highest text-primary font-label-mono-sm text-label-mono-sm font-medium">${num(r.nb)} menus</span>` : `<span class="font-label-mono-sm text-label-mono-sm text-outline italic">Aucun droit</span>` },
     { label: 'Rôles', get: r => roleBadges(r.roleapp) },
     { label: 'Admin', center: true, get: r => (r.gest === 'O' && r.ordon === 'O' && r.compta === 'O') ? badge('ADMIN', 'purple') : dash },
+    { label: 'Invalidé le', center: true, get: r => agentInvalid(r) },
     { label: 'Dernière MAJ', get: r => r.maj ? `<div class="font-label-mono-sm text-label-mono-sm text-on-surface">${esc(r.maj)}</div>` : dash }
   ];
 
