@@ -1710,7 +1710,10 @@ function docFilesHtml(rows, total, records) {
       </span>
       ${Number(f.versions) > 1 ? `<span class="px-1 rounded bg-amber-100 text-amber-800 text-[10px] font-semibold whitespace-nowrap" title="${esc(f.versions)} version(s) — dernière révision r${esc(f.revis)}">${esc(f.versions)} vers.</span>` : ''}
       ${Number(f.records) > 1 ? `<span class="px-1 rounded bg-surface-container text-secondary text-[10px] font-semibold whitespace-nowrap" title="${esc(f.records)} enregistrement(s)">×${esc(f.records)}</span>` : ''}
-      ${f.theme ? `<span class="px-1.5 py-0.2 rounded-full bg-surface-container text-secondary text-[10px] font-semibold whitespace-nowrap">${esc(f.theme)}</span>` : ''}
+      ${f.theme ? `<span class="px-1.5 py-0.2 rounded-full bg-secondary-container text-on-secondary-fixed text-[10px] font-semibold whitespace-nowrap" title="Thème GED : ${esc(f.theme_nom || f.theme)}">${esc(f.theme_nom ? f.theme_nom.slice(0, 22) : f.theme)}</span>` : ''}
+      ${f.type ? `<span class="px-1.5 py-0.2 rounded-full bg-surface-container text-secondary text-[10px] font-semibold whitespace-nowrap" title="Nature du fichier">${esc(f.type)}</span>` : ''}
+      ${f.stockage ? `<span class="px-1.5 py-0.2 rounded-full bg-tertiary-container text-on-tertiary-container text-[10px] font-semibold whitespace-nowrap" title="Mode de stockage">${esc(f.stockage)}</span>` : ''}
+      ${f.ref ? `<span class="font-label-mono-sm text-outline text-[10px] whitespace-nowrap" title="Référence document">${esc(f.ref)}</span>` : ''}
       <span class="font-label-mono-sm text-outline text-[11px] whitespace-nowrap tabular">${f.taille ? num(Math.round(Number(f.taille) / 1024)) + ' Ko' : ''}</span>
       <span class="font-label-mono-sm text-outline text-[11px] whitespace-nowrap">${esc(f.date_depot || f.date_doc || '')}</span>
     </div>`).join('');

@@ -13,3 +13,7 @@ indices-journal.jsonl
 pulldocker.ini
 pulldocker.bat
 pulldocker.ps1
+
+# Documentation fournisseur (propriétaire, volumineuse) — conservée hors dépôt
+DOC TECHNIQUE/
+

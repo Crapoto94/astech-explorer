@@ -357,7 +357,35 @@ constaté 2026-09) :
 | `SEQUENCE` | 3 |
 
 > Beaucoup d'objets sont `INVALID` (non recompilés) — normal sur une prod
-> ancienne ; interroger `ALL_OBJECTS.STATUS`.
+> ancienne ; interroger `ALL_OBJECTS.STATUS`. Constaté : **706 procédures**,
+> 79 fonctions, 52 triggers et 272 vues `INVALID`.
+
+### Classement des objets par domaine (préfixe du nom)
+
+Les 1 212 procédures + 294 fonctions se répartissent en familles reconnaissables
+au préfixe (utilisé par le module « Procédures stockées » de l'appli) :
+
+| Famille | Préfixe | Exemples / sens |
+|---|---|---|
+| Rapports / éditions | `RPT*` (705), `IMP*` | Génération d'états (`RPT7342_*` = indices) |
+| **Business Objects** | `BO_*` (96) | Restitution décisionnelle. Surtout `BO_LIB_*` = fonctions de **libellé/mapping** (code → libellé) pour le BO ; `BO_*` vues = extraits |
+| Opérations métier | `OP_*` (15+) | Traitements applicatifs (`OPC OMPTA_CRE`, `OP_BLPOSITDEMANDE`…) |
+| Fonctions | `F_*` (133) | Fonctions PL/SQL (calcul ou accès paramétré) |
+| API / triggers | `P_*`, `TRIGGERS_API` | Package `TRIGGERS_API`, procédures d'API |
+| Transactions | `SP_*`, `TR_*` | Unités de traitement atomiques |
+| Vérifications | `VERIF*` | Contrôles de cohérence |
+| Calculs | `CALC*`, `CAL*` | Calculs métier |
+| Migrations / dumps | `ARCHIV*`, `MANU_*`, `IMP_*` | Maintenances, imports |
+
+### Classification des triggers (335)
+
+Les triggers sont classés **par table cible** dans l'appli (ARBO 66,
+interventions 70, stock/achats 24, contrats 19, agents 17, parc 10, autres 117).
+Types : `BEFORE EACH ROW` (105), `AFTER EACH ROW` (206), `COMPOUND` (15),
+`AFTER STATEMENT` (9). Colonnes utiles : `ALL_TRIGGERS.TABLE_NAME`,
+`TRIGGERING_EVENT` (`INSERT OR UPDATE`…), `TRIGGER_TYPE`, `STATUS`
+(`ENABLED`/`DISABLED`). Description déduite : « Trigger ligne. Avant INSERT sur
+ARBO — … ».
 
 Procédures/fonctions notables côté **locatif / révision / échéancier** :
 
@@ -460,6 +488,22 @@ Attributs utiles pour créer un compte ASTECH :
 (→ `SDEM_DES`/`USR_DETAIL`), `department`/`company` (→ service), `title`.
 Exemple réel (FORTAS) : `sAMAccountName=SFortas`, `employeeID=0018451`,
 `mail=sfortas@ivry94.fr`, `department=SERVICE DEPLOIEMENT ET SUPPORT` (→ `BF9`).
+
+### Authentification AD via l'API centrale (APM) — utilisée par l'appli
+
+L'application **astech-explorer** authentifie les agents par
+**`POST {APM}/api/v1/ad/authenticate`** (voir `GUIDE_NOUVELLE_APP_VILLE.md` §3.2) :
+
+- `APM_API_URL` = `https://api.ivry.local` (redirige depuis http, `openresty`).
+- Header **`X-API-KEY`** = clé APM avec la permission **`ad_auth`**.
+- Corps : `{ "username": "…", "password": "…" }` ; réponse `200 {success:true, dn}`
+  ou `401 {error:"User not found"}` / `{"error":"X-API-KEY header missing"}`.
+- Le serveur **proxy** cet appel (le mot de passe n'est jamais stocké) puis émet
+  un **jeton de session** signé HMAC (`ASTECH_SESSION_SECRET`, TTL 8 h) ; l'UI le
+  renvoie dans l'en-tête `X-ASTECH-Token`.
+- Restriction possible : `ASTECH_AGENT_ALLOW` / `AGENT_DENY` (listes de logins).
+- Activation : `ASTECH_REQUIRE_AUTH=1` (les routes internes `/api/*` hors
+  `/api/auth/*` et `/api/v1/*` exigent alors une session valide).
 
 ## Repères métier (domaines)
 
@@ -725,15 +769,45 @@ https://github.com/Crapoto94/astech), port **8099** :
   `DOC_VUSER`/`DOC_PUBLIE`/`DOC_REVIS`/`DOC_EPUR`), rattachement (`DOC_AFFECT`/
   `DOC_RESID`), transfert (`DOC_TRF_*`/`DOC_FUSION`). **Versionning : oui** —
   compteur `DOC.DOC_REVIS` (463 docs > 1 révision, max 7) + archive des versions
-  précédentes dans **`DOC_HISTO`** (2 804 lignes, 2 222 docs : `DOCH_REVIS`,
-  `DOCH_FILE`, `DOCH_FOLDER`, `DOCH_SIZE`, `DOCH_STOCKG`, `DOCH_MUSER/DATE`) ;
-  historique de références de fichiers, sans branches ni diff de contenu.
+  précédentes dans **`DOC_HISTO`** (2 804 lignes, 2 222 docs : `DOCH_DOCID`,
+  `DOCH_REVIS`, `DOCH_FILE`, `DOCH_FOLDER`, `DOCH_SIZE`, `DOCH_STOCKG`,
+  `DOCH_FDATE`, `DOCH_MUSER/DATE`) — jointure `DOC_HISTO.DOCH_DOCID = DOC.DOC_ID`.
+  Historique de **références de fichiers** par révision (chemin/nom/taille), sans
+  branches ni diff de contenu ; un fichier déposé une seule fois n'a pas de ligne
+  d'historique. Les répartitions de dates (`DOC_CDATE`) : 2014→2026, pics 2025
+  (4 065) et 2026 (2 984) ; 658 jours de dépôt.
+- **Authentification AD de l'appli** (couche applicative, distincte du SSO
+  ASTECH) : `POST {APM_API_URL}/api/v1/ad/authenticate` (APM de la Ville, header
+  `X-API-KEY`), puis jeton de session **HMAC** exposé en `X-ASTECH-Token`
+  (`SESSION_TTL_MS` = 8 h). Variables `.env` : `APM_API_URL`, `APM_API_KEY`,
+  `ASTECH_REQUIRE_AUTH` (1 = session obligatoire sur `/api/*`),
+  `ASTECH_AGENT_ALLOW/DENY`, `ASTECH_SESSION_SECRET`, `ASTECH_SESSION_TTL_MS`.
+  Aucun mot de passe stocké. Voir `GUIDE_NOUVELLE_APP_VILLE.md`.
+- **Magasins** : un magasin = structure `V_SOCIETES` ; articles `STOCK` via
+  `STOCK.SREF_SOC = V_SOCIETES.COD` (emplacements `SREF_ALLEE/TRAVEE/CASIER/POS`).
+  Endpoints `/api/magasins`, `/api/magasin/:code` ; UI `#/magasins`.
 - **Docker Linux** : `Dockerfile` (base Oracle Linux 8 + `oracle-instantclient-basic`
   + Node 20) et `docker-compose.yml` ; voir README/DEPLOIEMENT pour les variables d'env.
+  Déploiement distant : `pulldocker.bat`/`pulldocker.ps1` (lit `pulldocker.ini`
+  local non commité, SSH/plink vers le serveur, `git pull` + rebuild compose).
 - **Pagination** : `dataTable()` (front, client-side) propose un sélecteur de
   lignes **25/50/100/500/2000/Tous** via `state.pageSizes`. Liste Agents
   (paginée serveur, `pageSize` jusqu'à 3000) : filtre **Tous/Actifs/Inactifs**
-  (`?actif=`) + taille de page.
+  (`?actif=`) + taille de page. État d'un compte = `DEMANDEUR.SDEM_SIGN` (`O`=actif) ;
+  badges visuels dans la liste Agents et la fiche (`Actif`/`Inactif` + pastille).
+- **Listes déroulantes** : les `<select data-act>` ne déclenchent l'action que sur
+  l'événement **`change`** — le gestionnaire global `click` les ignore
+  (`select, input[type=checkbox], input[type=radio]`), sinon la vue se re-rendait au
+  clic et la liste se refermait avant de choisir.
+- **Parc automobile** : voir section dédiée plus haut ; endpoints `/api/parc`,
+  `/api/parc/stats`, `/api/parc/permis`, `/api/parc/vehicule/:id` ; UI `#/parc`.
+- **Thèmes de documents** (`DOC_THEME`) : codes `PH*` = **PHOTO** (ex. `PHDI` =
+  « PHOTO DEMANDE D'INTERVENTION », `PHFAC` = « PHOTO FACADE BATIMENT », `PHVEH`,
+  `PHINT`, `PHART`, `PHSIT`) ; pas des pièces comptables. Nature du fichier
+  (`V_DOCTYPE`) : `BUREAUTIQUE`, `IMAGE`, `VIDEO`, `PLAN`, `URL`. Stockage
+  (`V_DOCSTOCKG`) : `EXTERN`, `INTERN`, `BASE`, `PLAN`. La liste des fichiers
+  affiche désormais **chemin** (`DOC_FOLDER`), **thème en clair** (`THM_NOM`),
+  nature, stockage, référence (`DOC_REF`) et taille.
 - Recherche via `UPPER(...) LIKE :q` (bind), `FETCH FIRST n ROWS ONLY`,
   `rownum <= :lim`. Les colonnes Oracle reviennent en MAJUSCULES → **normaliser
   les clés en minuscules** côté serveur avant de les renvoyer au front.
