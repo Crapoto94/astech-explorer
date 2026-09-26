@@ -886,29 +886,61 @@ async function runCreer() {
   } catch (e) { c.error = e.message; }
   finally { c.busy = false; await viewSynchro(); }
 }
-function runSyncRh() {
+async function runSyncRh() {
   const s = state.synchro;
   s.running = true; s.error = null; s.result = null; s.selected = null;
   s.desact = { plan: null, result: null, busy: false, error: null };
-  viewSynchro().then(() => {
-    const bar = document.getElementById('syncBar');
-    const txt = document.getElementById('syncText');
-    const up = (done, total) => {
-      if (bar && total) bar.style.width = Math.round((done / total) * 100) + '%';
-      if (txt) txt.textContent = done + ' / ' + total;
-    };
-    let es;
-    try { es = new EventSource('/api/sync/rh/stream?scope=' + encodeURIComponent(s.scope)); }
-    catch (e) { s.running = false; s.error = e.message; viewSynchro(); return; }
-    es.onmessage = (ev) => {
-      let d; try { d = JSON.parse(ev.data); } catch { return; }
-      if (d.type === 'start') up(0, d.total);
-      else if (d.type === 'progress') up(d.done, d.total);
-      else if (d.type === 'error') { es.close(); s.error = d.error; s.running = false; viewSynchro(); }
-      else if (d.type === 'done') { es.close(); s.result = d.result; s.selected = null; s.running = false; viewSynchro(); }
-    };
-    es.onerror = () => { es.close(); if (s.running) { s.error = 'Flux interrompu (connexion au proxy).'; s.running = false; viewSynchro(); } };
-  });
+  await viewSynchro();
+  const bar = document.getElementById('syncBar');
+  const txt = document.getElementById('syncText');
+  const up = (done, total) => {
+    if (bar && total) bar.style.width = Math.round((done / total) * 100) + '%';
+    if (txt) txt.textContent = done + ' / ' + total;
+  };
+  // EventSource ne peut pas porter l'en-tête X-ASTECH-Token : on lit le flux SSE
+  // via fetch pour transmettre la session (et le profil base ?env=).
+  const headers = {};
+  if (SESSION.token) headers['X-ASTECH-Token'] = SESSION.token;
+  let reader = null;
+  try {
+    const r = await fetch(withEnv('/api/sync/rh/stream?scope=' + encodeURIComponent(s.scope)), { headers });
+    if (r.status === 401 && APP.authEnabled) {
+      SESSION.token = ''; try { localStorage.removeItem('astechToken'); } catch (e) { /* ignore */ }
+      showLogin('Session expirée, veuillez vous reconnecter.');
+      throw new Error('Authentification requise');
+    }
+    if (!r.ok || !r.body) {
+      let msg = 'Erreur ' + r.status;
+      try { const j = await r.json(); if (j && j.error) msg = j.error; } catch (e) { /* ignore */ }
+      throw new Error(msg);
+    }
+    reader = r.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let idx;
+      while ((idx = buf.indexOf('\n\n')) >= 0) {
+        const frame = buf.slice(0, idx); buf = buf.slice(idx + 2);
+        for (const line of frame.split('\n')) {
+          if (line.slice(0, 5) !== 'data:') continue;
+          let d; try { d = JSON.parse(line.slice(5).trim()); } catch { continue; }
+          if (d.type === 'start') up(0, d.total);
+          else if (d.type === 'progress') up(d.done, d.total);
+          else if (d.type === 'error') throw new Error(d.error || 'Erreur de synchronisation.');
+          else if (d.type === 'done') { s.result = d.result; s.selected = null; }
+        }
+      }
+    }
+  } catch (e) {
+    s.error = e.message || 'Flux interrompu (connexion au proxy).';
+  } finally {
+    if (reader) { try { reader.cancel(); } catch (e) { /* ignore */ } }
+    s.running = false;
+    await viewSynchro();
+  }
 }
 
 /* ═══════════════════════════ LOCATIF ═══════════════════════════ */
