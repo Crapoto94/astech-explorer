@@ -36,11 +36,11 @@ function sendArchAudit(res, id) {
 const EXPLORER_PREFIX = { astech: 'ASTECH_API', neocity: 'NEOCITY_API' };
 const EXPLORER_PRESETS = {
   astech: [
+    { label: 'Test de connexion — menu (401 attendu sans jeton)', method: 'GET', path: '/api/menu' },
     { label: 'Liste des demandes (traitements)', method: 'GET', path: '/api/demande/all' },
     { label: "Détails d'une demande", method: 'GET', path: '/api/demande/details/{id}' },
     { label: 'Détail intervention par n°', method: 'GET', path: '/api/intervention/demandes/nr/{num}' },
     { label: 'Recherche interventions', method: 'GET', path: '/api/intervention/search/' },
-    { label: "Bien d'un demandeur", method: 'GET', path: '/api/arbo/get-bien-demandeur' },
   ],
   neocity: [
     { label: 'Liste des signalements', method: 'GET', path: '/signalements' },
@@ -48,7 +48,7 @@ const EXPLORER_PRESETS = {
   ],
 };
 const EXPLORER_TARGETS = [
-  { id: 'astech', label: 'AS-Tech OPUS / Symphonie', prefix: 'ASTECH_API', defUrl: 'https://astech.ivry94.fr' },
+  { id: 'astech', label: 'AS-Tech OPUS / Symphonie', prefix: 'ASTECH_API', defUrl: 'https://astech.ivry94.fr/app.php' },
   { id: 'neocity', label: 'NEOCITY', prefix: 'NEOCITY_API', defUrl: 'https://api.neocity.fr' },
 ];
 function explorerTargets() {
