@@ -911,6 +911,13 @@ async function listParc(f = {}) {
 }
 
 async function getParcVehicule(id) {
+  try {
+    return await getParcVehiculeInner(id);
+  } catch (e) {
+    throw new Error('getParcVehicule(' + id + '): ' + e.message);
+  }
+}
+async function getParcVehiculeInner(id) {
   const [v] = await exec(`SELECT * FROM ${PARC_TABLE} WHERE ${PARC_FILTER} AND ID_BIEN = :id`, { id: Number(id) }, 1);
   if (!v) return null;
   const [arbo] = await exec(`SELECT A.ARB_ID AS id, A.ARB_CODE AS code, A.ARB_DES AS des, A.ARB_REF AS immat,
@@ -918,7 +925,7 @@ async function getParcVehicule(id) {
       A.ARB_DAT1 AS date1, A.ARB_REFORME AS reforme
     FROM ARBO A LEFT JOIN SOUSCATEGORIE SS ON SS.SSCAT_COD = A.ARB_SCAT
     WHERE A.ARB_ID = :id`, { id: Number(id) }, 1);
-  const mate = await exec(`SELECT M.ARBMA_DATGAR AS date_garantie, M.ARBMA_DISPO AS dispo, M.ARBMA_INDISPODEB AS indispo_deb,
+  const mate = await exec(`SELECT /*parc:mate*/ M.ARBMA_DATGAR AS date_garantie, M.ARBMA_DISPO AS dispo, M.ARBMA_INDISPODEB AS indispo_deb,
       M.ARBMA_INDISPOFIN AS indispo_fin, M.ARBMA_ALERTE AS alerte, M.ARBMA_DATALERTE AS date_alerte,
       M.ARBMA_SSERV AS sserv_affect, M.ARBMA_FOURN AS fournisseur
     FROM ARBO_MATE M WHERE M.ARBMA_ARBID = :id`, { id: Number(id) }, 1);
