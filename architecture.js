@@ -135,8 +135,11 @@ const ARCHITECTURE = {
   poste004: {
     present: false,
     question: 'POSTE004 est-il la Symphonie Box ?',
-    conclusion: "NON. POSTE004 n'apparaît dans aucun des 13 documents fournisseur analysés, et ses caractéristiques ne correspondent pas à une Symphonie Box (VM Ubuntu, ports 80/443, SSH 3422) ni au serveur de fichiers documentaire (SMB 445, partage \\\\AWO\\StockageDocumentaire$).",
-    indice: "\\\\POSTE004\\C$\\TEMP est le partage administratif C$ d'un POSTE DE TRAVAIL (dossier TEMP) : c'est une zone de transit où l'application dépose les photos de la GED. Il concentre 7 191 enregistrements / 4 724 fichiers (dont 4 713 en thème PHDI = PHOTO DEMANDE D'INTERVENTION), de 2024-07-18 à 2026-09-25.",
+    conclusion: "NON. POSTE004 n'apparaît dans aucun des 13 documents fournisseur analysés et ne correspond pas à une Symphonie Box (VM Ubuntu, nginx 80, SSH 3422). C'est un poste de travail utilisé comme répertoire de stockage documentaire.",
+    cause: "Paramètre applicatif REPDOCUMENT = \\\\POSTE004\\C$\\TEMP (SBCG_PARAM, PAR_ID 1439, société 00) : le mode de stockage GED « Interne » déplace les fichiers vers ce chemin au lieu du serveur documentaire (\\\\AWO\\StockageDocumentaire$). REP_OPUSEXPORT pointe aussi dessus.",
+    indice: "\\\\POSTE004\\C$\\TEMP est le partage administratif C$ d'un POSTE DE TRAVAIL (dossier TEMP). Il concentre 7 191 enregistrements / 4 724 fichiers (dont 4 713 en thème PHDI = PHOTO DEMANDE D'INTERVENTION), de 2024-07-18 à 2026-09-25. Premier dépôt : 18/07/2024 14:45:59 (IMG_6381.jpg, ASAPH PHILIPPE / 0000196). Volumes : 2024=142, 2025=4065, 2026=2984.",
+    reseau: "Le nom n'est résolu par aucun canal : DNS ivry.local/ivry94.local sans enregistrement A, pas de WINS, cache NetBIOS vide, ping 'hôte inconnu', port 445 en timeout. Le chemin en base est une simple chaîne ; l'hôte peut avoir été renommé/décommissionné ou écrire en local.",
+    correctif: "Basculer REPDOCUMENT vers le serveur documentaire, migrer les 4 724 fichiers, puis retirer la dépendance à POSTE004.",
     autres: "Les 353 autres dossiers GED pointent surtout vers \\\\tsclient\\… (lecteurs redirigés d'une session Citrix/TSE).",
   },
 

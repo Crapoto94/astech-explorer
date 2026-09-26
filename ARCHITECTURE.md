@@ -197,17 +197,30 @@ le SMB et les services Windows ; certificat SSL sur IIS et NGINX si HTTPS.
 
 ## 9. Question : `POSTE004` est-il la Symphonie Box ?
 
-**Non.** D'après la documentation et les données observées, `POSTE004` **n'est
-pas** la Symphonie Box (ni un serveur de fichiers documentaire).
+**Non.** `POSTE004` n'est **pas** la Symphonie Box (ni un serveur de fichiers
+documentaire). C'est un **poste de travail** qui sert de **répertoire de
+stockage documentaire** parce que le paramètre applicatif `REPDOCUMENT` pointe
+dessus. La Symphonie Box est une autre machine (`symphoniebox-prod.ivry.local`).
 
-### Ce que dit la documentation
+### Cause racine : paramètre `REPDOCUMENT`
 
-`POSTE004` **n'apparaît dans aucun** des 13 documents fournisseur analysés
-(.docx/.pdf). Les documents décrivent des **rôles** (« Serveur de fichiers »,
-« Symphonie Box »), pas des machines nommées. La Symphonie Box est une **VM
-Ubuntu** (ports **80/443**, accès SSH **3422**), le serveur de fichiers un
-partage **SMB (445)** — ni l'un ni l'autre ne correspond à un chemin
-`\\POSTE004\C$\TEMP`.
+La GED AS-Tech propose 3 modes de stockage (`DossierArchitectureTechnique`, §12) :
+**Externe** (fichier non déplacé), **Interne** (fichier **déplacé** vers le
+serveur documentaire prédéfini) et **Base** (fichier en base). Le répertoire du
+mode « Interne » est défini par le paramètre **`REPDOCUMENT`**, avec rangement
+`année\mois\extension` (paramètre `REPDOC_STOCKAGE = %DATAA%\%DATMM%\%EXT%`).
+
+Dans la base ASTECH (`SBCG_PARAM`) :
+
+| PAR_ID | PAR_SOC | PAR_NOM | PAR_VAL |
+|---|---|---|---|
+| 1439 | `00` | **`REPDOCUMENT`** | **`\\POSTE004\C$\TEMP`** |
+| 6572 | `00` | `REP_OPUSEXPORT` | `\\POSTE004\C$\TEMP` |
+| 1439 | `10` | `REPDOCUMENT` | `\\nas-ivry01\transversal\K:\Patrimoine\SEBC\CONTROLE AMIANTE` |
+
+`POSTE004` n'est donc pas une machine « mystérieuse » : c'est la **valeur de
+configuration** du dépôt documentaire (société `00`), restée sur un poste de
+transit au lieu du serveur de fichiers documentaire (`\\AWO\StockageDocumentaire$`).
 
 ### Ce que montrent les données (`DOC`)
 
@@ -216,19 +229,36 @@ partage **SMB (445)** — ni l'un ni l'autre ne correspond à un chemin
 | Chemin | `\\POSTE004\C$\TEMP` | partage documentaire SMB (`\\AWO\…`) |
 | Nature | **poste de travail** (admin `C$`, dossier `TEMP`) | serveur Linux |
 | Part dans la GED | **7 191 enregistrements / 4 724 fichiers** (dont 4 713 en `PHDI`) | — |
+| Premier dépôt | **18/07/2024 14:45:59** (`IMG_6381.jpg`, titré « Rideau », par ASAPH PHILIPPE / 0000196) | — |
 | Période | 2024-07-18 → 2026-09-25 | — |
+| Volumes | 2024 : 142 · 2025 : 4 065 · 2026 : 2 984 | — |
 
-`\\POSTE004\C$\TEMP` est un **dossier temporaire d'un poste Windows** (partage
-administratif `C$`). Il concentre la majorité des **photos de demandes
-d'intervention** (`PHDI`) et d'interventions (`PHINT`) : c'est manifestement une
-**zone de transit** où l'application dépose temporairement les images avant/au
-moment de leur rattachement, et où elles sont restées stockées. Ce n'est pas une
-brique d'architecture décrite par AS-Tech.
+Les premiers jours mêlent des dépôts de test (`test.pdf` par CHOUKRI MOHAMED et
+BESSOL RENÉ) : le paramètre `REPDOCUMENT` a manifestement été figé lors de la
+**mise en service de juillet 2024** et n'a jamais été corrigé. Le volume est
+aujourd'hui porté par le **connecteur NEOCITY** (compte d'interface, 2 241
+dépôts) et une cinquantaine d'agents (photos prises au téléphone :
+`picture-1.jpg`, `20260925_155826.jpg`, identifiants numériques longs).
 
-> Conclusion : `POSTE004` = poste de travail utilisé comme **répertoire
-> temporaire** pour les photos GED. La Symphonie Box et le serveur de fichiers
-> documentaire sont **d'autres machines**, non identifiées par leur nom dans la
-> documentation fournie.
+### Pourquoi `POSTE004` est introuvable sur le réseau
+
+Le nom n'est **résolu par aucun canal** depuis le LAN :
+
+- **DNS** : `POSTE004`, `POSTE004.ivry.local` et `POSTE004.ivry94.local` →
+  « le nom DNS n'existe pas » (pas d'enregistrement `A`).
+- **NetBIOS/WINS** : aucun serveur WINS configuré, cache NetBIOS vide.
+- **ICMP/SMB** : `ping` → hôte inconnu, port **445** en timeout.
+
+Autrement dit, `\\POSTE004\C$\TEMP` est une simple **chaîne de caractères en
+base** ; rien n'oblige l'hôte à exister ou à être résolvable. Soit la machine a
+été **renommée / décommissionnée / écartée du domaine**, soit elle écrit en
+**local** (le service applicatif tourne dessus, `C:\TEMP` local), et seuls les
+serveurs applicatifs y accèdent encore — pas ton poste.
+
+> Conclusion : `POSTE004` = poste de travail utilisé comme **répertoire de dépôt
+> documentaire** via `REPDOCUMENT = \\POSTE004\C$\TEMP`. À corriger : basculer
+> `REPDOCUMENT` vers le serveur documentaire, **migrer les 4 724 fichiers**,
+> puis retirer la dépendance à `POSTE004`.
 
 Les 353 autres dossiers de la GED (2 222 enregistrements / 1 564 fichiers)
 pointent surtout vers `\\tsclient\…` (lecteurs redirigés d'une session

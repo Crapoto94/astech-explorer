@@ -313,6 +313,11 @@ par révision). Historique de références de fichiers, sans branches ni diff.
 fichiers uniques** (multi-rows par fichier ; ex. `picture.jpg` = 2 112 lignes,
 281 groupes de doublons). Chemins = **354 dossiers**, dominés par
 `\\POSTE004\C$\TEMP` (**7 191 enregistrements / 4 724 fichiers**, soit ~76 %).
+Ce chemin n'est pas un serveur : c'est la valeur du paramètre applicatif
+**`REPDOCUMENT`** (`SBCG_PARAM`, `PAR_ID 1439`, société `00`) qui pilote le mode
+de stockage GED « Interne ». Premier dépôt le **18/07/2024 14:45:59** (poste de
+travail `POSTE004`, non résolvable sur le LAN). À corriger : basculer
+`REPDOCUMENT` vers le serveur documentaire puis migrer les fichiers.
 En excluant POSTE004 : 2 222 enregistrements / 1 611 fichiers uniques. Autres
 champs porteurs : `CONTRAT_LOCATIF.CONTL_PJ1..15` (0 rempli),
 `DEMANDEUR.SDEM_REPDOC` (12), `BIMMAQ_IE.MIE_FILE` (vide).
