@@ -1713,14 +1713,15 @@ function mdToHtml(md) {
   flush();
   return html;
 }
-async function openAudit() {
+async function openAudit(id) {
+  id = id || 'technique';
   let el = document.getElementById('auditOverlay');
   if (!el) { el = document.createElement('div'); el.id = 'auditOverlay'; el.className = 'fixed inset-0 z-[90] flex flex-col bg-[#0f172a]/95 backdrop-blur-sm'; document.body.appendChild(el); }
   el.innerHTML = `
     <div class="flex items-center justify-between gap-space-sm px-space-lg py-space-sm bg-surface-container-lowest border-b border-surface-container">
       <div class="flex items-center gap-2 min-w-0"><span class="material-symbols-outlined text-primary">fact_check</span>
-        <div class="min-w-0"><div class="font-title-md text-on-surface truncate">Audit technique — base Oracle ASTECHIVR</div>
-          <div class="font-label-mono-sm text-secondary truncate">AUDIT_TECHNIQUE.md</div></div></div>
+        <div class="min-w-0"><div id="auditTitle" class="font-title-md text-on-surface truncate">Audit</div>
+          <div id="auditFile" class="font-label-mono-sm text-secondary truncate">${esc(id)}</div></div></div>
       <button id="auditClose" class="p-1 rounded hover:bg-surface-container"><span class="material-symbols-outlined">close</span></button>
     </div>
     <div class="flex-1 overflow-auto p-space-lg"><div id="auditBody" class="max-w-5xl mx-auto bg-surface-container-lowest rounded-xl shadow-sm p-space-lg">
@@ -1728,7 +1729,8 @@ async function openAudit() {
   const close = () => el.remove();
   document.getElementById('auditClose').onclick = close;
   try {
-    const r = await api('/api/architecture/audit');
+    const r = await api('/api/architecture/audit/' + encodeURIComponent(id));
+    if (r.titre) document.getElementById('auditTitle').textContent = r.titre;
     document.getElementById('auditBody').innerHTML = mdToHtml(r.markdown || '');
   } catch (e) {
     document.getElementById('auditBody').innerHTML = `<div class="text-error font-body-md">Erreur : ${esc(e.message)}</div>`;
@@ -1843,9 +1845,16 @@ async function viewArchitecture() {
       ${d.poste004.correctif ? `<p class="font-body-sm text-on-surface-variant mt-1"><span class="font-semibold">Correctif :</span> ${esc(d.poste004.correctif)}</p>` : ''}
       ${d.poste004.autres ? `<p class="font-body-sm text-on-surface-variant mt-1">${esc(d.poste004.autres)}</p>` : ''}</div>`, 'search')}</div>
 
-    <div class="mt-space-lg">${cc('Audit technique de la base Oracle', `<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
-      <p class="font-body-sm text-on-surface-variant max-w-3xl">Analyse du dictionnaire Oracle : structures, intégrité, sécurité, dette PL/SQL, décalage aux bonnes pratiques 2026 et faisabilité d'une migration de SGBD.</p>
-      <button data-act="audit" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary shadow-md font-title-md transition-all whitespace-nowrap"><span class="material-symbols-outlined text-[18px]">fact_check</span>Lire l'audit technique</button></div>`, 'fact_check')}</div>
+    <div class="mt-space-lg">${cc('Audits (lecture seule)', `<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+      <div class="p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-sm">
+        <div><div class="font-title-md text-on-surface font-bold">Audit technique — base Oracle</div>
+          <p class="font-body-sm text-on-surface-variant mt-1">Structures, intégrité, sécurité, dette PL/SQL, adhérence Oracle et trajectoire de migration.</p></div>
+        <button data-act="audit:technique" class="self-start inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary shadow-md font-title-md transition-all"><span class="material-symbols-outlined text-[18px]">fact_check</span>Lire l'audit technique</button></div>
+      <div class="p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-sm">
+        <div><div class="font-title-md text-on-surface font-bold">Audit de la documentation</div>
+          <p class="font-body-sm text-on-surface-variant mt-1">Inventaire documentaire, manques pour comprendre l'application et conformité aux bonnes pratiques.</p></div>
+        <button data-act="audit:documentation" class="self-start inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary shadow-md font-title-md transition-all"><span class="material-symbols-outlined text-[18px]">description</span>Lire l'audit documentation</button></div>
+    </div>`, 'fact_check')}</div>
 
     <div class="mt-space-lg">${cc('Documents sources (visionneuse PDF)', `<div class="grid grid-cols-1 md:grid-cols-2 gap-space-sm">
       ${(d.docs || []).map(doc => `<button data-act="pdf:${encodeURIComponent(doc.fichier)}||${encodeURIComponent(doc.titre)}" class="text-left p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container flex items-start gap-2">
@@ -2847,7 +2856,7 @@ function handleAction(action, value, el) {
     case 'procType': state.procs.type = el.value; viewProcedures(); break;
     case 'procStatus': state.procs.status = value || ''; viewProcedures(); break;
     case 'pdf': { const parts = String(value || '').split('|'); openPdf(decodeURIComponent(parts[0]), parts[1] ? Number(parts[1]) : null, decodeURIComponent(parts[2] || '')); break; }
-    case 'audit': openAudit(); break;
+    case 'audit': openAudit(value || 'technique'); break;
     case 'adminTab': state.admin.tab = value; viewAdministration(); break;
     case 'usersRefresh': state.users.rows = null; viewUsers(); break;
     case 'userAdd': runUserAdd(); break;

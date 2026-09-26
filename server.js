@@ -17,6 +17,20 @@ const localauth = require('./localauth');
 const { ARCHITECTURE } = require('./architecture');
 const { DOCS: ARCH_DOCS, SOURCES: ARCH_SOURCES } = require('./architecture-docs');
 
+// Rapports d'audit publiés dans l'écran Architecture (fichiers Markdown à la racine).
+const ARCH_AUDITS = [
+  { id: 'technique', titre: 'Audit technique — base Oracle ASTECHIVR', fichier: 'AUDIT_TECHNIQUE.md', role: 'Structures, intégrité, sécurité, dette PL/SQL, adhérence Oracle et trajectoire de migration.' },
+  { id: 'documentation', titre: 'Audit de la documentation éditeur (AS-Tech)', fichier: 'AUDIT_DOCUMENTATION.md', role: 'Couverture de la documentation fournisseur, manques pour comprendre l\'application et analyse de l\'API.' },
+];
+function sendArchAudit(res, id) {
+  const a = ARCH_AUDITS.find((x) => x.id === id);
+  if (!a) return sendJson(res, 404, { error: 'Audit inconnu.' });
+  try {
+    const markdown = fs.readFileSync(path.join(__dirname, a.fichier), 'utf8');
+    return sendJson(res, 200, { id: a.id, titre: a.titre, markdown });
+  } catch (e) { return sendJson(res, 404, { error: 'Audit indisponible : ' + e.message }); }
+}
+
 // Charge .env (local, non commité) avant toute lecture de process.env.
 (function loadDotEnv() {
   try {
@@ -2207,12 +2221,9 @@ async function handleRequest(req, res, p, sp) {
     // Architecture (référentiel statique issu des dossiers techniques)
     if (p === '/api/architecture') return sendJson(res, 200, { ...ARCHITECTURE, docs: ARCH_DOCS, sources: ARCH_SOURCES });
     if (p === '/api/architecture/docs') return sendJson(res, 200, { docs: ARCH_DOCS, sources: ARCH_SOURCES });
-    if (p === '/api/architecture/audit') {
-      try {
-        const md = fs.readFileSync(path.join(__dirname, 'AUDIT_TECHNIQUE.md'), 'utf8');
-        return sendJson(res, 200, { titre: 'Audit technique — base Oracle ASTECHIVR', markdown: md });
-      } catch (e) { return sendJson(res, 404, { error: 'Audit indisponible : ' + e.message }); }
-    }
+    if (p === '/api/architecture/audits') return sendJson(res, 200, { audits: ARCH_AUDITS.map(({ id, titre, role }) => ({ id, titre, role })) });
+    if (p === '/api/architecture/audit') return sendArchAudit(res, 'technique');
+    { const am = p.match(/^\/api\/architecture\/audit\/([a-z0-9-]+)$/); if (am) return sendArchAudit(res, am[1]); }
 
     // Magasins & stock
     if (p === '/api/magasins') return sendJson(res, 200, { rows: await listMagasins() });
