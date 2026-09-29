@@ -1654,17 +1654,36 @@ async function listDocumentsByDay(date, opts = {}) {
 }
 
 // Documents stockés directement dans la base (mode DOC_STOCKG = « BASE ») : le
-// fichier est conservé en BLOB dans SBCG_RES.RES_BIN, relié à la GED centrale
-// par l'égalité DOC.DOC_REF = SBCG_RES.RES_NOM. RES_FMT = 1 = fichier document
+// fichier est conservé en BLOB dans SBCG_RES.RES_BIN. Le lien applicatif vers la
+// GED est **l'identifiant** DOC.DOC_RESID = SBCG_RES.RES_ID (cf. la vue éditeur
+// V_PATRI_IMAGE) ; on retombe sur la **référence texte** DOC.DOC_REF =
+// SBCG_RES.RES_NOM quand l'id est absent. `OUTER APPLY` garantit au plus un DOC
+// par ressource (pas de doublon, priorité à l'id). RES_FMT = 1 = fichier document
 // (4 = icône / ressource graphique, exclue). Aucun contenu n'est renvoyé : seule
 // la taille (DBMS_LOB.GETLENGTH) et les métadonnées le sont.
+const BASE_RES_FROM = `FROM SBCG_RES r
+      OUTER APPLY (
+        SELECT d.DOC_ID, d.DOC_REF, d.DOC_RESID, d.DOC_TITRE, d.DOC_FILE, d.DOC_FOLDER,
+               d.DOC_SIZE, d.DOC_STOCKG, d.DOC_THEME, d.DOC_TYPE, d.DOC_CDATE, d.DOC_DATE
+        FROM DOC d
+        WHERE d.DOC_RESID = r.RES_ID OR d.DOC_REF = r.RES_NOM
+        ORDER BY CASE WHEN d.DOC_RESID = r.RES_ID THEN 0 ELSE 1 END, d.DOC_ID
+        FETCH FIRST 1 ROWS ONLY
+      ) d
+      LEFT JOIN DOC_THEME t ON t.THM_ID = d.DOC_THEME
+      LEFT JOIN V_DOCTYPE ty ON ty.ID = d.DOC_TYPE`;
+// Nature du lien ressource → document : 'id' (lien applicatif), 'ref' (repli) ou
+// 'orphelin' (blob sans aucun DOC, ex. ressource applicative ou doc supprimé).
+const BASE_LIEN = `CASE WHEN d.DOC_ID IS NULL THEN 'orphelin'
+      WHEN d.DOC_RESID = r.RES_ID THEN 'id' ELSE 'ref' END`;
 async function listDocumentsBase(opts = {}) {
   const q = String(opts.q || '').trim().toUpperCase();
-  const lim = int(opts.limit, 1000, 5000);
-  const off = Math.max(0, Math.floor(Number(opts.offset) || 0));
   const ext = String(opts.ext || '').trim().toUpperCase();
   const theme = String(opts.theme || '').trim();
+  const lien = String(opts.lien || '').trim().toLowerCase();
   const poste004 = !!opts.poste004;
+  const lim = int(opts.limit, 1000, 5000);
+  const off = Math.max(0, Math.floor(Number(opts.offset) || 0));
   const binds = {};
   const w = ['NVL(r.RES_FMT,1) = 1'];
   if (q) {
@@ -1677,53 +1696,86 @@ async function listDocumentsBase(opts = {}) {
     if (theme === '(hors GED)') w.push('d.DOC_ID IS NULL');
     else { binds.theme = theme; w.push('t.THM_COD = :theme'); }
   }
+  if (lien === 'id') w.push('d.DOC_ID IS NOT NULL AND d.DOC_RESID = r.RES_ID');
+  else if (lien === 'ref') w.push('d.DOC_ID IS NOT NULL AND (d.DOC_RESID IS NULL OR d.DOC_RESID <> r.RES_ID)');
+  else if (lien === 'orphelin') w.push('d.DOC_ID IS NULL');
+  else if (lien === 'extern') w.push('d.DOC_ID IS NOT NULL AND d.DOC_STOCKG = 0');
+  else if (lien === 'base') w.push('d.DOC_ID IS NOT NULL AND d.DOC_STOCKG = 2');
   if (poste004) w.push(`UPPER(NVL(d.DOC_FOLDER,' ')) LIKE '\\\\POSTE004\\%'`);
-  const from = `FROM SBCG_RES r
-      LEFT JOIN DOC d ON d.DOC_REF = r.RES_NOM
-      LEFT JOIN DOC_THEME t ON t.THM_ID = d.DOC_THEME
-      LEFT JOIN V_DOCTYPE ty ON ty.ID = d.DOC_TYPE`;
   const where = w.join(' AND ');
-  const [formats, themes, tot, posteRow, rows] = await Promise.all([
+  const [formats, themes, tot, liens, sansBlob, sansBlobThemes, rows] = await Promise.all([
     exec(`SELECT NVL(r.RES_EXT,'(sans)') AS ext, COUNT(*) AS n,
         SUM(NVL(DBMS_LOB.GETLENGTH(r.RES_BIN),0)) AS octets
       FROM SBCG_RES r WHERE NVL(r.RES_FMT,1) = 1
       GROUP BY NVL(r.RES_EXT,'(sans)') ORDER BY n DESC`, {}, 100),
     exec(`SELECT NVL(t.THM_COD,'(hors GED)') AS cod,
         NVL(t.THM_NOM,'Ressources sans document GED') AS nom, COUNT(*) AS n
-      FROM SBCG_RES r
-      LEFT JOIN DOC d ON d.DOC_REF = r.RES_NOM
-      LEFT JOIN DOC_THEME t ON t.THM_ID = d.DOC_THEME
-      WHERE NVL(r.RES_FMT,1) = 1
+      ${BASE_RES_FROM} WHERE NVL(r.RES_FMT,1) = 1
       GROUP BY NVL(t.THM_COD,'(hors GED)'), NVL(t.THM_NOM,'Ressources sans document GED')
       ORDER BY n DESC`, {}, 100),
-    one(`SELECT COUNT(*) AS docs, SUM(NVL(DBMS_LOB.GETLENGTH(r.RES_BIN),0)) AS octets,
+    one(`SELECT COUNT(*) AS blobs, SUM(NVL(DBMS_LOB.GETLENGTH(r.RES_BIN),0)) AS volume,
         SUM(CASE WHEN d.DOC_ID IS NOT NULL THEN 1 ELSE 0 END) AS lies,
+        SUM(CASE WHEN d.DOC_ID IS NULL THEN 1 ELSE 0 END) AS orphelins,
+        SUM(CASE WHEN d.DOC_ID IS NOT NULL AND d.DOC_RESID = r.RES_ID THEN 1 ELSE 0 END) AS par_id,
+        SUM(CASE WHEN d.DOC_ID IS NOT NULL AND (d.DOC_RESID IS NULL OR d.DOC_RESID <> r.RES_ID) THEN 1 ELSE 0 END) AS par_ref,
+        SUM(CASE WHEN d.DOC_ID IS NOT NULL AND d.DOC_STOCKG = 0 THEN 1 ELSE 0 END) AS incoherents_extern,
+        SUM(CASE WHEN d.DOC_ID IS NOT NULL AND UPPER(NVL(d.DOC_FOLDER,' ')) LIKE '\\\\POSTE004\\%' THEN 1 ELSE 0 END) AS poste004,
         MAX(DBMS_LOB.GETLENGTH(r.RES_BIN)) AS taille_max
-      ${from} WHERE ${where}`, binds),
-    one(`SELECT COUNT(*) AS n FROM SBCG_RES r JOIN DOC d ON d.DOC_REF = r.RES_NOM
-      WHERE NVL(r.RES_FMT,1) = 1 AND UPPER(NVL(d.DOC_FOLDER,' ')) LIKE '\\\\POSTE004\\%'`),
+      ${BASE_RES_FROM} WHERE ${where}`, binds),
+    one(`SELECT COUNT(*) AS total,
+        SUM(CASE WHEN d.DOC_ID IS NULL THEN 1 ELSE 0 END) AS orphelin,
+        SUM(CASE WHEN d.DOC_ID IS NOT NULL AND d.DOC_RESID = r.RES_ID THEN 1 ELSE 0 END) AS par_id,
+        SUM(CASE WHEN d.DOC_ID IS NOT NULL AND (d.DOC_RESID IS NULL OR d.DOC_RESID <> r.RES_ID) THEN 1 ELSE 0 END) AS par_ref,
+        SUM(CASE WHEN d.DOC_ID IS NOT NULL AND d.DOC_STOCKG = 0 THEN 1 ELSE 0 END) AS incoherents_extern
+      ${BASE_RES_FROM} WHERE NVL(r.RES_FMT,1) = 1`),
+    one(`SELECT COUNT(*) AS total, SUM(CASE WHEN DOC_STOCKG = 0 THEN 1 ELSE 0 END) AS extern,
+        SUM(CASE WHEN DOC_STOCKG = 2 THEN 1 ELSE 0 END) AS base
+      FROM DOC d WHERE d.DOC_RESID IS NULL
+        AND NOT EXISTS (SELECT 1 FROM SBCG_RES r WHERE r.RES_NOM = d.DOC_REF)`),
+    exec(`SELECT NVL(t.THM_COD,'(sans theme)') AS cod, NVL(t.THM_NOM,'') AS nom, COUNT(*) AS n
+      FROM DOC d LEFT JOIN DOC_THEME t ON t.THM_ID = d.DOC_THEME
+      WHERE d.DOC_RESID IS NULL
+        AND NOT EXISTS (SELECT 1 FROM SBCG_RES r WHERE r.RES_NOM = d.DOC_REF)
+      GROUP BY NVL(t.THM_COD,'(sans theme)'), NVL(t.THM_NOM,'') ORDER BY n DESC`, {}, 100),
     exec(`SELECT r.RES_ID AS id, r.RES_NOM AS ref, NVL(r.RES_EXT,'?') AS ext,
         DBMS_LOB.GETLENGTH(r.RES_BIN) AS taille,
-        d.DOC_ID AS doc_id, d.DOC_TITRE AS titre, d.DOC_FILE AS fichier,
-        d.DOC_FOLDER AS dossier, d.DOC_RESID AS resid,
+        d.DOC_ID AS doc_id, d.DOC_RESID AS doc_resid, d.DOC_TITRE AS titre, d.DOC_FILE AS fichier,
+        d.DOC_FOLDER AS dossier, d.DOC_STOCKG AS stockg, s.MNEMO AS stockage,
         t.THM_COD AS theme, t.THM_NOM AS theme_nom, ty.MNEMO AS type,
+        ${BASE_LIEN} AS lien,
         TO_CHAR(d.DOC_CDATE,'DD/MM/YYYY') AS date_depot, TO_CHAR(d.DOC_DATE,'DD/MM/YYYY') AS date_doc
-      ${from} WHERE ${where}
+      ${BASE_RES_FROM}
+      LEFT JOIN V_DOCSTOCKG s ON s.ID = d.DOC_STOCKG
+      WHERE ${where}
       ORDER BY r.RES_ID DESC OFFSET ${off} ROWS FETCH NEXT ${lim} ROWS ONLY`, binds, lim),
   ]);
   for (const r of rows) r.poste004 = /^\\\\POSTE004\\/i.test(String(r.dossier || ''));
   return {
     resume: {
-      docs: tot ? Number(tot.docs) : 0,
-      octets: tot ? Number(tot.octets) : 0,
+      blobs: tot ? Number(tot.blobs) : 0,
+      volume: tot ? Number(tot.volume) : 0,
       lies: tot ? Number(tot.lies) : 0,
+      orphelins: tot ? Number(tot.orphelins) : 0,
+      par_id: tot ? Number(tot.par_id) : 0,
+      par_ref: tot ? Number(tot.par_ref) : 0,
+      incoherents_extern: tot ? Number(tot.incoherents_extern) : 0,
+      poste004: tot ? Number(tot.poste004) : 0,
       taille_max: tot ? Number(tot.taille_max) : 0,
+      sans_blob: sansBlob ? Number(sansBlob.total) : 0,
+      sans_blob_extern: sansBlob ? Number(sansBlob.extern) : 0,
+      sans_blob_base: sansBlob ? Number(sansBlob.base) : 0,
       formats: formats.length,
-      poste004: posteRow ? Number(posteRow.n) : 0,
-      filtre: { q: q || null, ext: ext || null, theme: theme || null, poste004 },
+      filtre: { q: q || null, ext: ext || null, theme: theme || null, lien: lien || null, poste004 },
     },
-    formats, themes,
-    total: tot ? Number(tot.docs) : rows.length,
+    liens: {
+      total: liens ? Number(liens.total) : 0,
+      id: liens ? Number(liens.par_id) : 0,
+      ref: liens ? Number(liens.par_ref) : 0,
+      orphelin: liens ? Number(liens.orphelin) : 0,
+      extern: liens ? Number(liens.incoherents_extern) : 0,
+    },
+    formats, themes, sans_blob_themes: sansBlobThemes,
+    total: tot ? Number(tot.blobs) : rows.length,
     limit: lim, offset: off,
     rows,
   };
@@ -2502,7 +2554,7 @@ async function handleRequest(req, res, p, sp) {
     if (p === '/api/documents/fichiers') return sendJson(res, 200, await listDocumentFiles(sp.get('folder') || '', { limit: sp.get('limit'), offset: sp.get('offset') }));
     if (p === '/api/documents/dates') return sendJson(res, 200, await listDocumentDates({ excludePoste: sp.get('excludePoste') === '1' }));
     if (p === '/api/documents/jour') return sendJson(res, 200, await listDocumentsByDay(sp.get('date') || '', { excludePoste: sp.get('excludePoste') === '1' }));
-    if (p === '/api/documents/base') return sendJson(res, 200, await listDocumentsBase({ q: term, ext: sp.get('ext'), theme: sp.get('theme'), poste004: sp.get('poste004') === '1', limit: sp.get('limit'), offset: sp.get('offset') }));
+    if (p === '/api/documents/base') return sendJson(res, 200, await listDocumentsBase({ q: term, ext: sp.get('ext'), theme: sp.get('theme'), lien: sp.get('lien'), poste004: sp.get('poste004') === '1', limit: sp.get('limit'), offset: sp.get('offset') }));
     m = p.match(/^\/api\/documents\/base\/(\d+)\/content$/);
     if (m) {
       const bit = await getBaseResource(m[1]);

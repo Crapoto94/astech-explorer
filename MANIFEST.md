@@ -168,17 +168,31 @@ les **chemins de stockage** et les **dépôts par date**, et expliquer le
   centrale reste la source quasi unique, les champs dédiés sont surtout vides.
 - **Stockés en base (BLOB)** : onglet « En base (BLOB) ». Les documents en mode
   `DOC_STOCKG = 2` (« Base de données ») ont leur **contenu binaire en base** :
-  `SBCG_RES.RES_BIN` (**BLOB**, 8 979 fichiers, ~7,7 Go), relié à la GED par
-  `DOC.DOC_REF = SBCG_RES.RES_NOM` (`RES_FMT=1` = document ; `RES_FMT=4` = icône
-  exclue). 8 801 ressources sont rattachées à un `DOC`, les autres sont des
-  logos/ressources autonomes. Formats : JPG (~8,2 k), PDF (544), MP4, PNG, DOCX…
-  L'UI affiche volume, formats, thèmes, plus gros fichier et la liste (taille via
-  `DBMS_LOB.GETLENGTH`), avec recherche sur référence/extension/titre/fichier.
-  **Filtres cliquables** : type de document (extension : `ext`) et thème GED
-  (`theme`, dont `(hors GED)`), plus un bouton **« POSTE004 uniquement »**
-  (`poste004=1`) ; la colonne « Dossier lié » affiche le `DOC_FOLDER` du document
-  GED associé — **7 203 docs en base pointent `\POSTE004\C$\TEMP`** (photos
-  PHDI/PHINT), isolables via ce bouton.
+  `SBCG_RES.RES_BIN` (**BLOB**, `RES_FMT=1` = document, `4` = icône exclue ;
+  8 979 ressources, ~7,7 Go). Le contenu est **le même fichier** que le chemin
+  (`DOC.DOC_SIZE` = longueur du BLOB).
+  *Lien doc ↔ ressource* : le lien **applicatif** est l'identifiant
+  **`DOC.DOC_RESID = SBCG_RES.RES_ID`** (comme la vue éditeur `V_PATRI_IMAGE`) ;
+  la référence texte `DOC.DOC_REF = SBCG_RES.RES_NOM` ne sert que de **repli**
+  (la jointure `OUTER APPLY` donne au plus un DOC par ressource, priorité à l'id).
+  Chiffres : **8 873 ressources liées** (8 777 par id + 96 par réf.), **106 BLOB
+  orphelins** (aucun `DOC` : 101 anciennes réf. 2014-2018, 4 icônes JSTREE,
+  1 logo), **25 incohérences** (DOC `EXTERN` ayant malgré tout un blob).
+  *Écarts « chemin »* : **648 documents sans blob** (637 `EXTERN` jamais stockés
+  en base — `CTAMIANT` 206, `FPV` 187, `PLAN` 172, `PHDI` 42… — et 11 `BASE`
+  sans ressource). Leurs chemins sont des partages client (`\tsclient\…`) ou
+  staging (`\POSTE004\C$\TEMP`), **non résolubles côté serveur**.
+  *(Réponse à la question « blob ET chemin ? »)* : en mode `BASE` le contenu est
+  en base et le chemin n'est qu'une **métadonnée de dépôt** ; ce n'est pas un
+  détournement — `SBCG_RES` est le **magasin de ressources natif** de l'appli
+  (lu par `GETICONE*`, `V_PATRI_IMAGE`, `BO_LIB_OPUS`, `RPT*`), le mode « Base »
+  est officiel (`V_DOCSTOCKG`), paramétré par `STOCKIMAGE='B'`, `AFFICHERESP`,
+  `REPDOCUMENT` ; aucun trigger/PL-SQL n'écrit dans `SBCG_RES`.
+  **Filtres cliquables** : type de document (extension : `ext`), thème GED
+  (`theme`, dont `(hors GED)`), **nature du lien** (`lien` : `id` / `ref` /
+  `orphelin` / `extern`) et bouton **« POSTE004 uniquement »** (`poste004=1`,
+  7 203 docs `PHDI/PHINT`). Colonnes : **Lien** (ID / Réf. / Orphelin +
+  `EXTERN`) et **Dossier lié** (`DOC_FOLDER`).
   **Visionneuse** intégrée (`GET /documents/base/:id/content`) : JPG/images et
   **PDF** affichés en direct (zoom + rotation pour les images), vidéo, ou
   téléchargement pour les autres formats ; le contenu est chargé via `fetch`
@@ -322,7 +336,7 @@ Noms de tables **à confirmer** à l'étape suivante (exploration) :
 | Satellites | `DOC_ANNEX`, `DOC_DEMAT`, `DOC_KEYW`, `DOC_CARACT`, `TOPIC_DOC`, `DOCJ` | annexes, dématérialisé, mots-clés, caractéristiques, liens |
 | Historique versions | `DOC_HISTO` (2 804 lignes / 2 222 docs) | `DOCH_DOCID`, `DOCH_REVIS`, `DOCH_FILE`, `DOCH_FOLDER`, `DOCH_SIZE`, `DOCH_STOCKG`, `DOCH_MUSER`, `DOCH_MDATE` |
 | Vue | `V_DOC` | projection lisible (libellés thème/type/stockage, noms d'utilisateurs) |
-| **Contenu en base** | `SBCG_RES` (9 004 lignes) | fichier en **BLOB** `RES_BIN` ; `RES_NOM` = `DOC.DOC_REF`, `RES_EXT` = extension, `RES_FMT` (`1` = document, `4` = icône) — mode `DOC_STOCKG=2` (« Base ») |
+| **Contenu en base** | `SBCG_RES` (9 004 lignes) | fichier en **BLOB** `RES_BIN` ; lien applicatif **`RES_ID` = `DOC.DOC_RESID`** (repli `RES_NOM` = `DOC.DOC_REF`), `RES_EXT` = extension, `RES_FMT` (`1` = document, `4` = icône) — mode `DOC_STOCKG=2` (« Base ») |
 
 **Versionning : oui** — `DOC.DOC_REVIS` = n° de révision (463 docs > 1, max 7) ;
 les versions précédentes sont archivées dans **`DOC_HISTO`** (chemin/fichier/taille
@@ -401,7 +415,7 @@ Base `http://localhost:8099/api`.
 | GET | `/documents/fichiers` | `folder`, `limit`, `offset` | fichiers uniques d'un dossier (+ nb de versions / enregistrements) |
 | GET | `/documents/dates` | `excludePoste=1` | agrégat année/mois/jour (`DOC_CDATE`) en fichiers uniques + enregistrements |
 | GET | `/documents/jour` | `date=YYYY-MM-DD`, `excludePoste=1` | fichiers uniques déposés ce jour |
-| GET | `/documents/base` | `q`, `ext`, `theme`, `poste004=1`, `limit`, `offset` | documents stockés en base (`SBCG_RES.RES_BIN` BLOB) : `resume` (nb, volume, rattachés, max, `poste004`), `formats`, `themes`, `rows` (dont `dossier` + `poste004`) |
+| GET | `/documents/base` | `q`, `ext`, `theme`, `lien` (`id`/`ref`/`orphelin`/`extern`), `poste004=1`, `limit`, `offset` | documents stockés en base (`SBCG_RES.RES_BIN` BLOB) : `resume` (blobs, volume, lies, par_id, par_ref, orphelins, incohérents `extern`, `poste004`, `sans_blob`/`sans_blob_extern`/`sans_blob_base`), `liens` (facettes), `formats`, `themes`, `sans_blob_themes`, `rows` (`lien`, `stockg`, `dossier`, `poste004`) |
 | GET | `/documents/base/:id/content` | `download=1` | flux binaire (BLOB) : `Content-Type` selon l'extension (`image/jpeg`, `application/pdf`, `video/mp4`…), `inline` (visionneuse) ou `attachment` ; 404 si absent |
 
 ### 4.6 Principes transverses
@@ -430,6 +444,10 @@ Base `http://localhost:8099/api`.
 | **Fichier document unique** | `(DOC_FOLDER, DOC_FILE)` — `DOC` peut contenir N lignes du même fichier |
 | **Versions document** | `COUNT(DISTINCT DOC_REVIS)` + lignes `DOC_HISTO` |
 | **PJ POSTE004** | `UPPER(NVL(DOC_FOLDER,' ')) LIKE '\\POSTE004\%'` |
+| **Document en base** | `DOC_STOCKG=2` → BLOB `SBCG_RES.RES_BIN` (`RES_FMT=1`) |
+| **Lien ressource ↔ document** | `DOC.DOC_RESID = SBCG_RES.RES_ID` (lien applicatif), repli `DOC.DOC_REF = SBCG_RES.RES_NOM` |
+| **BLOB orphelin** | ressource `RES_FMT=1` sans `DOC` (ni par `DOC_RESID` ni par `DOC_REF`) |
+| **Chemin sans blob** | `DOC.DOC_RESID IS NULL` et pas de ressource par `DOC_REF` |
 
 ---
 

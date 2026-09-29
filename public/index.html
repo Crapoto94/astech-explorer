@@ -391,7 +391,7 @@ const state = {
   magasins: { code: '', enStock: true, list: null },
   parc: { tab: 'vehicules', service: '', etat: '', page: 1 },
   procs: { type: '', group: '', status: '' },
-  docs: { tab: 'modules', module: '', cheminsView: 'tree', excludePoste: false, baseExt: '', baseTheme: '', basePoste004: false },
+  docs: { tab: 'modules', module: '', cheminsView: 'tree', excludePoste: false, baseExt: '', baseTheme: '', baseLien: '', basePoste004: false },
   locatif: { tab: 'echeances', mode: 'futures', num: '' },
   refs: { type: 'biens', genre: '' },
   inter: { tab: 'interventions', etat: '', type: '', period: '12m', page: 1 },
@@ -2316,6 +2316,7 @@ async function viewDocuments() {
   if (state.q) bq.set('q', state.q);
   if (s.baseExt) bq.set('ext', s.baseExt);
   if (s.baseTheme) bq.set('theme', s.baseTheme);
+  if (s.baseLien) bq.set('lien', s.baseLien);
   if (s.basePoste004) bq.set('poste004', '1');
   const baseData = (s.tab === 'base') ? await api('/api/documents/base' + (bq.toString() ? '?' + bq.toString() : '')) : null;
   const tabs = [['modules', 'Modules & thèmes', 'category'], ['tables', 'Tables & champs', 'table_view'], ['chemins', 'Chemins de stockage', 'folder'], ['base', 'En base (BLOB)', 'database'], ['dates', 'Par date de dépôt', 'event_note'], ['transversal', 'Transversal', 'hub']];
@@ -2458,12 +2459,23 @@ async function viewDocuments() {
       <span>${esc(t.nom ? t.nom.slice(0, 28) : t.cod)}</span>
       <span class="px-1.5 rounded-full ${on ? 'bg-white/20' : 'bg-surface-container text-secondary'} text-[11px]">${num(t.n)}</span></button>`;
     }).join('');
-    const activeFilters = !!(s.baseExt || s.baseTheme || s.basePoste004);
+    const lg = b.liens || {};
+    const activeFilters = !!(s.baseExt || s.baseTheme || s.baseLien || s.basePoste004);
+    const lienChips = [['', 'Tous', lg.total], ['id', 'Liés par ID', lg.id], ['ref', 'Liés par réf.', lg.ref], ['orphelin', 'Orphelins (sans DOC)', lg.orphelin], ['extern', 'Incohérents (EXTERN)', lg.extern]]
+      .map(([v, label, n]) => {
+        const on = (s.baseLien || '') === v;
+        return `<button data-act="docBaseLien:${v}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-label-mono-sm transition-colors ${on ? 'bg-primary text-on-primary shadow-md' : 'bg-surface-container-low hover:bg-surface-container text-on-surface'}">${esc(label)}${n != null ? ` <span class="px-1.5 rounded-full ${on ? 'bg-white/20' : 'bg-surface-container text-secondary'} text-[11px]">${num(n)}</span>` : ''}</button>`;
+      }).join('');
     const controls = `<div class="flex flex-wrap items-center gap-2">
+        ${lienChips}
         <button data-act="docBasePoste004" title="Isoler les documents dont le dossier GED est \\\\POSTE004\\C$\\TEMP" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg font-label-mono-sm transition-colors ${s.basePoste004 ? 'bg-primary text-on-primary shadow-md' : 'bg-surface-container-low hover:bg-surface-container text-on-surface'}"><span class="material-symbols-outlined text-[16px]">${s.basePoste004 ? 'visibility' : 'folder_open'}</span>POSTE004 uniquement${rb.poste004 ? ' · ' + num(rb.poste004) : ''}</button>
-        ${activeFilters ? `<button data-act="docBaseReset" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-label-mono-sm bg-surface-container text-secondary hover:bg-surface-container-high"><span class="material-symbols-outlined text-[16px]">filter_alt_off</span>Réinitialiser${s.baseExt ? ' · ' + esc(s.baseExt) : ''}${s.baseTheme ? ' · ' + esc(s.baseTheme) : ''}</button>` : ''}
-        <span class="font-label-mono-sm text-secondary ml-auto"><span class="font-semibold text-on-surface">${num(b.total)}</span> document(s)${s.basePoste004 ? ' (POSTE004)' : ''}</span>
+        ${activeFilters ? `<button data-act="docBaseReset" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-label-mono-sm bg-surface-container text-secondary hover:bg-surface-container-high"><span class="material-symbols-outlined text-[16px]">filter_alt_off</span>Réinitialiser</button>` : ''}
+        <span class="font-label-mono-sm text-secondary ml-auto"><span class="font-semibold text-on-surface">${num(b.total)}</span> ressource(s)${s.basePoste004 ? ' (POSTE004)' : ''}</span>
       </div>`;
+    const lienBadge = (x) => x.lien === 'id' ? badge('ID', 'green', 'link')
+      : x.lien === 'ref' ? badge('Réf.', 'amber', 'link')
+      : badge('Orphelin', 'red', 'link_off');
+    const sansBlobChips = (b.sans_blob_themes || []).map((t) => `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container-low font-label-mono-sm"><span>${esc(t.nom ? t.nom.slice(0, 28) : t.cod)}</span><span class="px-1.5 rounded-full bg-surface-container text-secondary text-[11px]">${num(t.n)}</span></span>`).join('');
     const cols = [
       { label: 'Aperçu', center: true, get: (x) => {
         const k = docViewerKind(x.ext);
@@ -2474,22 +2486,28 @@ async function viewDocuments() {
       { label: 'Taille', right: true, get: (x) => cellMono(docBytes(x.taille), 'text-secondary') },
       { label: 'Titre / fichier', nowrap: false, get: (x) => `<div class="font-title-sm clamp1" style="max-width:360px">${esc(x.titre || x.fichier || '—')}</div><div class="font-label-mono-sm text-secondary clamp1" style="max-width:360px">${esc(x.fichier || '')}</div>` },
       { label: 'Thème', get: (x) => (x.theme && x.theme !== '—') ? badge(x.theme_nom ? x.theme_nom.slice(0, 22) : x.theme, 'slate') : dash },
+      { label: 'Lien', center: true, get: (x) => `${lienBadge(x)}${Number(x.stockg) === 0 ? ' ' + badge('EXTERN', 'red') : ''}` },
       { label: 'Dossier lié (DOC_FOLDER)', nowrap: false, get: (x) => x.dossier ? `<span class="font-label-mono-sm text-[11px] break-all">${esc(x.dossier)}</span>${x.poste004 ? ' ' + badge('POSTE004', 'amber') : ''}` : dash },
       { label: 'Dépôt', get: (x) => cellMono(x.date_depot || '', 'text-secondary') },
     ];
-    const more = Number(b.total) > (b.rows || []).length ? `<div class="text-secondary font-body-sm p-space-lg">… ${num(Number(b.total) - b.rows.length)} autre(s) document(s) non affiché(s) (plafond ${num(b.limit)}).</div>` : '';
+    const more = Number(b.total) > (b.rows || []).length ? `<div class="text-secondary font-body-sm p-space-lg">… ${num(Number(b.total) - b.rows.length)} autre(s) ressource(s) non affichée(s) (plafond ${num(b.limit)}).</div>` : '';
     body = `${card('Documents stockés en base (SBCG_RES.RES_BIN)', `<div class="p-space-lg space-y-space-md">
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-space-md">
-          <div class="p-space-md rounded-xl bg-surface-container-low text-center"><div class="font-headline-md font-bold tabular">${num(rb.docs)}</div><div class="font-label-mono-sm text-secondary">fichiers en base</div></div>
-          <div class="p-space-md rounded-xl bg-surface-container-low text-center"><div class="font-headline-md font-bold tabular">${docBytes(rb.octets)}</div><div class="font-label-mono-sm text-secondary">volume BLOB</div></div>
-          <div class="p-space-md rounded-xl bg-surface-container-low text-center"><div class="font-headline-md font-bold tabular">${num(rb.lies)}</div><div class="font-label-mono-sm text-secondary">rattachés à la GED</div></div>
-          <div class="p-space-md rounded-xl bg-surface-container-low text-center"><div class="font-headline-md font-bold tabular">${num(rb.poste004)}</div><div class="font-label-mono-sm text-secondary">dossier \\POSTE004</div></div>
+          <div class="p-space-md rounded-xl bg-surface-container-low text-center"><div class="font-headline-md font-bold tabular">${num(rb.blobs)}</div><div class="font-label-mono-sm text-secondary">BLOB en base (RES_FMT=1)</div></div>
+          <div class="p-space-md rounded-xl bg-surface-container-low text-center"><div class="font-headline-md font-bold tabular">${docBytes(rb.volume)}</div><div class="font-label-mono-sm text-secondary">volume BLOB</div></div>
+          <div class="p-space-md rounded-xl bg-surface-container-low text-center"><div class="font-headline-md font-bold tabular">${num(rb.lies)}</div><div class="font-label-mono-sm text-secondary">liés à un DOC · ${num(rb.par_id)} par ID / ${num(rb.par_ref)} par réf.</div></div>
+          <div class="p-space-md rounded-xl bg-surface-container-low text-center"><div class="font-headline-md font-bold tabular ${rb.orphelins ? 'text-error' : ''}">${num(rb.orphelins)}</div><div class="font-label-mono-sm text-secondary">BLOB sans DOC (orphelins)</div></div>
         </div>
         ${controls}
         <div><div class="font-title-sm text-on-surface mb-1">Type de document (format) — cliquer pour filtrer</div><div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-space-sm">${fmtCards || '<span class="text-secondary font-body-sm">—</span>'}</div></div>
         <div><div class="font-title-sm text-on-surface mb-1">Thèmes GED — cliquer pour filtrer</div><div class="flex flex-wrap gap-1.5">${themeChips || '<span class="text-secondary font-body-sm">—</span>'}</div></div>
-        <p class="font-body-sm text-on-surface-variant">Mode de stockage <span class="font-label-mono-sm">DOC_STOCKG = 2</span> (« Base de données ») : le contenu est un <strong>BLOB</strong> dans <span class="font-label-mono-sm">SBCG_RES.RES_BIN</span>, relié au document par <span class="font-label-mono-sm">DOC.DOC_REF = SBCG_RES.RES_NOM</span> (<span class="font-label-mono-sm">RES_FMT = 1</span>). Les icônes / ressources graphiques (<span class="font-label-mono-sm">RES_FMT = 4</span>) sont exclues. La colonne « Dossier lié » reprend le chemin du document GED associé — dont les <strong>\\\\POSTE004\\C$\\TEMP</strong> (photos PHDI/PHINT), isolables via le bouton. La recherche (globale) porte sur la référence, l’extension, le titre et le fichier.</p>
-      </div>` + dataTable(cols, b.rows || [], { empty: 'Aucun document en base pour ce filtre.', key: 'doc_base' }) + more, null, 'Le fichier lui-même est conservé dans la base Oracle (et non sur un partage fichier) ; chaque ligne affiche le dossier du document GED lié.')}`;
+        <div class="p-space-md rounded-xl border border-amber-300/50 bg-amber-50/40">
+          <div class="flex items-center gap-2 mb-1"><span class="material-symbols-outlined text-amber-700">folder_off</span><span class="font-title-md text-on-surface">Documents « chemin » sans BLOB — ${num(rb.sans_blob)}</span></div>
+          <p class="font-body-sm text-on-surface-variant">Documents GED <strong>sans copie en base</strong> (aucune ressource liée) : ${num(rb.sans_blob_extern)} en mode <span class="font-label-mono-sm">EXTERN</span> (jamais stockés en base, sur <span class="font-label-mono-sm">\\tsclient\…</span>) et ${num(rb.sans_blob_base)} en mode <span class="font-label-mono-sm">BASE</span> sans blob. Autrement dit : le chemin existe, pas le contenu en base.</p>
+          <div class="flex flex-wrap gap-1.5 mt-2">${sansBlobChips || '<span class="text-secondary font-body-sm">—</span>'}</div>
+        </div>
+        <p class="font-body-sm text-on-surface-variant">Le contenu est un <strong>BLOB</strong> dans <span class="font-label-mono-sm">SBCG_RES.RES_BIN</span>. Lien applicatif : <span class="font-label-mono-sm">DOC.DOC_RESID = SBCG_RES.RES_ID</span> (comme la vue éditeur <span class="font-label-mono-sm">V_PATRI_IMAGE</span>), avec repli sur la référence <span class="font-label-mono-sm">DOC.DOC_REF = SBCG_RES.RES_NOM</span>. Les icônes/ressources graphiques (<span class="font-label-mono-sm">RES_FMT = 4</span>) sont exclues. La colonne « Dossier lié » reprend le chemin du DOC — dont les <strong>\\\\POSTE004\\C$\\TEMP</strong> (photos PHDI/PHINT), isolables via le bouton ; ces chemins ne sont plus résolvables, le BLOB est la seule copie.</p>
+      </div>` + dataTable(cols, b.rows || [], { empty: 'Aucun document en base pour ce filtre.', key: 'doc_base' }) + more, null, 'Le fichier est conservé dans la base Oracle ; le lien fiable est DOC_RESID (id), la référence texte servant de repli.')}`;
   } else if (s.tab === 'dates') {
     const dates = datesData.dates || [];
     const nbJours = dates.length;
@@ -3136,8 +3154,9 @@ function handleAction(action, value, el) {
     case 'docBaseView': openDocBaseViewer(value, el.getAttribute('data-ref'), el.getAttribute('data-ext')); break;
     case 'docBaseExt': state.docs.baseExt = (String(state.docs.baseExt).toUpperCase() === String(value).toUpperCase()) ? '' : (value || ''); state.pages = {}; viewDocuments(); break;
     case 'docBaseTheme': state.docs.baseTheme = state.docs.baseTheme === value ? '' : (value || ''); state.pages = {}; viewDocuments(); break;
+    case 'docBaseLien': state.docs.baseLien = state.docs.baseLien === value ? '' : (value || ''); state.pages = {}; viewDocuments(); break;
     case 'docBasePoste004': state.docs.basePoste004 = !state.docs.basePoste004; state.pages = {}; viewDocuments(); break;
-    case 'docBaseReset': state.docs.baseExt = ''; state.docs.baseTheme = ''; state.docs.basePoste004 = false; state.pages = {}; viewDocuments(); break;
+    case 'docBaseReset': state.docs.baseExt = ''; state.docs.baseTheme = ''; state.docs.baseLien = ''; state.docs.basePoste004 = false; state.pages = {}; viewDocuments(); break;
     case 'magasinEnStock': state.magasins.enStock = el.checked; viewMagasins(); break;
     case 'interTab': it.tab = value; it.page = 1; state.q = ''; viewInterventions(); break;
     case 'neocityPage': state.neocity.page = value === 'next' ? state.neocity.page + 1 : Math.max(1, state.neocity.page - 1); viewNeocity(); break;

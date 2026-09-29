@@ -762,21 +762,31 @@ https://github.com/Crapoto94/astech), port **8099** :
   (le plus souvent vides : la GED reste la source). L'onglet **En base (BLOB)**
   liste les documents dont le **contenu binaire est stocké dans la base** (mode
   `DOC_STOCKG = 2` « Base de données ») : table **`SBCG_RES`** (`RES_BIN` BLOB,
-  `RES_NOM` = `DOC.DOC_REF`, `RES_EXT`, `RES_FMT` : 1 = document, 4 = icône).
-  8 979 fichiers / ~7,7 Go, dont 8 801 rattachés à un `DOC` (le reste = logos,
-  ressources autonomes) ; volumétrie par `DBMS_LOB.GETLENGTH` (jamais le contenu),
-  formats JPG/PDF/MP4/PNG/DOCX…, recherche référence/extension/titre/fichier.
-  Endpoints `/api/documents/base` (filtres `q`, `ext`, `theme`, `poste004=1`) et
+  `RES_EXT`, `RES_FMT` : 1 = document, 4 = icône). **Lien applicatif :**
+  `DOC.DOC_RESID = SBCG_RES.RES_ID` (comme la vue éditeur `V_PATRI_IMAGE`), repli
+  `DOC.DOC_REF = SBCG_RES.RES_NOM` (`OUTER APPLY` → au plus un DOC par ressource,
+  priorité à l'id). 8 979 BLOB / ~7,7 Go ; **8 873 liés** (8 777 par id + 96 par
+  réf.), **106 orphelins** (BLOB sans DOC), **25 incohérents** (DOC `EXTERN` avec
+  blob). C'est le **magasin de ressources natif** (lu par `GETICONE*`,
+  `V_PATRI_IMAGE`, `BO_LIB_OPUS`, `RPT*`) : le mode « Base » est officiel
+  (`STOCKIMAGE='B'`, `AFFICHERESP`, `REPDOCUMENT`), pas un pont
+  chemin→blob. En mode `BASE` le `DOC_FOLDER` n'est qu'une **métadonnée de dépôt**
+  (souvent `\POSTE004\C$\TEMP` ou `\tsclient\…`, non résolubles) ; `DOC_SIZE` =
+  longueur du BLOB (même fichier). **648 documents sont « chemin sans blob »**
+  (637 `EXTERN`, 11 `BASE`) — chemin sans contenu en base. Volumétrie par
+  `DBMS_LOB.GETLENGTH` (jamais le contenu), formats JPG/PDF/MP4/PNG/DOCX….
+  Endpoints `/api/documents/base` (filtres `q`, `ext`, `theme`,
+  `lien=id|ref|orphelin|extern`, `poste004=1`) et
   `/api/documents/base/:id/content` (flux binaire, `Content-Type` selon
   l'extension, `?download=1` = attachment) ; l'onglet affiche volume, formats,
-  thèmes et la liste, et **chaque ligne ouvre une visionneuse** (JPG/images avec
-  zoom + rotation, PDF via `<iframe>`, vidéo ; téléchargement sinon). Les cartes
-  **Formats** et les puces **Thèmes GED** sont **cliquables** (filtres) + bouton
-  **« POSTE004 uniquement »** ; la colonne **« Dossier lié (DOC_FOLDER) »** montre
-  le document GED associé — 7 203 docs en base pointent `\POSTE004\C$\TEMP`
-  (photos PHDI/PHINT). Le contenu est chargé en `fetch` (l'en-tête de session
-  `X-ASTECH-Token` ne peut pas être porté par un `<img>`/`<iframe>`) puis exposé
-  par object URL. L'onglet **Par date**
+  thèmes, les écarts « chemin sans blob » et la liste, et **chaque ligne ouvre
+  une visionneuse** (JPG/images avec zoom + rotation, PDF via `<iframe>`, vidéo ;
+  téléchargement sinon). Les cartes **Formats**, les puces **Thèmes GED** et les
+  boutons de **lien** (ID / réf. / orphelins / incohérents) sont **cliquables**,
+  plus **« POSTE004 uniquement »** ; colonnes **Lien** et **« Dossier lié
+  (DOC_FOLDER) »** (7 203 docs pointent `\POSTE004\C$\TEMP`, photos PHDI/PHINT).
+  Le contenu est chargé en `fetch` (l'en-tête `X-ASTECH-Token` ne peut pas être
+  porté par un `<img>`/`<iframe>`) puis exposé par object URL. L'onglet **Par date**
   (`/api/documents/dates`, `/api/documents/jour?date=`) affiche une arborescence
   **année → mois → jour** sur `DOC.DOC_CDATE` (date de dépôt) ; déplier un jour
   liste les documents déposés. **Métadonnées** d'un document (`DOC_META`) :
