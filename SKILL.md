@@ -766,11 +766,15 @@ https://github.com/Crapoto94/astech), port **8099** :
   8 979 fichiers / ~7,7 Go, dont 8 801 rattachés à un `DOC` (le reste = logos,
   ressources autonomes) ; volumétrie par `DBMS_LOB.GETLENGTH` (jamais le contenu),
   formats JPG/PDF/MP4/PNG/DOCX…, recherche référence/extension/titre/fichier.
-  Endpoints `/api/documents/base` et `/api/documents/base/:id/content`
-  (flux binaire, `Content-Type` selon l'extension, `?download=1` = attachment) ;
-  l'onglet affiche volume, formats, thèmes et la liste, et **chaque ligne ouvre
-  une visionneuse** (JPG/images avec zoom + rotation, PDF via `<iframe>`, vidéo ;
-  téléchargement sinon). Le contenu est chargé en `fetch` (l'en-tête de session
+  Endpoints `/api/documents/base` (filtres `q`, `ext`, `theme`, `poste004=1`) et
+  `/api/documents/base/:id/content` (flux binaire, `Content-Type` selon
+  l'extension, `?download=1` = attachment) ; l'onglet affiche volume, formats,
+  thèmes et la liste, et **chaque ligne ouvre une visionneuse** (JPG/images avec
+  zoom + rotation, PDF via `<iframe>`, vidéo ; téléchargement sinon). Les cartes
+  **Formats** et les puces **Thèmes GED** sont **cliquables** (filtres) + bouton
+  **« POSTE004 uniquement »** ; la colonne **« Dossier lié (DOC_FOLDER) »** montre
+  le document GED associé — 7 203 docs en base pointent `\POSTE004\C$\TEMP`
+  (photos PHDI/PHINT). Le contenu est chargé en `fetch` (l'en-tête de session
   `X-ASTECH-Token` ne peut pas être porté par un `<img>`/`<iframe>`) puis exposé
   par object URL. L'onglet **Par date**
   (`/api/documents/dates`, `/api/documents/jour?date=`) affiche une arborescence

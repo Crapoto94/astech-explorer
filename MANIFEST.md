@@ -174,6 +174,11 @@ les **chemins de stockage** et les **dépôts par date**, et expliquer le
   logos/ressources autonomes. Formats : JPG (~8,2 k), PDF (544), MP4, PNG, DOCX…
   L'UI affiche volume, formats, thèmes, plus gros fichier et la liste (taille via
   `DBMS_LOB.GETLENGTH`), avec recherche sur référence/extension/titre/fichier.
+  **Filtres cliquables** : type de document (extension : `ext`) et thème GED
+  (`theme`, dont `(hors GED)`), plus un bouton **« POSTE004 uniquement »**
+  (`poste004=1`) ; la colonne « Dossier lié » affiche le `DOC_FOLDER` du document
+  GED associé — **7 203 docs en base pointent `\POSTE004\C$\TEMP`** (photos
+  PHDI/PHINT), isolables via ce bouton.
   **Visionneuse** intégrée (`GET /documents/base/:id/content`) : JPG/images et
   **PDF** affichés en direct (zoom + rotation pour les images), vidéo, ou
   téléchargement pour les autres formats ; le contenu est chargé via `fetch`
@@ -396,7 +401,7 @@ Base `http://localhost:8099/api`.
 | GET | `/documents/fichiers` | `folder`, `limit`, `offset` | fichiers uniques d'un dossier (+ nb de versions / enregistrements) |
 | GET | `/documents/dates` | `excludePoste=1` | agrégat année/mois/jour (`DOC_CDATE`) en fichiers uniques + enregistrements |
 | GET | `/documents/jour` | `date=YYYY-MM-DD`, `excludePoste=1` | fichiers uniques déposés ce jour |
-| GET | `/documents/base` | `q`, `limit`, `offset` | documents stockés en base (`SBCG_RES.RES_BIN` BLOB) : `resume` (nb, volume, rattachés, max), `formats`, `themes`, `rows` |
+| GET | `/documents/base` | `q`, `ext`, `theme`, `poste004=1`, `limit`, `offset` | documents stockés en base (`SBCG_RES.RES_BIN` BLOB) : `resume` (nb, volume, rattachés, max, `poste004`), `formats`, `themes`, `rows` (dont `dossier` + `poste004`) |
 | GET | `/documents/base/:id/content` | `download=1` | flux binaire (BLOB) : `Content-Type` selon l'extension (`image/jpeg`, `application/pdf`, `video/mp4`…), `inline` (visionneuse) ou `attachment` ; 404 si absent |
 
 ### 4.6 Principes transverses

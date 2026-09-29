@@ -1662,6 +1662,9 @@ async function listDocumentsBase(opts = {}) {
   const q = String(opts.q || '').trim().toUpperCase();
   const lim = int(opts.limit, 1000, 5000);
   const off = Math.max(0, Math.floor(Number(opts.offset) || 0));
+  const ext = String(opts.ext || '').trim().toUpperCase();
+  const theme = String(opts.theme || '').trim();
+  const poste004 = !!opts.poste004;
   const binds = {};
   const w = ['NVL(r.RES_FMT,1) = 1'];
   if (q) {
@@ -1669,12 +1672,18 @@ async function listDocumentsBase(opts = {}) {
     w.push(`(UPPER(NVL(r.RES_NOM,' ')) LIKE :q OR UPPER(NVL(r.RES_EXT,' ')) LIKE :q
       OR UPPER(NVL(d.DOC_TITRE,' ')) LIKE :q OR UPPER(NVL(d.DOC_FILE,' ')) LIKE :q)`);
   }
+  if (ext) { binds.ext = ext; w.push(`UPPER(NVL(r.RES_EXT,' ')) = :ext`); }
+  if (theme) {
+    if (theme === '(hors GED)') w.push('d.DOC_ID IS NULL');
+    else { binds.theme = theme; w.push('t.THM_COD = :theme'); }
+  }
+  if (poste004) w.push(`UPPER(NVL(d.DOC_FOLDER,' ')) LIKE '\\\\POSTE004\\%'`);
   const from = `FROM SBCG_RES r
       LEFT JOIN DOC d ON d.DOC_REF = r.RES_NOM
       LEFT JOIN DOC_THEME t ON t.THM_ID = d.DOC_THEME
       LEFT JOIN V_DOCTYPE ty ON ty.ID = d.DOC_TYPE`;
   const where = w.join(' AND ');
-  const [formats, themes, tot, rows] = await Promise.all([
+  const [formats, themes, tot, posteRow, rows] = await Promise.all([
     exec(`SELECT NVL(r.RES_EXT,'(sans)') AS ext, COUNT(*) AS n,
         SUM(NVL(DBMS_LOB.GETLENGTH(r.RES_BIN),0)) AS octets
       FROM SBCG_RES r WHERE NVL(r.RES_FMT,1) = 1
@@ -1691,14 +1700,18 @@ async function listDocumentsBase(opts = {}) {
         SUM(CASE WHEN d.DOC_ID IS NOT NULL THEN 1 ELSE 0 END) AS lies,
         MAX(DBMS_LOB.GETLENGTH(r.RES_BIN)) AS taille_max
       ${from} WHERE ${where}`, binds),
+    one(`SELECT COUNT(*) AS n FROM SBCG_RES r JOIN DOC d ON d.DOC_REF = r.RES_NOM
+      WHERE NVL(r.RES_FMT,1) = 1 AND UPPER(NVL(d.DOC_FOLDER,' ')) LIKE '\\\\POSTE004\\%'`),
     exec(`SELECT r.RES_ID AS id, r.RES_NOM AS ref, NVL(r.RES_EXT,'?') AS ext,
         DBMS_LOB.GETLENGTH(r.RES_BIN) AS taille,
         d.DOC_ID AS doc_id, d.DOC_TITRE AS titre, d.DOC_FILE AS fichier,
+        d.DOC_FOLDER AS dossier, d.DOC_RESID AS resid,
         t.THM_COD AS theme, t.THM_NOM AS theme_nom, ty.MNEMO AS type,
         TO_CHAR(d.DOC_CDATE,'DD/MM/YYYY') AS date_depot, TO_CHAR(d.DOC_DATE,'DD/MM/YYYY') AS date_doc
       ${from} WHERE ${where}
       ORDER BY r.RES_ID DESC OFFSET ${off} ROWS FETCH NEXT ${lim} ROWS ONLY`, binds, lim),
   ]);
+  for (const r of rows) r.poste004 = /^\\\\POSTE004\\/i.test(String(r.dossier || ''));
   return {
     resume: {
       docs: tot ? Number(tot.docs) : 0,
@@ -1706,7 +1719,8 @@ async function listDocumentsBase(opts = {}) {
       lies: tot ? Number(tot.lies) : 0,
       taille_max: tot ? Number(tot.taille_max) : 0,
       formats: formats.length,
-      filtre: q || null,
+      poste004: posteRow ? Number(posteRow.n) : 0,
+      filtre: { q: q || null, ext: ext || null, theme: theme || null, poste004 },
     },
     formats, themes,
     total: tot ? Number(tot.docs) : rows.length,
@@ -2488,7 +2502,7 @@ async function handleRequest(req, res, p, sp) {
     if (p === '/api/documents/fichiers') return sendJson(res, 200, await listDocumentFiles(sp.get('folder') || '', { limit: sp.get('limit'), offset: sp.get('offset') }));
     if (p === '/api/documents/dates') return sendJson(res, 200, await listDocumentDates({ excludePoste: sp.get('excludePoste') === '1' }));
     if (p === '/api/documents/jour') return sendJson(res, 200, await listDocumentsByDay(sp.get('date') || '', { excludePoste: sp.get('excludePoste') === '1' }));
-    if (p === '/api/documents/base') return sendJson(res, 200, await listDocumentsBase({ q: term, limit: sp.get('limit'), offset: sp.get('offset') }));
+    if (p === '/api/documents/base') return sendJson(res, 200, await listDocumentsBase({ q: term, ext: sp.get('ext'), theme: sp.get('theme'), poste004: sp.get('poste004') === '1', limit: sp.get('limit'), offset: sp.get('offset') }));
     m = p.match(/^\/api\/documents\/base\/(\d+)\/content$/);
     if (m) {
       const bit = await getBaseResource(m[1]);

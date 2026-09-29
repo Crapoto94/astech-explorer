@@ -391,7 +391,7 @@ const state = {
   magasins: { code: '', enStock: true, list: null },
   parc: { tab: 'vehicules', service: '', etat: '', page: 1 },
   procs: { type: '', group: '', status: '' },
-  docs: { tab: 'modules', module: '', cheminsView: 'tree', excludePoste: false },
+  docs: { tab: 'modules', module: '', cheminsView: 'tree', excludePoste: false, baseExt: '', baseTheme: '', basePoste004: false },
   locatif: { tab: 'echeances', mode: 'futures', num: '' },
   refs: { type: 'biens', genre: '' },
   inter: { tab: 'interventions', etat: '', type: '', period: '12m', page: 1 },
@@ -2312,7 +2312,12 @@ async function viewDocuments() {
   const modById = Object.fromEntries(mods.map((m) => [m.key, m]));
   const themeById = Object.fromEntries((d.themes || []).map((t) => [t.id, t]));
   const datesData = (s.tab === 'dates') ? await api('/api/documents/dates' + exQ) : { dates: [] };
-  const baseData = (s.tab === 'base') ? await api('/api/documents/base' + (state.q ? '?q=' + encodeURIComponent(state.q) : '')) : null;
+  const bq = new URLSearchParams();
+  if (state.q) bq.set('q', state.q);
+  if (s.baseExt) bq.set('ext', s.baseExt);
+  if (s.baseTheme) bq.set('theme', s.baseTheme);
+  if (s.basePoste004) bq.set('poste004', '1');
+  const baseData = (s.tab === 'base') ? await api('/api/documents/base' + (bq.toString() ? '?' + bq.toString() : '')) : null;
   const tabs = [['modules', 'Modules & thèmes', 'category'], ['tables', 'Tables & champs', 'table_view'], ['chemins', 'Chemins de stockage', 'folder'], ['base', 'En base (BLOB)', 'database'], ['dates', 'Par date de dépôt', 'event_note'], ['transversal', 'Transversal', 'hub']];
   const tabBar = `<nav class="flex items-center gap-space-xs overflow-x-auto p-1 bg-surface-container-low rounded-xl mb-space-md shadow-sm">
     ${tabs.map(([k, label, icon]) => `<button data-act="docTab:${k}" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg font-title-md whitespace-nowrap transition-all ${s.tab === k ? 'bg-surface-container-lowest text-primary shadow-sm' : 'text-secondary hover:text-on-surface hover:bg-surface-container'}"><span class="material-symbols-outlined text-[18px]">${icon}</span>${label}</button>`).join('')}
@@ -2438,13 +2443,27 @@ async function viewDocuments() {
   } else if (s.tab === 'base') {
     const b = baseData || { resume: {}, formats: [], themes: [], rows: [], total: 0 };
     const rb = b.resume || {};
-    const fmtCards = (b.formats || []).map((f) => `<div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-container-low">
-      <span class="material-symbols-outlined text-[18px] text-secondary">${docFileIcon('x.' + f.ext)}</span>
-      <div class="min-w-0"><div class="font-label-mono-sm text-on-surface">${esc(f.ext)}</div>
-      <div class="font-label-mono-sm text-outline text-[11px]">${num(f.n)} · ${docBytes(f.octets)}</div></div></div>`).join('');
-    const themeChips = (b.themes || []).map((t) => `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container-low font-label-mono-sm">
-      <span class="text-on-surface">${esc(t.nom ? t.nom.slice(0, 28) : t.cod)}</span>
-      <span class="px-1.5 rounded-full bg-surface-container text-secondary text-[11px]">${num(t.n)}</span></span>`).join('');
+    const fmtActive = String(s.baseExt || '').toUpperCase();
+    const thActive = s.baseTheme || '';
+    const fmtCards = (b.formats || []).map((f) => {
+      const on = !!fmtActive && fmtActive === String(f.ext).toUpperCase();
+      return `<button data-act="docBaseExt:${esc(f.ext)}" title="Filtrer sur ${esc(f.ext)}" class="flex items-center gap-2 px-3 py-2 rounded-xl text-left transition-colors ${on ? 'bg-primary text-on-primary shadow-md' : 'bg-surface-container-low hover:bg-surface-container'}">
+      <span class="material-symbols-outlined text-[18px] ${on ? '' : 'text-secondary'}">${docFileIcon('x.' + f.ext)}</span>
+      <div class="min-w-0"><div class="font-label-mono-sm">${esc(f.ext)}</div>
+      <div class="font-label-mono-sm ${on ? 'text-white/80' : 'text-outline'} text-[11px]">${num(f.n)} · ${docBytes(f.octets)}</div></div></button>`;
+    }).join('');
+    const themeChips = (b.themes || []).map((t) => {
+      const on = !!thActive && thActive === t.cod;
+      return `<button data-act="docBaseTheme:${esc(t.cod)}" title="Filtrer sur ce thème" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-label-mono-sm transition-colors ${on ? 'bg-primary text-on-primary shadow-md' : 'bg-surface-container-low hover:bg-surface-container'}">
+      <span>${esc(t.nom ? t.nom.slice(0, 28) : t.cod)}</span>
+      <span class="px-1.5 rounded-full ${on ? 'bg-white/20' : 'bg-surface-container text-secondary'} text-[11px]">${num(t.n)}</span></button>`;
+    }).join('');
+    const activeFilters = !!(s.baseExt || s.baseTheme || s.basePoste004);
+    const controls = `<div class="flex flex-wrap items-center gap-2">
+        <button data-act="docBasePoste004" title="Isoler les documents dont le dossier GED est \\\\POSTE004\\C$\\TEMP" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg font-label-mono-sm transition-colors ${s.basePoste004 ? 'bg-primary text-on-primary shadow-md' : 'bg-surface-container-low hover:bg-surface-container text-on-surface'}"><span class="material-symbols-outlined text-[16px]">${s.basePoste004 ? 'visibility' : 'folder_open'}</span>POSTE004 uniquement${rb.poste004 ? ' · ' + num(rb.poste004) : ''}</button>
+        ${activeFilters ? `<button data-act="docBaseReset" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-label-mono-sm bg-surface-container text-secondary hover:bg-surface-container-high"><span class="material-symbols-outlined text-[16px]">filter_alt_off</span>Réinitialiser${s.baseExt ? ' · ' + esc(s.baseExt) : ''}${s.baseTheme ? ' · ' + esc(s.baseTheme) : ''}</button>` : ''}
+        <span class="font-label-mono-sm text-secondary ml-auto"><span class="font-semibold text-on-surface">${num(b.total)}</span> document(s)${s.basePoste004 ? ' (POSTE004)' : ''}</span>
+      </div>`;
     const cols = [
       { label: 'Aperçu', center: true, get: (x) => {
         const k = docViewerKind(x.ext);
@@ -2455,6 +2474,7 @@ async function viewDocuments() {
       { label: 'Taille', right: true, get: (x) => cellMono(docBytes(x.taille), 'text-secondary') },
       { label: 'Titre / fichier', nowrap: false, get: (x) => `<div class="font-title-sm clamp1" style="max-width:360px">${esc(x.titre || x.fichier || '—')}</div><div class="font-label-mono-sm text-secondary clamp1" style="max-width:360px">${esc(x.fichier || '')}</div>` },
       { label: 'Thème', get: (x) => (x.theme && x.theme !== '—') ? badge(x.theme_nom ? x.theme_nom.slice(0, 22) : x.theme, 'slate') : dash },
+      { label: 'Dossier lié (DOC_FOLDER)', nowrap: false, get: (x) => x.dossier ? `<span class="font-label-mono-sm text-[11px] break-all">${esc(x.dossier)}</span>${x.poste004 ? ' ' + badge('POSTE004', 'amber') : ''}` : dash },
       { label: 'Dépôt', get: (x) => cellMono(x.date_depot || '', 'text-secondary') },
     ];
     const more = Number(b.total) > (b.rows || []).length ? `<div class="text-secondary font-body-sm p-space-lg">… ${num(Number(b.total) - b.rows.length)} autre(s) document(s) non affiché(s) (plafond ${num(b.limit)}).</div>` : '';
@@ -2463,12 +2483,13 @@ async function viewDocuments() {
           <div class="p-space-md rounded-xl bg-surface-container-low text-center"><div class="font-headline-md font-bold tabular">${num(rb.docs)}</div><div class="font-label-mono-sm text-secondary">fichiers en base</div></div>
           <div class="p-space-md rounded-xl bg-surface-container-low text-center"><div class="font-headline-md font-bold tabular">${docBytes(rb.octets)}</div><div class="font-label-mono-sm text-secondary">volume BLOB</div></div>
           <div class="p-space-md rounded-xl bg-surface-container-low text-center"><div class="font-headline-md font-bold tabular">${num(rb.lies)}</div><div class="font-label-mono-sm text-secondary">rattachés à la GED</div></div>
-          <div class="p-space-md rounded-xl bg-surface-container-low text-center"><div class="font-headline-md font-bold tabular">${docBytes(rb.taille_max)}</div><div class="font-label-mono-sm text-secondary">plus gros fichier</div></div>
+          <div class="p-space-md rounded-xl bg-surface-container-low text-center"><div class="font-headline-md font-bold tabular">${num(rb.poste004)}</div><div class="font-label-mono-sm text-secondary">dossier \\POSTE004</div></div>
         </div>
-        <div><div class="font-title-sm text-on-surface mb-1">Formats</div><div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-space-sm">${fmtCards || '<span class="text-secondary font-body-sm">—</span>'}</div></div>
-        <div><div class="font-title-sm text-on-surface mb-1">Thèmes GED</div><div class="flex flex-wrap gap-1.5">${themeChips || '<span class="text-secondary font-body-sm">—</span>'}</div></div>
-        <p class="font-body-sm text-on-surface-variant">Mode de stockage <span class="font-label-mono-sm">DOC_STOCKG = 2</span> (« Base de données ») : le contenu est un <strong>BLOB</strong> dans <span class="font-label-mono-sm">SBCG_RES.RES_BIN</span>, relié au document par <span class="font-label-mono-sm">DOC.DOC_REF = SBCG_RES.RES_NOM</span> (<span class="font-label-mono-sm">RES_FMT = 1</span>). Les icônes / ressources graphiques (<span class="font-label-mono-sm">RES_FMT = 4</span>) sont exclues. La recherche (globale) porte sur la référence, l’extension, le titre et le fichier.</p>
-      </div>` + dataTable(cols, b.rows || [], { empty: 'Aucun document en base.', key: 'doc_base' }) + more, null, 'Le fichier lui-même est conservé dans la base Oracle (et non sur un partage fichier) — volume total supérieur à la GED sur disque.')}`;
+        ${controls}
+        <div><div class="font-title-sm text-on-surface mb-1">Type de document (format) — cliquer pour filtrer</div><div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-space-sm">${fmtCards || '<span class="text-secondary font-body-sm">—</span>'}</div></div>
+        <div><div class="font-title-sm text-on-surface mb-1">Thèmes GED — cliquer pour filtrer</div><div class="flex flex-wrap gap-1.5">${themeChips || '<span class="text-secondary font-body-sm">—</span>'}</div></div>
+        <p class="font-body-sm text-on-surface-variant">Mode de stockage <span class="font-label-mono-sm">DOC_STOCKG = 2</span> (« Base de données ») : le contenu est un <strong>BLOB</strong> dans <span class="font-label-mono-sm">SBCG_RES.RES_BIN</span>, relié au document par <span class="font-label-mono-sm">DOC.DOC_REF = SBCG_RES.RES_NOM</span> (<span class="font-label-mono-sm">RES_FMT = 1</span>). Les icônes / ressources graphiques (<span class="font-label-mono-sm">RES_FMT = 4</span>) sont exclues. La colonne « Dossier lié » reprend le chemin du document GED associé — dont les <strong>\\\\POSTE004\\C$\\TEMP</strong> (photos PHDI/PHINT), isolables via le bouton. La recherche (globale) porte sur la référence, l’extension, le titre et le fichier.</p>
+      </div>` + dataTable(cols, b.rows || [], { empty: 'Aucun document en base pour ce filtre.', key: 'doc_base' }) + more, null, 'Le fichier lui-même est conservé dans la base Oracle (et non sur un partage fichier) ; chaque ligne affiche le dossier du document GED lié.')}`;
   } else if (s.tab === 'dates') {
     const dates = datesData.dates || [];
     const nbJours = dates.length;
@@ -3113,6 +3134,10 @@ function handleAction(action, value, el) {
     case 'docCheminView': state.docs.cheminsView = value === 'list' ? 'list' : 'tree'; viewDocuments(); break;
     case 'docExcludePoste': state.docs.excludePoste = !state.docs.excludePoste; state.pages = {}; viewDocuments(); break;
     case 'docBaseView': openDocBaseViewer(value, el.getAttribute('data-ref'), el.getAttribute('data-ext')); break;
+    case 'docBaseExt': state.docs.baseExt = (String(state.docs.baseExt).toUpperCase() === String(value).toUpperCase()) ? '' : (value || ''); state.pages = {}; viewDocuments(); break;
+    case 'docBaseTheme': state.docs.baseTheme = state.docs.baseTheme === value ? '' : (value || ''); state.pages = {}; viewDocuments(); break;
+    case 'docBasePoste004': state.docs.basePoste004 = !state.docs.basePoste004; state.pages = {}; viewDocuments(); break;
+    case 'docBaseReset': state.docs.baseExt = ''; state.docs.baseTheme = ''; state.docs.basePoste004 = false; state.pages = {}; viewDocuments(); break;
     case 'magasinEnStock': state.magasins.enStock = el.checked; viewMagasins(); break;
     case 'interTab': it.tab = value; it.page = 1; state.q = ''; viewInterventions(); break;
     case 'neocityPage': state.neocity.page = value === 'next' ? state.neocity.page + 1 : Math.max(1, state.neocity.page - 1); viewNeocity(); break;
