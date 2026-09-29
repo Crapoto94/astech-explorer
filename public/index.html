@@ -2168,6 +2168,105 @@ function docBytes(n) {
   if (b < 1024 * 1024 * 1024) return (b / 1024 / 1024).toFixed(1) + ' Mo';
   return (b / 1024 / 1024 / 1024).toFixed(2) + ' Go';
 }
+// ── Visionneuse des documents stockés en base (BLOB SBCG_RES.RES_BIN) ────────
+// Le contenu est chargé via fetch (l'en-tête de session ne peut pas être porté
+// par un <img>/<iframe>), puis exposé via un object URL : images, PDF et vidéo
+// sont affichés en direct, les autres formats sont proposés au téléchargement.
+let DOC_VIEWER = null;
+let DOC_VIEWER_REQ = 0;
+function docViewerKind(ext) {
+  const e = String(ext || '').toLowerCase();
+  if (['jpg', 'jpeg', 'jpe', 'png', 'gif', 'bmp', 'webp', 'tif', 'tiff', 'avif', 'heic', 'heif', 'svg'].includes(e)) return 'image';
+  if (e === 'pdf') return 'pdf';
+  if (['mp4', 'm4v', 'webm', 'mov'].includes(e)) return 'video';
+  return null;
+}
+async function apiBlob(path) {
+  const headers = {};
+  if (SESSION.token) headers['X-ASTECH-Token'] = SESSION.token;
+  const r = await fetch(withEnv(path), { headers });
+  if (r.status === 401 && APP.authEnabled) {
+    SESSION.token = ''; try { localStorage.removeItem('astechToken'); } catch (e) { /* ignore */ }
+    showLogin('Session expirée, veuillez vous reconnecter.'); throw new Error('Authentification requise');
+  }
+  if (!r.ok) { let d; try { d = await r.json(); } catch { d = {}; } throw new Error(d.error || ('Erreur ' + r.status)); }
+  return r.blob();
+}
+function closeDocViewer() {
+  DOC_VIEWER_REQ++;
+  const el = document.getElementById('docViewer'); if (el) el.remove();
+  if (DOC_VIEWER && DOC_VIEWER.url) { try { URL.revokeObjectURL(DOC_VIEWER.url); } catch (e) { /* ignore */ } }
+  DOC_VIEWER = null;
+}
+async function openDocBaseViewer(id, ref, ext) {
+  closeDocViewer();
+  const myReq = ++DOC_VIEWER_REQ;
+  const kind = docViewerKind(ext);
+  const extU = String(ext || '').toUpperCase();
+  const name = (ref || ('res-' + id)) + (ext ? '.' + String(ext).toLowerCase() : '');
+  const icon = kind === 'image' ? 'image' : kind === 'pdf' ? 'picture_as_pdf' : kind === 'video' ? 'movie' : 'draft';
+  const overlay = document.createElement('div');
+  overlay.id = 'docViewer';
+  overlay.className = 'fixed inset-0 z-[95] flex flex-col bg-[#0b1220]/95 backdrop-blur-sm';
+  overlay.innerHTML = `
+    <div class="flex items-center gap-3 px-4 h-14 bg-[#0f172a] text-white shadow-lg shrink-0">
+      <span class="material-symbols-outlined text-[20px] text-sky-400">${icon}</span>
+      <div class="min-w-0"><div class="font-title-md truncate" style="max-width:44vw" title="${esc(ref)}">${esc(ref || 'Ressource')}</div>
+        <div class="font-label-mono-sm text-[#94a3b8] text-[11px]">${esc(extU)} · ${kind ? 'document en base (BLOB)' : 'fichier en base (BLOB)'}</div></div>
+      <div id="dvTools" class="ml-auto flex items-center gap-1"></div>
+      <button id="dvClose" class="p-1.5 rounded-lg hover:bg-white/10" title="Fermer (Échap)"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div id="dvBody" class="flex-1 overflow-auto flex items-center justify-center p-4"><div class="text-[#94a3b8] font-body-sm flex items-center gap-2"><span class="material-symbols-outlined animate-spin">progress_activity</span>Chargement…</div></div>`;
+  document.body.appendChild(overlay);
+  const body = overlay.querySelector('#dvBody');
+  const tools = overlay.querySelector('#dvTools');
+  overlay.querySelector('#dvClose').addEventListener('click', closeDocViewer);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeDocViewer(); });
+  let blob;
+  try { blob = await apiBlob('/api/documents/base/' + encodeURIComponent(id) + '/content'); }
+  catch (err) { if (myReq === DOC_VIEWER_REQ) body.innerHTML = `<div class="text-red-400 font-body-sm">${esc(err.message)}</div>`; return; }
+  if (myReq !== DOC_VIEWER_REQ) return;
+  const url = URL.createObjectURL(blob);
+  DOC_VIEWER = { url };
+  let zoom = 1, rot = 0;
+  const applyImg = () => {
+    const im = overlay.querySelector('#dvImg'); if (!im) return;
+    im.style.width = (zoom * 100) + '%';
+    im.style.transform = `rotate(${rot}deg)`;
+    const z = overlay.querySelector('#dvZoom'); if (z) z.textContent = Math.round(zoom * 100) + '%';
+  };
+  const toolBtn = (act, iconName, title) => `<button data-dv="${act}" title="${esc(title)}" class="inline-flex items-center px-2 py-1.5 rounded-lg hover:bg-white/10"><span class="material-symbols-outlined text-[18px]">${iconName}</span></button>`;
+  const common = `${toolBtn('newtab', 'open_in_new', 'Ouvrir dans un onglet')}<a href="${url}" download="${esc(name)}" title="Télécharger" class="inline-flex items-center px-2 py-1.5 rounded-lg hover:bg-white/10 text-white no-underline"><span class="material-symbols-outlined text-[18px]">download</span></a>`;
+  tools.innerHTML = kind === 'image'
+    ? `${toolBtn('zoomout', 'zoom_out', 'Réduire')}<span id="dvZoom" class="font-label-mono-sm text-[#cbd5e1] w-10 text-center">100%</span>${toolBtn('zoomin', 'zoom_in', 'Agrandir')}${toolBtn('rot', 'rotate_right', 'Pivoter')}<span class="w-px h-5 bg-white/20 mx-1"></span>${common}`
+    : common;
+  tools.querySelectorAll('[data-dv]').forEach((b) => b.addEventListener('click', () => {
+    const a = b.getAttribute('data-dv');
+    if (a === 'zoomin') zoom = Math.min(5, zoom + 0.25);
+    else if (a === 'zoomout') zoom = Math.max(0.25, zoom - 0.25);
+    else if (a === 'rot') rot = (rot + 90) % 360;
+    else if (a === 'newtab') { const w = window.open(url, '_blank'); if (w) w.opener = null; return; }
+    applyImg();
+  }));
+  if (kind === 'image') {
+    body.className = 'flex-1 overflow-auto p-4 text-center';
+    body.innerHTML = `<img id="dvImg" src="${url}" alt="${esc(name)}" class="rounded-lg shadow-2xl bg-white inline-block align-top" style="transform-origin:center;transition:transform .15s" />`;
+    applyImg();
+  } else if (kind === 'pdf') {
+    body.className = 'flex-1 overflow-hidden';
+    body.innerHTML = `<iframe src="${url}#view=FitH" title="${esc(name)}" style="width:100%;height:100%;border:0" class="bg-white"></iframe>`;
+  } else if (kind === 'video') {
+    body.className = 'flex-1 overflow-auto flex items-center justify-center p-4';
+    body.innerHTML = `<video src="${url}" controls class="max-w-full max-h-full rounded-lg shadow-2xl bg-black"></video>`;
+  } else {
+    body.innerHTML = `<div class="flex flex-col items-center gap-3 text-center max-w-md">
+      <span class="material-symbols-outlined text-[56px] text-[#64748b]">draft</span>
+      <div class="font-title-lg text-white">${esc(extU || 'Fichier')} · ${docBytes(blob.size)}</div>
+      <p class="font-body-sm text-[#94a3b8]">Ce format n’est pas affichable directement dans le navigateur.</p>
+      <a href="${url}" download="${esc(name)}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary font-title-md hover:bg-primary transition-colors"><span class="material-symbols-outlined text-[18px]">download</span>Télécharger ${esc(name)}</a>
+    </div>`;
+  }
+}
 function docFilesHtml(rows, total, records) {
   if (!rows || !rows.length) return '<div class="text-secondary font-body-sm py-1">Aucun fichier.</div>';
   const list = rows.map((f) => `<div class="flex items-center gap-2 py-0.5">
@@ -2347,6 +2446,10 @@ async function viewDocuments() {
       <span class="text-on-surface">${esc(t.nom ? t.nom.slice(0, 28) : t.cod)}</span>
       <span class="px-1.5 rounded-full bg-surface-container text-secondary text-[11px]">${num(t.n)}</span></span>`).join('');
     const cols = [
+      { label: 'Aperçu', center: true, get: (x) => {
+        const k = docViewerKind(x.ext);
+        return `<button data-act="docBaseView:${x.id}" data-ref="${esc(x.ref)}" data-ext="${esc(x.ext)}" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg ${k ? 'bg-primary-container text-on-primary hover:bg-primary' : 'bg-surface-container text-on-surface hover:bg-surface-container-high'} text-[11px] font-title-md transition-colors"><span class="material-symbols-outlined text-[15px]">${k ? 'visibility' : 'download'}</span>${k === 'image' ? 'Voir' : k === 'pdf' ? 'PDF' : k === 'video' ? 'Vidéo' : 'Ouvrir'}</button>`;
+      } },
       { label: 'Réf. / ressource', get: (x) => `<span class="font-label-mono-sm text-primary font-semibold">${esc(x.ref)}</span>` },
       { label: 'Format', center: true, get: (x) => badge(String(x.ext || '?').toUpperCase(), 'blue') },
       { label: 'Taille', right: true, get: (x) => cellMono(docBytes(x.taille), 'text-secondary') },
@@ -3009,6 +3112,7 @@ function handleAction(action, value, el) {
     case 'docModule': state.docs.module = value || ''; state.docs.tab = 'tables'; state.pages = {}; viewDocuments(); break;
     case 'docCheminView': state.docs.cheminsView = value === 'list' ? 'list' : 'tree'; viewDocuments(); break;
     case 'docExcludePoste': state.docs.excludePoste = !state.docs.excludePoste; state.pages = {}; viewDocuments(); break;
+    case 'docBaseView': openDocBaseViewer(value, el.getAttribute('data-ref'), el.getAttribute('data-ext')); break;
     case 'magasinEnStock': state.magasins.enStock = el.checked; viewMagasins(); break;
     case 'interTab': it.tab = value; it.page = 1; state.q = ''; viewInterventions(); break;
     case 'neocityPage': state.neocity.page = value === 'next' ? state.neocity.page + 1 : Math.max(1, state.neocity.page - 1); viewNeocity(); break;
@@ -3054,7 +3158,7 @@ function handleAction(action, value, el) {
       initEnvSwitch(); render(); break;
   }
 }
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); const s = $('#globalSearch'); if (s) s.focus(); } });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeDocViewer(); closeDrawer(); } if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); const s = $('#globalSearch'); if (s) s.focus(); } });
 
 function wireGlobalSearch() {
   const s = $('#globalSearch');
@@ -3063,7 +3167,7 @@ function wireGlobalSearch() {
   s.addEventListener('keydown', (e) => { if (e.key === 'Enter') { state.q = s.value.trim(); pendingFocus = '#globalSearch'; render(); } });
 }
 
-window.addEventListener('hashchange', render);
+window.addEventListener('hashchange', () => { closeDocViewer(); render(); });
 wireGlobalSearch();
 initAuth().then(() => { initEnvSwitch(); render(); });
 </script>

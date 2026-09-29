@@ -1715,6 +1715,57 @@ async function listDocumentsBase(opts = {}) {
   };
 }
 
+// Types MIME des documents stockés en base (visionneuse : images + PDF + vidéo).
+const DOC_MIME = {
+  jpg: 'image/jpeg', jpeg: 'image/jpeg', jpe: 'image/jpeg', png: 'image/png',
+  gif: 'image/gif', bmp: 'image/bmp', webp: 'image/webp', tif: 'image/tiff',
+  tiff: 'image/tiff', heic: 'image/heic', heif: 'image/heif', svg: 'image/svg+xml',
+  avif: 'image/avif', ico: 'image/x-icon',
+  pdf: 'application/pdf',
+  mp4: 'video/mp4', m4v: 'video/x-m4v', webm: 'video/webm', mov: 'video/quicktime',
+  txt: 'text/plain; charset=utf-8', csv: 'text/csv; charset=utf-8', json: 'application/json',
+  doc: 'application/msword', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xls: 'application/vnd.ms-excel', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  msg: 'application/vnd.ms-outlook', zip: 'application/zip',
+};
+const docMime = (ext) => DOC_MIME[String(ext || '').toLowerCase()] || 'application/octet-stream';
+
+// Récupère le contenu binaire d'une ressource en base (SBCG_RES.RES_BIN) sous
+// forme de Buffer. Renvoie null si l'identifiant n'existe pas.
+async function getBaseResource(id) {
+  const conn = await (await getPool(currentDbEnv())).getConnection();
+  try {
+    const r = await conn.execute(
+      `SELECT RES_ID, RES_NOM, RES_EXT, RES_FMT,
+              DBMS_LOB.GETLENGTH(RES_BIN) AS TAILLE, RES_BIN
+         FROM SBCG_RES WHERE RES_ID = :id`,
+      { id: Number(id) },
+      { outFormat: oracledb.OUT_FORMAT_OBJECT, maxRows: 1, fetchInfo: { RES_BIN: { type: oracledb.BUFFER } } },
+    );
+    const row = (r.rows || [])[0];
+    if (!row || !row.RES_BIN) return null;
+    return {
+      id: row.RES_ID,
+      ref: row.RES_NOM,
+      ext: row.RES_EXT,
+      fmt: row.RES_FMT,
+      size: Number(row.TAILLE) || row.RES_BIN.length,
+      buffer: row.RES_BIN,
+    };
+  } finally { await conn.close(); }
+}
+// Envoi d'un binaire (Content-Disposition inline par défaut, attachment si download).
+function sendBinary(res, buffer, { contentType, filename, download } = {}) {
+  const safe = String(filename || 'document').replace(/[\r\n"\\]/g, '').slice(0, 200);
+  res.writeHead(200, {
+    'Content-Type': contentType || 'application/octet-stream',
+    'Content-Length': buffer.length,
+    'Content-Disposition': `${download ? 'attachment' : 'inline'}; filename="${safe}"`,
+    'Cache-Control': 'private, max-age=300',
+  });
+  res.end(buffer);
+}
+
 // ─── Magasins & stock ────────────────────────────────────────────────────────
 // Un « magasin » est une structure (V_SOCIETES) ; les articles sont dans STOCK
 // via STOCK.SREF_SOC = V_SOCIETES.COD.
@@ -2438,6 +2489,13 @@ async function handleRequest(req, res, p, sp) {
     if (p === '/api/documents/dates') return sendJson(res, 200, await listDocumentDates({ excludePoste: sp.get('excludePoste') === '1' }));
     if (p === '/api/documents/jour') return sendJson(res, 200, await listDocumentsByDay(sp.get('date') || '', { excludePoste: sp.get('excludePoste') === '1' }));
     if (p === '/api/documents/base') return sendJson(res, 200, await listDocumentsBase({ q: term, limit: sp.get('limit'), offset: sp.get('offset') }));
+    m = p.match(/^\/api\/documents\/base\/(\d+)\/content$/);
+    if (m) {
+      const bit = await getBaseResource(m[1]);
+      if (!bit) return sendJson(res, 404, { error: 'Document en base introuvable.' });
+      const name = (bit.ref || ('res-' + bit.id)) + (bit.ext ? '.' + String(bit.ext).toLowerCase() : '');
+      return sendBinary(res, bit.buffer, { contentType: docMime(bit.ext), filename: name, download: sp.get('download') === '1' });
+    }
 
     // Procédures stockées
     if (p === '/api/procedures') return sendJson(res, 200, await listProcedures({ q: term, type: sp.get('type') || '', group: sp.get('group') || '' }));

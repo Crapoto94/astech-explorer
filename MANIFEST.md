@@ -174,6 +174,11 @@ les **chemins de stockage** et les **dépôts par date**, et expliquer le
   logos/ressources autonomes. Formats : JPG (~8,2 k), PDF (544), MP4, PNG, DOCX…
   L'UI affiche volume, formats, thèmes, plus gros fichier et la liste (taille via
   `DBMS_LOB.GETLENGTH`), avec recherche sur référence/extension/titre/fichier.
+  **Visionneuse** intégrée (`GET /documents/base/:id/content`) : JPG/images et
+  **PDF** affichés en direct (zoom + rotation pour les images), vidéo, ou
+  téléchargement pour les autres formats ; le contenu est chargé via `fetch`
+  (l'en-tête de session ne peut pas être porté par un `<img>`/`<iframe>`) puis
+  exposé par object URL.
 - **Fichiers uniques** : `DOC` contient **plusieurs lignes par même fichier**
   (doublons / versions). L'UI regroupe par **fichier unique** (`DOC_FOLDER` +
   `DOC_FILE`) et affiche le **nombre de versions** (`DOC_REVIS`) et
@@ -392,6 +397,7 @@ Base `http://localhost:8099/api`.
 | GET | `/documents/dates` | `excludePoste=1` | agrégat année/mois/jour (`DOC_CDATE`) en fichiers uniques + enregistrements |
 | GET | `/documents/jour` | `date=YYYY-MM-DD`, `excludePoste=1` | fichiers uniques déposés ce jour |
 | GET | `/documents/base` | `q`, `limit`, `offset` | documents stockés en base (`SBCG_RES.RES_BIN` BLOB) : `resume` (nb, volume, rattachés, max), `formats`, `themes`, `rows` |
+| GET | `/documents/base/:id/content` | `download=1` | flux binaire (BLOB) : `Content-Type` selon l'extension (`image/jpeg`, `application/pdf`, `video/mp4`…), `inline` (visionneuse) ou `attachment` ; 404 si absent |
 
 ### 4.6 Principes transverses
 
