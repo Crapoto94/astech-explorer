@@ -736,7 +736,8 @@ https://github.com/Crapoto94/astech), port **8099** :
   `PATRIGENE.SGEN_PHOTO`/`CATEGORIE.SCAT_PHOTO`/`SOUSCATEGORIE.SSCAT_PHOTO`,
   `*_ENGRATTACH` (contrats/compta), `OP_*`/`GFI_INT_LIQR`/`SIG*`/`DF_FORM_ENDPOINT`
   (export, API, SIG). Endpoint `/api/documents` (`DOC_MODULES`/`DOC_FIELDS`/
-  `DOC_TRANSVERSAL` : 9 modules, ~47 champs, 354 chemins) ; UI route
+  `DOC_TRANSVERSAL` : 9 modules, ~47 champs, 354 chemins) et `/api/documents/base`
+  (documents en BLOB `SBCG_RES.RES_BIN`) ; UI route
   `#/documents` (onglets Modules & thèmes, Tables & champs, Chemins de stockage,
   Transversal agents/biens/contrats/véhicules/interventions/permis/amiante/articles).
   ⚠️ `DOC` contient **plusieurs lignes par même fichier** (doublons/versions :
@@ -758,7 +759,15 @@ https://github.com/Crapoto94/astech), port **8099** :
   L'onglet Modules décrit le **modèle hybride** (`DOC_HYBRIDE` → `modele`) :
   (1) GED centrale `DOC` + satellites, (2) rattachement polymorphe `DOC_AFFECT`
   (`DAFF_FRM`/`DAFF_ENTID`), (3) **24 champs document dédiés** dans 24 tables
-  (le plus souvent vides : la GED reste la source). L'onglet **Par date**
+  (le plus souvent vides : la GED reste la source). L'onglet **En base (BLOB)**
+  liste les documents dont le **contenu binaire est stocké dans la base** (mode
+  `DOC_STOCKG = 2` « Base de données ») : table **`SBCG_RES`** (`RES_BIN` BLOB,
+  `RES_NOM` = `DOC.DOC_REF`, `RES_EXT`, `RES_FMT` : 1 = document, 4 = icône).
+  8 979 fichiers / ~7,7 Go, dont 8 801 rattachés à un `DOC` (le reste = logos,
+  ressources autonomes) ; volumétrie par `DBMS_LOB.GETLENGTH` (jamais le contenu),
+  formats JPG/PDF/MP4/PNG/DOCX…, recherche référence/extension/titre/fichier.
+  Endpoint `/api/documents/base` ; l'onglet affiche volume, formats, thèmes et la
+  liste. L'onglet **Par date**
   (`/api/documents/dates`, `/api/documents/jour?date=`) affiche une arborescence
   **année → mois → jour** sur `DOC.DOC_CDATE` (date de dépôt) ; déplier un jour
   liste les documents déposés. **Métadonnées** d'un document (`DOC_META`) :

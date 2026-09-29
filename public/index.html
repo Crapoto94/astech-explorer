@@ -2161,6 +2161,13 @@ function docFileIcon(name) {
   if (['zip', 'rar', '7z'].includes(e)) return 'folder_zip';
   return 'draft';
 }
+function docBytes(n) {
+  const b = Number(n) || 0;
+  if (b < 1024) return b + ' o';
+  if (b < 1024 * 1024) return Math.round(b / 1024) + ' Ko';
+  if (b < 1024 * 1024 * 1024) return (b / 1024 / 1024).toFixed(1) + ' Mo';
+  return (b / 1024 / 1024 / 1024).toFixed(2) + ' Go';
+}
 function docFilesHtml(rows, total, records) {
   if (!rows || !rows.length) return '<div class="text-secondary font-body-sm py-1">Aucun fichier.</div>';
   const list = rows.map((f) => `<div class="flex items-center gap-2 py-0.5">
@@ -2206,7 +2213,8 @@ async function viewDocuments() {
   const modById = Object.fromEntries(mods.map((m) => [m.key, m]));
   const themeById = Object.fromEntries((d.themes || []).map((t) => [t.id, t]));
   const datesData = (s.tab === 'dates') ? await api('/api/documents/dates' + exQ) : { dates: [] };
-  const tabs = [['modules', 'Modules & thèmes', 'category'], ['tables', 'Tables & champs', 'table_view'], ['chemins', 'Chemins de stockage', 'folder'], ['dates', 'Par date de dépôt', 'event_note'], ['transversal', 'Transversal', 'hub']];
+  const baseData = (s.tab === 'base') ? await api('/api/documents/base' + (state.q ? '?q=' + encodeURIComponent(state.q) : '')) : null;
+  const tabs = [['modules', 'Modules & thèmes', 'category'], ['tables', 'Tables & champs', 'table_view'], ['chemins', 'Chemins de stockage', 'folder'], ['base', 'En base (BLOB)', 'database'], ['dates', 'Par date de dépôt', 'event_note'], ['transversal', 'Transversal', 'hub']];
   const tabBar = `<nav class="flex items-center gap-space-xs overflow-x-auto p-1 bg-surface-container-low rounded-xl mb-space-md shadow-sm">
     ${tabs.map(([k, label, icon]) => `<button data-act="docTab:${k}" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg font-title-md whitespace-nowrap transition-all ${s.tab === k ? 'bg-surface-container-lowest text-primary shadow-sm' : 'text-secondary hover:text-on-surface hover:bg-surface-container'}"><span class="material-symbols-outlined text-[18px]">${icon}</span>${label}</button>`).join('')}
   </nav>`;
@@ -2328,6 +2336,36 @@ async function viewDocuments() {
         <span class="font-label-mono-sm text-secondary"><span class="font-semibold text-on-surface">${num(rows.length)}</span> dossier(s) · <span class="font-semibold text-on-surface">${num(totalDocs)}</span> fichiers uniques · ${num(totalRecs)} enreg.</span>
       </div>`;
     body = `${card('Arborescence des chemins de stockage (' + num(d.chemins.length) + ' dossiers)', controls + (viewMode === 'tree' ? treeHtml : dataTable(cols, rows, { empty: 'Aucun chemin.', key: 'doc_chemins', pageSize: 50 })), null, 'Chaque nœud affiche le nombre de FICHIERS UNIQUES de tout son sous-arbre (\\tsclient → C → Documents and Settings → …) ; le compteur « ici » précise les fichiers rangés directement à ce niveau quand il diffère du cumul. Les enregistrements en doublon d’un même fichier ne sont pas répétés.')}`;
+  } else if (s.tab === 'base') {
+    const b = baseData || { resume: {}, formats: [], themes: [], rows: [], total: 0 };
+    const rb = b.resume || {};
+    const fmtCards = (b.formats || []).map((f) => `<div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-container-low">
+      <span class="material-symbols-outlined text-[18px] text-secondary">${docFileIcon('x.' + f.ext)}</span>
+      <div class="min-w-0"><div class="font-label-mono-sm text-on-surface">${esc(f.ext)}</div>
+      <div class="font-label-mono-sm text-outline text-[11px]">${num(f.n)} · ${docBytes(f.octets)}</div></div></div>`).join('');
+    const themeChips = (b.themes || []).map((t) => `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container-low font-label-mono-sm">
+      <span class="text-on-surface">${esc(t.nom ? t.nom.slice(0, 28) : t.cod)}</span>
+      <span class="px-1.5 rounded-full bg-surface-container text-secondary text-[11px]">${num(t.n)}</span></span>`).join('');
+    const cols = [
+      { label: 'Réf. / ressource', get: (x) => `<span class="font-label-mono-sm text-primary font-semibold">${esc(x.ref)}</span>` },
+      { label: 'Format', center: true, get: (x) => badge(String(x.ext || '?').toUpperCase(), 'blue') },
+      { label: 'Taille', right: true, get: (x) => cellMono(docBytes(x.taille), 'text-secondary') },
+      { label: 'Titre / fichier', nowrap: false, get: (x) => `<div class="font-title-sm clamp1" style="max-width:360px">${esc(x.titre || x.fichier || '—')}</div><div class="font-label-mono-sm text-secondary clamp1" style="max-width:360px">${esc(x.fichier || '')}</div>` },
+      { label: 'Thème', get: (x) => (x.theme && x.theme !== '—') ? badge(x.theme_nom ? x.theme_nom.slice(0, 22) : x.theme, 'slate') : dash },
+      { label: 'Dépôt', get: (x) => cellMono(x.date_depot || '', 'text-secondary') },
+    ];
+    const more = Number(b.total) > (b.rows || []).length ? `<div class="text-secondary font-body-sm p-space-lg">… ${num(Number(b.total) - b.rows.length)} autre(s) document(s) non affiché(s) (plafond ${num(b.limit)}).</div>` : '';
+    body = `${card('Documents stockés en base (SBCG_RES.RES_BIN)', `<div class="p-space-lg space-y-space-md">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-space-md">
+          <div class="p-space-md rounded-xl bg-surface-container-low text-center"><div class="font-headline-md font-bold tabular">${num(rb.docs)}</div><div class="font-label-mono-sm text-secondary">fichiers en base</div></div>
+          <div class="p-space-md rounded-xl bg-surface-container-low text-center"><div class="font-headline-md font-bold tabular">${docBytes(rb.octets)}</div><div class="font-label-mono-sm text-secondary">volume BLOB</div></div>
+          <div class="p-space-md rounded-xl bg-surface-container-low text-center"><div class="font-headline-md font-bold tabular">${num(rb.lies)}</div><div class="font-label-mono-sm text-secondary">rattachés à la GED</div></div>
+          <div class="p-space-md rounded-xl bg-surface-container-low text-center"><div class="font-headline-md font-bold tabular">${docBytes(rb.taille_max)}</div><div class="font-label-mono-sm text-secondary">plus gros fichier</div></div>
+        </div>
+        <div><div class="font-title-sm text-on-surface mb-1">Formats</div><div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-space-sm">${fmtCards || '<span class="text-secondary font-body-sm">—</span>'}</div></div>
+        <div><div class="font-title-sm text-on-surface mb-1">Thèmes GED</div><div class="flex flex-wrap gap-1.5">${themeChips || '<span class="text-secondary font-body-sm">—</span>'}</div></div>
+        <p class="font-body-sm text-on-surface-variant">Mode de stockage <span class="font-label-mono-sm">DOC_STOCKG = 2</span> (« Base de données ») : le contenu est un <strong>BLOB</strong> dans <span class="font-label-mono-sm">SBCG_RES.RES_BIN</span>, relié au document par <span class="font-label-mono-sm">DOC.DOC_REF = SBCG_RES.RES_NOM</span> (<span class="font-label-mono-sm">RES_FMT = 1</span>). Les icônes / ressources graphiques (<span class="font-label-mono-sm">RES_FMT = 4</span>) sont exclues. La recherche (globale) porte sur la référence, l’extension, le titre et le fichier.</p>
+      </div>` + dataTable(cols, b.rows || [], { empty: 'Aucun document en base.', key: 'doc_base' }) + more, null, 'Le fichier lui-même est conservé dans la base Oracle (et non sur un partage fichier) — volume total supérieur à la GED sur disque.')}`;
   } else if (s.tab === 'dates') {
     const dates = datesData.dates || [];
     const nbJours = dates.length;

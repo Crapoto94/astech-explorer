@@ -166,6 +166,14 @@ les **chemins de stockage** et les **dépôts par date**, et expliquer le
   (`CONTRAT_LOCATIF.CONTL_PJ1..15`, `DEMANDEUR.SDEM_REPDOC`, `BIMMAQ_IE.MIE_FILE`,
   `*_ENGRATTACH`, `OP_*`, `GFI_INT_LIQR`, `SIG*`, `DF_FORM_ENDPOINT`…) — la GED
   centrale reste la source quasi unique, les champs dédiés sont surtout vides.
+- **Stockés en base (BLOB)** : onglet « En base (BLOB) ». Les documents en mode
+  `DOC_STOCKG = 2` (« Base de données ») ont leur **contenu binaire en base** :
+  `SBCG_RES.RES_BIN` (**BLOB**, 8 979 fichiers, ~7,7 Go), relié à la GED par
+  `DOC.DOC_REF = SBCG_RES.RES_NOM` (`RES_FMT=1` = document ; `RES_FMT=4` = icône
+  exclue). 8 801 ressources sont rattachées à un `DOC`, les autres sont des
+  logos/ressources autonomes. Formats : JPG (~8,2 k), PDF (544), MP4, PNG, DOCX…
+  L'UI affiche volume, formats, thèmes, plus gros fichier et la liste (taille via
+  `DBMS_LOB.GETLENGTH`), avec recherche sur référence/extension/titre/fichier.
 - **Fichiers uniques** : `DOC` contient **plusieurs lignes par même fichier**
   (doublons / versions). L'UI regroupe par **fichier unique** (`DOC_FOLDER` +
   `DOC_FILE`) et affiche le **nombre de versions** (`DOC_REVIS`) et
@@ -304,6 +312,7 @@ Noms de tables **à confirmer** à l'étape suivante (exploration) :
 | Satellites | `DOC_ANNEX`, `DOC_DEMAT`, `DOC_KEYW`, `DOC_CARACT`, `TOPIC_DOC`, `DOCJ` | annexes, dématérialisé, mots-clés, caractéristiques, liens |
 | Historique versions | `DOC_HISTO` (2 804 lignes / 2 222 docs) | `DOCH_DOCID`, `DOCH_REVIS`, `DOCH_FILE`, `DOCH_FOLDER`, `DOCH_SIZE`, `DOCH_STOCKG`, `DOCH_MUSER`, `DOCH_MDATE` |
 | Vue | `V_DOC` | projection lisible (libellés thème/type/stockage, noms d'utilisateurs) |
+| **Contenu en base** | `SBCG_RES` (9 004 lignes) | fichier en **BLOB** `RES_BIN` ; `RES_NOM` = `DOC.DOC_REF`, `RES_EXT` = extension, `RES_FMT` (`1` = document, `4` = icône) — mode `DOC_STOCKG=2` (« Base ») |
 
 **Versionning : oui** — `DOC.DOC_REVIS` = n° de révision (463 docs > 1, max 7) ;
 les versions précédentes sont archivées dans **`DOC_HISTO`** (chemin/fichier/taille
@@ -382,6 +391,7 @@ Base `http://localhost:8099/api`.
 | GET | `/documents/fichiers` | `folder`, `limit`, `offset` | fichiers uniques d'un dossier (+ nb de versions / enregistrements) |
 | GET | `/documents/dates` | `excludePoste=1` | agrégat année/mois/jour (`DOC_CDATE`) en fichiers uniques + enregistrements |
 | GET | `/documents/jour` | `date=YYYY-MM-DD`, `excludePoste=1` | fichiers uniques déposés ce jour |
+| GET | `/documents/base` | `q`, `limit`, `offset` | documents stockés en base (`SBCG_RES.RES_BIN` BLOB) : `resume` (nb, volume, rattachés, max), `formats`, `themes`, `rows` |
 
 ### 4.6 Principes transverses
 
@@ -562,7 +572,7 @@ concordant `#64748b`.
 | Référentiels | `/api/referentiels/:type` |
 | Interventions | `/api/interventions`, `/api/intervention/:id`, `/api/demandes/options` |
 | Indices | `/api/indices`, `/api/indices/verifier`, `/api/indices/pousser` |
-| Docs associés (GED) | `/api/documents`, `/api/documents/fichiers`, `/api/documents/dates`, `/api/documents/jour` |
+| Docs associés (GED) | `/api/documents`, `/api/documents/fichiers`, `/api/documents/dates`, `/api/documents/jour`, `/api/documents/base` |
 | Parc auto | `/api/parc`, `/api/parc/stats`, `/api/parc/permis`, `/api/parc/vehicule/:id` |
 | Magasins | `/api/magasins`, `/api/magasin/:code` |
 | Procédures & triggers | `/api/procedures`, `/api/procedure/:name` |

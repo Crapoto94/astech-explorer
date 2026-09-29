@@ -1653,6 +1653,68 @@ async function listDocumentsByDay(date, opts = {}) {
   return { date: d, total: tot ? Number(tot.files) : rows.length, records: tot ? Number(tot.records) : rows.length, rows };
 }
 
+// Documents stockés directement dans la base (mode DOC_STOCKG = « BASE ») : le
+// fichier est conservé en BLOB dans SBCG_RES.RES_BIN, relié à la GED centrale
+// par l'égalité DOC.DOC_REF = SBCG_RES.RES_NOM. RES_FMT = 1 = fichier document
+// (4 = icône / ressource graphique, exclue). Aucun contenu n'est renvoyé : seule
+// la taille (DBMS_LOB.GETLENGTH) et les métadonnées le sont.
+async function listDocumentsBase(opts = {}) {
+  const q = String(opts.q || '').trim().toUpperCase();
+  const lim = int(opts.limit, 1000, 5000);
+  const off = Math.max(0, Math.floor(Number(opts.offset) || 0));
+  const binds = {};
+  const w = ['NVL(r.RES_FMT,1) = 1'];
+  if (q) {
+    binds.q = '%' + q + '%';
+    w.push(`(UPPER(NVL(r.RES_NOM,' ')) LIKE :q OR UPPER(NVL(r.RES_EXT,' ')) LIKE :q
+      OR UPPER(NVL(d.DOC_TITRE,' ')) LIKE :q OR UPPER(NVL(d.DOC_FILE,' ')) LIKE :q)`);
+  }
+  const from = `FROM SBCG_RES r
+      LEFT JOIN DOC d ON d.DOC_REF = r.RES_NOM
+      LEFT JOIN DOC_THEME t ON t.THM_ID = d.DOC_THEME
+      LEFT JOIN V_DOCTYPE ty ON ty.ID = d.DOC_TYPE`;
+  const where = w.join(' AND ');
+  const [formats, themes, tot, rows] = await Promise.all([
+    exec(`SELECT NVL(r.RES_EXT,'(sans)') AS ext, COUNT(*) AS n,
+        SUM(NVL(DBMS_LOB.GETLENGTH(r.RES_BIN),0)) AS octets
+      FROM SBCG_RES r WHERE NVL(r.RES_FMT,1) = 1
+      GROUP BY NVL(r.RES_EXT,'(sans)') ORDER BY n DESC`, {}, 100),
+    exec(`SELECT NVL(t.THM_COD,'(hors GED)') AS cod,
+        NVL(t.THM_NOM,'Ressources sans document GED') AS nom, COUNT(*) AS n
+      FROM SBCG_RES r
+      LEFT JOIN DOC d ON d.DOC_REF = r.RES_NOM
+      LEFT JOIN DOC_THEME t ON t.THM_ID = d.DOC_THEME
+      WHERE NVL(r.RES_FMT,1) = 1
+      GROUP BY NVL(t.THM_COD,'(hors GED)'), NVL(t.THM_NOM,'Ressources sans document GED')
+      ORDER BY n DESC`, {}, 100),
+    one(`SELECT COUNT(*) AS docs, SUM(NVL(DBMS_LOB.GETLENGTH(r.RES_BIN),0)) AS octets,
+        SUM(CASE WHEN d.DOC_ID IS NOT NULL THEN 1 ELSE 0 END) AS lies,
+        MAX(DBMS_LOB.GETLENGTH(r.RES_BIN)) AS taille_max
+      ${from} WHERE ${where}`, binds),
+    exec(`SELECT r.RES_ID AS id, r.RES_NOM AS ref, NVL(r.RES_EXT,'?') AS ext,
+        DBMS_LOB.GETLENGTH(r.RES_BIN) AS taille,
+        d.DOC_ID AS doc_id, d.DOC_TITRE AS titre, d.DOC_FILE AS fichier,
+        t.THM_COD AS theme, t.THM_NOM AS theme_nom, ty.MNEMO AS type,
+        TO_CHAR(d.DOC_CDATE,'DD/MM/YYYY') AS date_depot, TO_CHAR(d.DOC_DATE,'DD/MM/YYYY') AS date_doc
+      ${from} WHERE ${where}
+      ORDER BY r.RES_ID DESC OFFSET ${off} ROWS FETCH NEXT ${lim} ROWS ONLY`, binds, lim),
+  ]);
+  return {
+    resume: {
+      docs: tot ? Number(tot.docs) : 0,
+      octets: tot ? Number(tot.octets) : 0,
+      lies: tot ? Number(tot.lies) : 0,
+      taille_max: tot ? Number(tot.taille_max) : 0,
+      formats: formats.length,
+      filtre: q || null,
+    },
+    formats, themes,
+    total: tot ? Number(tot.docs) : rows.length,
+    limit: lim, offset: off,
+    rows,
+  };
+}
+
 // ─── Magasins & stock ────────────────────────────────────────────────────────
 // Un « magasin » est une structure (V_SOCIETES) ; les articles sont dans STOCK
 // via STOCK.SREF_SOC = V_SOCIETES.COD.
@@ -2375,6 +2437,7 @@ async function handleRequest(req, res, p, sp) {
     if (p === '/api/documents/fichiers') return sendJson(res, 200, await listDocumentFiles(sp.get('folder') || '', { limit: sp.get('limit'), offset: sp.get('offset') }));
     if (p === '/api/documents/dates') return sendJson(res, 200, await listDocumentDates({ excludePoste: sp.get('excludePoste') === '1' }));
     if (p === '/api/documents/jour') return sendJson(res, 200, await listDocumentsByDay(sp.get('date') || '', { excludePoste: sp.get('excludePoste') === '1' }));
+    if (p === '/api/documents/base') return sendJson(res, 200, await listDocumentsBase({ q: term, limit: sp.get('limit'), offset: sp.get('offset') }));
 
     // Procédures stockées
     if (p === '/api/procedures') return sendJson(res, 200, await listProcedures({ q: term, type: sp.get('type') || '', group: sp.get('group') || '' }));
